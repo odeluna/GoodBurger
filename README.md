@@ -39,6 +39,10 @@ Class diagrams live in [`docs/UML/`](docs/UML/):
 - `menu-checkout.png` — GoodBurger menu/checkout layer diagram: `GoodBurgerApplication` (extends `Application`), `CheckoutScreenController` bound to `checkout_page.fxml`, `MenuItemManager` composing `MenuItem`, `MenuItem` referencing `Item` ingredients, and `Order` composing ordered `MenuItem`s for a `User`.
 - `rewards-nogame.puml` — PlantUML source (source of truth: `src/main/java/rewards/*.java`)
 - `rewards-nogame.svg` / `rewards-nogame.png` — rendered diagram
+- `combine-guide/` — the UML integration guide (how the four reference diagrams merge into the single shared model):
+  - `how-the-diagrams-combine.jpg` — merge overview: 42 classes / 63 relationships, per-reference contributions
+  - `merge-repeated-classes.jpg` — source-class → unified-name mapping (incl. the `OrderItem` bridge between catalog `MenuItem` and checkout)
+  - `connect-the-modules.jpg` — the 6 steps to wire the modules together, plus relationship-reading notes and known implementation gaps
 
 ![GoodBurger integrated class diagram](docs/UML/goodburger-full.png)
 
