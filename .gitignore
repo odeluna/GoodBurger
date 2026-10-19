@@ -1,0 +1,7 @@
+# Build output
+build/
+*.class
+
+# Local runtime state (not part of the project)
+progress.properties
+*.log
