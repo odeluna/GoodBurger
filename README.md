@@ -43,10 +43,22 @@ Class diagrams live in [`docs/UML/`](docs/UML/):
   - `how-the-diagrams-combine.jpg` — merge overview: 42 classes / 63 relationships, per-reference contributions
   - `merge-repeated-classes.jpg` — source-class → unified-name mapping (incl. the `OrderItem` bridge between catalog `MenuItem` and checkout)
   - `connect-the-modules.jpg` — the 6 steps to wire the modules together, plus relationship-reading notes and known implementation gaps
+- `signin-to-checkout.puml` / `.svg` / `.png` — the linear sign-in → checkout flow as a sequence diagram: 20 lifelines across all four modules (app/nav → accounts/shared user → menu/checkout → rewards), every class touched on the path (GoodBurgerApplication → … → AccountManager.login → User → Home → MenuScreen/panels → OrderItem/Order → CheckoutScreenController → RewardsController → PointsService).
+- `signin-to-checkout-classes.puml` / `.svg` / `.png` — the same linear path drawn as a class diagram: all 22 classes touched, numbered flow edges 1–22 plus real composition (`Order *-- OrderItem`, `OrderItem *-- MenuItem/Modifier`).
 
 ![GoodBurger integrated class diagram](docs/UML/goodburger-full.png)
 
 Relationships follow the CS 3443 arrow vocabulary: composition (`*--`, has-a/owned), dependency (`..>`), generalization (`--|>`, `extends`), and realization (`..|>`, `implements`).
+
+### Linear sign-in → checkout (all classes touched)
+
+The flow from sign-in to checkout is linear — one path through all four modules; the only branch is the guest option at sign-in. Sequence view (every call on the path):
+
+![Sign-in to checkout sequence](docs/UML/signin-to-checkout.png)
+
+Class view (every class touched, numbered 1–22):
+
+![Sign-in to checkout classes](docs/UML/signin-to-checkout-classes.png)
 
 ## Design
 

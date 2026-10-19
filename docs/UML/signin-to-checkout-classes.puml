@@ -1,0 +1,128 @@
+@startuml
+!pragma layout smetana
+title GoodBurger — linear sign-in → checkout (all classes touched)
+
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+
+class GoodBurgerApplication {
+  + main(args) : void
+  + start(stage) : void
+}
+class NavBar {
+  - SCREENS : String[]
+  + selectScreen(screen)
+}
+class WelcomeController {
+  - accountManager : AccountManager
+  + signInClicked()
+}
+class SignInController {
+  - accountManager : AccountManager
+  + loginClicked()
+  + validatePassword() : boolean
+}
+class AccountManager {
+  - currentUser : User
+  + login(email, password) : User
+  + loadUsersFromFile() : List<User>
+}
+class User {
+  - email, password, name
+  - points : int
+}
+class HomeController {
+  - accountManager : AccountManager
+  + menuClicked()
+}
+class MenuFileReader {
+  + loadMenu(path) : Menu
+  + loadModifiers(path) : List<Modifier>
+}
+class Menu {
+  + getItemsByCategory(cat) : List<MenuItem>
+}
+class MenuItem {
+  - name, price, calories
+  - modifiers : List<Modifier>
+  + getNutrition() : Nutrition
+}
+class Modifier {
+  - name, extraPrice
+  + getPrice() : double
+}
+class MenuScreen {
+  - menu : Menu
+  - currentOrder : Order
+  + onItemSelect(item)
+  + onAddToCart()
+  + proceedToCheckout()
+}
+class CategoryPanel {
+  + showCategories()
+}
+class ItemGridPanel {
+  + showItems(items)
+}
+class ItemDetailPanel {
+  + showItem(item)
+}
+class OrderItem {
+  - item : MenuItem
+  - chosen : List<Modifier>
+  - quantity : int
+  + getPrice() : double
+}
+class Order {
+  - items : List<OrderItem>
+  - total, tax : double
+  - pickupTime : String
+  + updateTax()
+}
+class CartPanel {
+  + showOrder(order)
+}
+class OrderReviewPanel {
+  + showOrder(order)
+}
+class CheckoutScreenController {
+  + confirmOrder()
+}
+class RewardsController {
+  - model : User
+  - pointsService : PointsService
+}
+class PointsService {
+  + addPoints(amount, user) : boolean
+}
+
+' linear flow edges (numbered)
+GoodBurgerApplication ..> MenuFileReader : 1. load menu + modifiers
+GoodBurgerApplication ..> NavBar : 2. build screens
+GoodBurgerApplication ..> WelcomeController : 3. show welcome
+WelcomeController ..> SignInController : 4. tap sign-in
+SignInController ..> AccountManager : 5. login(email, pw)
+AccountManager ..> User : 6. resolve account
+SignInController ..> HomeController : 7. home (signed in)
+HomeController ..> MenuFileReader : 8. catalog ready
+HomeController ..> MenuScreen : 9. menuClicked
+MenuScreen ..> CategoryPanel : 10. showCategories
+MenuScreen ..> ItemGridPanel : 11. showItems
+MenuScreen ..> ItemDetailPanel : 12. showItem + modifiers
+ItemDetailPanel ..> MenuItem : read item
+ItemDetailPanel ..> Modifier : select extras
+MenuScreen ..> OrderItem : 13. new cart line
+OrderItem *-- MenuItem
+OrderItem *-- Modifier
+MenuScreen ..> Order : 14. addOrderItem + updateTax
+Order *-- OrderItem
+MenuScreen ..> CartPanel : 15. updateCart
+MenuScreen ..> CheckoutScreenController : 16. proceedToCheckout
+CheckoutScreenController ..> Order : 17. total / tax / pickupTime
+CheckoutScreenController ..> User : 18. customer identity
+CheckoutScreenController ..> OrderReviewPanel : 19. review items
+OrderReviewPanel ..> Order
+CheckoutScreenController ..> RewardsController : 20. attach rewards (User)
+RewardsController ..> PointsService : 21. addPoints(credit)
+PointsService ..> User : 22. points += credit
+@enduml

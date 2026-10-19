@@ -1,0 +1,100 @@
+@startuml
+!pragma layout smetana
+title GoodBurger — linear sign-in → checkout (all classes touched)
+
+skinparam sequenceMessageAlign left
+skinparam ParticipantPadding 8
+skinparam BoxPadding 6
+skinparam sequenceArrowThickness 1
+skinparam monospace true
+skinparam defaultFontName "DejaVu Sans"
+skinparam sequence {
+  LifeBarBackgroundColor #EEEEEE
+}
+
+' ---------- app & navigation ----------
+box "Application & Navigation" #E3F2FD
+participant "GoodBurgerApplication\n<<app entry>>" as App
+participant "MenuFileReader\n<<catalog loader>>" as MFR
+participant "NavBar\n<<navigation>>" as Nav
+participant "WelcomeController\n<<M>>" as Welcome
+participant "SignInController\n<<M>>" as SignIn
+end box
+
+' ---------- accounts & shared user ----------
+box "Accounts & Shared User" #E8F5E9
+participant "AccountManager\n<<persistence>>" as AM
+participant "User\n<<shared entity>>" as User
+participant "HomeController\n<<M>>" as Home
+end box
+
+' ---------- menu / checkout ----------
+box "Menu Customization & Checkout" #FFF3E0
+participant "MenuScreen\n<<controller/panes>>" as Menu
+participant "CategoryPanel\n<<V>>" as Cat
+participant "ItemGridPanel\n<<V>>" as Grid
+participant "ItemDetailPanel\n<<V>>" as Detail
+participant "CartPanel\n<<V>>" as Cart
+participant "OrderReviewPanel\n<<V>>" as Review
+participant "Menu\n<<catalog>>" as MenuM
+participant "MenuItem\n<<merged>>" as MI
+participant "Modifier\n<<merged>>" as Mod
+participant "OrderItem\n<<bridge>>" as OI
+participant "Order\n<<merged>>" as Order
+participant "CheckoutScreenController\n<<M, checkOut_page.fxml>>" as Co
+end box
+
+' ---------- rewards (touched at checkout) ----------
+box "Rewards, Tasks & Points" #F3E5F5
+participant "RewardsController\n<<M>>" as RCtrl
+participant "PointsService\n<<points ledger>>" as PS
+end box
+
+' 1. launch
+App -> MFR : loadMenu(MENU_FILE)
+MFR --> MenuM : Menu{items, categories}
+App -> MFR : loadModifiers(MODIFIERS_FILE)
+MFR --> MI : List<Modifier> per item
+App -> Nav : build SCREENS + buttons
+App -> Welcome : show welcome
+
+' 2. sign in (linear)
+Welcome -> SignIn : user taps "Sign in"
+SignIn -> SignIn : validatePassword()
+SignIn -> AM : login(email, password)
+AM -> AM : loadUsersFromFile()  (users.csv)
+AM -> User : match email + password
+AM --> SignIn : User (currentUser)
+SignIn -> Home : signed-in home
+Home -> Home : welcomeMessage(user.name)
+
+' 3. menu
+Home -> Menu : menuClicked()
+Menu -> Cat : showCategories()
+Menu -> Grid : showItems(Menu.getItemsByCategory)
+Menu -> Detail : showItem(selected)
+Detail -> MI : name / price / getNutrition()
+Detail -> Mod : selectable modifiers
+Menu -> OI : new OrderItem(item, chosen modifiers, qty)
+OI -> Mod : logSelectedModifier()
+Menu -> Cart : updateCart()
+Cart -> Order : showOrder (items = List<OrderItem>)
+Order -> Order : total = Σ OrderItem.getPrice()
+Order -> Order : updateTax()
+
+' 4. checkout (linear, customer = signed-in User)
+Menu -> Co : proceedToCheckout()
+note right of Co : Order.customerID = User.email
+Co -> Order : items / total / tax / pickupTime
+Co -> User : customer identity (name/email)
+Co -> Review : review final items
+Co -> Order : confirm order (orderId fixed)
+Order --> Co : Order confirmed
+
+' 5. rewards touched by checkout
+Co -> RCtrl : attach rewards context (model = User)
+RCtrl -> PS : addPoints(order credit, User)
+PS -> User : points += credit (history logged)
+PS --> RCtrl : boolean
+RCtrl --> Co : rewards acknowledged
+@enduml
