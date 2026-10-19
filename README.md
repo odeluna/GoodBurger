@@ -34,12 +34,13 @@ In poker, Enter or Space reveals and then continues. After a poker win, 1, 2, or
 
 Class diagrams live in [`docs/UML/`](docs/UML/):
 
+- `goodburger-full.png` — integrated model merging all source diagrams into one page: Application & Navigation, Menu Customization & Checkout, Accounts & Shared User, and Rewards/Tasks/Points (with a relationship legend).
 - `rewards-class-diagram.png` — RewardsJavaFX class diagram (RewardsApp, MainView, RewardsController, data models `UserModel`/`Task`/`RewardItem`, and `PointsService`/`TaskService`).
 - `menu-checkout.png` — GoodBurger menu/checkout layer diagram: `GoodBurgerApplication` (extends `Application`), `CheckoutScreenController` bound to `checkout_page.fxml`, `MenuItemManager` composing `MenuItem`, `MenuItem` referencing `Item` ingredients, and `Order` composing ordered `MenuItem`s for a `User`.
 - `rewards-nogame.puml` — PlantUML source (source of truth: `src/main/java/rewards/*.java`)
 - `rewards-nogame.svg` / `rewards-nogame.png` — rendered diagram
 
-![Rewards UML class diagram](docs/UML/rewards-nogame.svg)
+![GoodBurger integrated class diagram](docs/UML/goodburger-full.png)
 
 Relationships follow the CS 3443 arrow vocabulary: composition (`*--`, has-a/owned), dependency (`..>`), generalization (`--|>`, `extends`), and realization (`..|>`, `implements`).
 
