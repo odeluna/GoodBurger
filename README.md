@@ -32,8 +32,10 @@ In poker, Enter or Space reveals and then continues. After a poker win, 1, 2, or
 
 ## UML
 
-A class diagram for the rewards/loyalty layer (economy, persistence, poker, and the app shell — the Pipe Flight mini-game cluster excluded) lives in [`docs/UML/`](docs/UML/):
+Class diagrams live in [`docs/UML/`](docs/UML/):
 
+- `rewards-class-diagram.png` — RewardsJavaFX class diagram (RewardsApp, MainView, RewardsController, data models `UserModel`/`Task`/`RewardItem`, and `PointsService`/`TaskService`).
+- `menu-checkout.png` — GoodBurger menu/checkout layer diagram: `GoodBurgerApplication` (extends `Application`), `CheckoutScreenController` bound to `checkout_page.fxml`, `MenuItemManager` composing `MenuItem`, `MenuItem` referencing `Item` ingredients, and `Order` composing ordered `MenuItem`s for a `User`.
 - `rewards-nogame.puml` — PlantUML source (source of truth: `src/main/java/rewards/*.java`)
 - `rewards-nogame.svg` / `rewards-nogame.png` — rendered diagram
 
