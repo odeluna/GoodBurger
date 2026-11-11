@@ -41,8 +41,7 @@ public class HomeScreenController {
     // Opens the rewards screen
     @FXML
     private void rewardsClicked(ActionEvent event) {
-        // goTo(event, "rewards_page.fxml");
-        System.out.println("Rewards screen is not built yet");
+        goTo(event, "rewards_page.fxml");
     }
 
     // Opens the checkout screen
