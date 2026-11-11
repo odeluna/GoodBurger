@@ -1,0 +1,282 @@
+GOOD BURGER - MODEL, CONTROLLER AND VIEW DESIGN
+================================================
+
+Diagrams (Violet UML, in the IntelliJ project's docs folder):
+  GoodBurger-Model.class.violet.html        model classes and how they relate
+  GoodBurger-Controllers.class.violet.html  controllers and the model classes they use
+  GoodBurger-Views.class.violet.html        FXML files and the controller each one uses
+
+The app follows MVC:
+  - Model classes hold the data and the rules (prices, points, password checks).
+    They know nothing about JavaFX.
+  - Each FXML file is a view. It only lays out controls.
+  - Each controller is named in its FXML file with fx:controller. It reacts to
+    clicks, calls the model, and updates the view.
+
+
+1. MODEL CLASSES
+----------------
+
+App state
+  Session
+    Description: the one shared object every controller gets. It holds what
+      the whole app is working on right now, so every screen sees the same
+      cart and the same logged-in user.
+    Attributes: - menu : Menu, - currentUser : User, - currentOrder : Order
+    Methods: + logIn(user : User) : void, + logOut() : void,
+      + isGuest() : boolean, + startNewOrder() : void, + getters
+
+Login / users
+  User
+    Description: one customer account. It holds reward points, the saved
+      favorite order and minigame plays.
+    Attributes: - username : String, - passwordHash : String, - points : int,
+      - favorite : SavedOrder, - playsToday : int, - lastPlayDate : LocalDate
+    Methods: + checkPassword(hash : String) : boolean, + addPoints(p : int) : void,
+      + spendPoints(p : int) : boolean, + setFavorite(f : SavedOrder) : void, + getters
+
+  LoginValidator
+    Description: validates logins and new accounts. Passwords are hashed and
+      only the hash is stored.
+    Attributes: - users : Map<String, User>, - store : UserFileStore,
+      + MIN_PASSWORD_LENGTH : int = 8 {static}
+    Methods: + logIn(name, pw) : User, + register(name, pw) : User,
+      + validateUsername(name) : String, + validatePassword(pw) : String
+      (both return an error message, or null when OK), - hash(pw) : String
+
+Menu
+  Category (enum)
+    Values: ENTREE, SIDE, DRINK, DESSERT
+    Attributes: - displayName : String
+    Methods: + getDisplayName() : String
+
+  Nutrition
+    Description: an immutable set of nutrition numbers that can be added together.
+    Attributes: + ZERO {static}, - calories, - protein, - carbs, - fat, - sodium : int
+    Methods: + getters, + add(other : Nutrition) : Nutrition
+
+  Modifier
+    Description: an add-on for one item, such as "Add bacon".
+    Attributes: - name : String, - extraPrice : double, - extraCalories : int
+    Methods: + getters, + getNutrition() : Nutrition
+
+  MenuItem
+    Description: one row of menu.csv.
+    Attributes: - id : String, - name : String, - category : Category,
+      - price : double, - nutrition : Nutrition, - modifiers : List<Modifier>,
+      - cateringOnly : boolean
+    Methods: + getters, + addModifier(m : Modifier) : void
+
+  Menu
+    Description: every MenuItem, with lookups by category and id.
+    Attributes: - items : List<MenuItem>
+    Methods: + getByCategory(c) : List<MenuItem>, + findById(id) : MenuItem,
+      + getCateringItems() : List<MenuItem>, + getAllItems() : List<MenuItem>
+
+  OrderItem
+    Description: a MenuItem as the customer ordered it, with chosen add-ons
+      and a quantity.
+    Attributes: - item : MenuItem, - chosen : List<Modifier>, - quantity : int,
+      - isReward : boolean
+    Methods: + toggleModifier(m) : void, + setQuantity(q) : void,
+      + markAsReward() : void (makes it free), + getLinePrice() : double,
+      + getNutrition() : Nutrition
+
+Checkout
+  Order
+    Description: the cart, plus pickup details once scheduled.
+    Attributes: - username : String, - items : List<OrderItem>, - type : OrderType,
+      - pickupTime : LocalDateTime, + TAX_RATE : double = 0.0825 {static}
+    Methods: + addItem(i) : void, + removeItem(i) : void, + getSubtotal() : double,
+      + getTax() : double, + getTotal() : double, + getNutritionTotal() : Nutrition,
+      + schedule(type : OrderType, time : LocalDateTime) : void
+
+  OrderType (enum)
+    Values: ASAP, SCHEDULED, CATERING
+
+  OrderScheduler
+    Description: decides whether a pickup time is allowed. It must be within
+      store hours, and catering orders need 24 hours' notice.
+    Attributes: + OPEN : LocalTime {static}, + CLOSE : LocalTime {static},
+      + CATERING_NOTICE_HOURS : int = 24 {static}
+    Methods: + isValid(type, time) : boolean, + availableSlots(day) : List<LocalDateTime>
+
+  SavedOrder
+    Description: a favorite order saved for quick reorder. It stores item ids
+      ("B01|2|Add bacon") instead of full objects, and rebuilds the real items
+      from the Menu when loaded.
+    Attributes: - lines : List<String>
+    Methods: + from(order) : SavedOrder {static}, + toOrder(menu) : Order,
+      + toCsv() : String, + parse(text) : SavedOrder {static}
+
+Rewards
+  RewardsService
+    Description: the points rules. Customers earn 100 points per dollar. A
+      reward unlocks once the customer has enough points, and the customer
+      can opt in to redeem it, which adds the item to the order at $0.
+    Attributes: - rewards : List<Reward>, + POINTS_PER_DOLLAR : int = 100 {static}
+    Methods: + pointsFor(subtotal) : int, + getUnlocked(u) : List<Reward>,
+      + nextMilestone(u) : Reward, + redeem(u, r, order, menu) : boolean
+
+  Reward
+    Description: one free item and its point cost (a milestone).
+    Attributes: - name : String, - itemId : String, - pointCost : int
+    Methods: + getters
+
+  MiniGame
+    Description: a small game that awards bonus points, limited to 3 plays a day.
+    Attributes: + MAX_PLAYS_PER_DAY : int = 3 {static}, - random : Random
+    Methods: + canPlay(u, today) : boolean, + play(u) : int, - recordPlay(u) : void
+
+Data access (CSV files)
+  MenuFileReader
+    Description: reads menu.csv and modifiers.csv into a Menu.
+    Methods: + load(menuPath, modifiersPath) : Menu, ~ parseItem(line),
+      ~ parseModifier(line)
+
+  CsvFileStore<T> (abstract)
+    Description: shared code for every CSV that is both read and written.
+      Subclasses only say how one line becomes an object and back.
+    Attributes: # path : Path
+    Methods: + loadAll() : List<T>, + saveAll(rows) : void,
+      # parse(line) : T {abstract}, # toLine(row : T) : String {abstract}
+  UserFileStore extends CsvFileStore<User>       (users.csv)
+  OrderFileStore extends CsvFileStore<Order>     (orders.csv)
+    + append(order) : void, + loadHistory(username) : List<Order>
+  RewardFileStore extends CsvFileStore<Reward>   (rewards.csv)
+
+Relationships (Model diagram)
+  Inheritance:  UserFileStore, OrderFileStore and RewardFileStore extend CsvFileStore.
+  Composition:  MenuItem owns its Nutrition (1) and its Modifiers (0..*).
+  Aggregation:  Menu has MenuItems (0..*); Order has OrderItems (0..*);
+                LoginValidator has Users (0..*); RewardsService has Rewards (0..*).
+  Association:  Session -> Menu (1), User (0..1), Order (1); MenuItem -> Category;
+                OrderItem -> MenuItem (1) and chosen Modifiers (0..*);
+                Order -> OrderType; User -> SavedOrder (favorite 0..1);
+                LoginValidator -> UserFileStore.
+  Dependency:   MenuFileReader creates Menu; OrderScheduler validates Order;
+                SavedOrder rebuilds Order; MiniGame adds points to User.
+
+
+2. CONTROLLER CLASSES
+---------------------
+
+  GoodBurgerApp (extends Application)
+    Description: the startup class. It loads the CSV files, creates the Session,
+      and loads main-layout.fxml.
+    Methods: + start(stage : Stage) : void, + main(args) : void
+
+  ScreenRouter (controller of main-layout.fxml)
+    Description: switches screens. It loads each screen's FXML file once, hands
+      the Session to that screen's controller, and swaps the screen into the
+      center of the layout.
+    Attributes: @FXML - contentArea : BorderPane, - session : Session,
+      - views : Map<String, Parent>
+    Methods: + init(session) : void, + show(name : String) : void,
+      - load(fxmlFile : String) : Parent
+
+  BaseController (abstract)
+    Description: the parent of every screen controller, so each one gets the
+      Session and the router the same way.
+    Attributes: # session : Session, # router : ScreenRouter
+    Methods: + init(s : Session, r : ScreenRouter) : void,
+      + onShow() : void (refreshes the screen every time it opens)
+
+  NavBarController extends BaseController
+    Attributes: @FXML mainButton, menuButton, rewardsButton, checkoutButton : Button
+    Methods: + onNavClicked(e : ActionEvent) : void (calls router.show),
+      + highlight(name : String) : void
+    Uses: ScreenRouter
+
+  LoginController extends BaseController
+    Attributes: @FXML - usernameField : TextField, @FXML - passwordField : PasswordField,
+      @FXML - errorLabel : Label, - validator : LoginValidator
+    Methods: + onLoginClicked(), + onCreateAccountClicked(), + onGuestClicked(),
+      - showError(msg : String)
+    Uses: LoginValidator, then session.logIn(user), then router.show("Main")
+
+  MainController extends BaseController
+    Attributes: @FXML - welcomeLabel, - pointsLabel, - favoriteLabel : Label
+    Methods: + onShow(), + onQuickOrderClicked(), + onStartOrderClicked()
+    Uses: SavedOrder.toOrder(menu) for quick reorder
+
+  MenuController extends BaseController
+    Attributes: @FXML - categoryPanel : CategoryPanel, @FXML - itemGridPanel : ItemGridPanel,
+      @FXML - itemDetailPanel : ItemDetailPanel, @FXML - cartPanel : CartPanel,
+      @FXML - itemPreviewPanel : ItemPreviewPanel, - selectedCategory : Category,
+      - draftItem : OrderItem
+    Methods: + initialize(), + onCategoryClicked(c), + onItemClicked(item),
+      + onModifierToggled(m), + onQuantityChanged(q), + onAddClicked(),
+      + onCancelClicked(), - refreshPanels()
+    Uses: Menu (reads items), OrderItem (the draft), session's Order (adds to cart)
+
+  RewardsController extends BaseController
+    Attributes: @FXML - pointsLabel : Label, @FXML - milestoneBar : ProgressBar,
+      @FXML - rewardList : ListView<Reward>, - rewards : RewardsService
+    Methods: + onShow(), + onRedeemClicked(), + onPlayGameClicked()
+    Uses: RewardsService
+
+  MiniGameController extends BaseController
+    Attributes: @FXML - playsLeftLabel, - resultLabel : Label, - game : MiniGame
+    Methods: + onShow(), + onPlayClicked(), + onBackClicked()
+    Uses: MiniGame
+
+  CheckoutController extends BaseController
+    Attributes: @FXML - orderList : ListView<OrderItem>,
+      @FXML - subtotalLabel, taxLabel, totalLabel : Label,
+      @FXML - asapRadio, scheduleRadio : RadioButton, @FXML - pickupDate : DatePicker,
+      @FXML - pickupTime : ComboBox<LocalTime>, @FXML - favoriteCheck : CheckBox,
+      - scheduler : OrderScheduler, - orderStore : OrderFileStore,
+      - rewards : RewardsService
+    Methods: + onShow(), + onRemoveClicked(), + onScheduleToggled(),
+      + onPlaceOrderClicked(), - refreshTotals()
+    Uses: OrderScheduler (checks pickup time), OrderFileStore (saves the order),
+      RewardsService (awards points), SavedOrder (saves the favorite)
+
+Relationships (Controllers diagram)
+  Inheritance:  all 7 screen controllers extend BaseController.
+  Association:  BaseController -> Session (1) and ScreenRouter (1);
+                each controller -> the model/service classes listed under "Uses".
+  Dependency:   GoodBurgerApp creates Session and loads main-layout.fxml;
+                NavBarController calls ScreenRouter.show(name).
+
+
+3. VIEWS (FXML FILES)
+---------------------
+All files go in src/main/resources/com/goodburger/views/.
+
+  File                  Root layout and main controls                         fx:controller
+  main-layout.fxml      BorderPane: center = current screen,                  ScreenRouter
+                        bottom = <fx:include source="nav-bar.fxml"/>
+  nav-bar.fxml          HBox with 4 Buttons: main, menu, rewards, checkout    NavBarController
+  login-view.fxml       VBox: TextField, PasswordField, error Label,          LoginController
+                        Buttons Log in / Create account / Continue as guest
+  main-view.fxml        VBox: welcome + points Labels, favorite Label,        MainController
+                        Buttons Quick order / Start order
+  menu-view.fxml        BorderPane: left = CategoryPanel;                     MenuController
+                        center = StackPane(ItemGridPanel, ItemDetailPanel);
+                        right = StackPane(CartPanel, ItemPreviewPanel)
+  rewards-view.fxml     VBox: points Label, ProgressBar to next milestone,    RewardsController
+                        ListView of rewards, Buttons Redeem / Play game
+  minigame-view.fxml    VBox: plays-left Label, Play Button, result Label,    MiniGameController
+                        Back Button
+  checkout-view.fxml    VBox: ListView of items, subtotal/tax/total Labels,   CheckoutController
+                        RadioButtons ASAP / Scheduled, DatePicker + time
+                        ComboBox, "Save as favorite" CheckBox, Place order Button
+
+Custom controls used in menu-view.fxml
+  The five menu panels are Java classes that extend a JavaFX layout. They are
+  imported into menu-view.fxml like built-in controls, and the MenuController
+  receives them through @FXML fields:
+  CategoryPanel (VBox), ItemGridPanel (ScrollPane), ItemDetailPanel (VBox),
+  CartPanel (VBox), ItemPreviewPanel (VBox).
+  The panels build their buttons from the menu data at run time, so a new
+  item added to menu.csv shows up without editing any FXML.
+
+How views connect to controllers (Views diagram)
+  - Each FXML file has a dependency arrow labeled fx:controller pointing to its
+    controller. That is the fx:controller attribute on the file's root element.
+  - main-layout.fxml composes nav-bar.fxml with fx:include.
+  - menu-view.fxml composes the five panel classes.
+  - Each control with an fx:id matches an @FXML field of the same name in the
+    controller, and each onAction="#handler" matches a controller method.

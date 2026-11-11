@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Maven build file for the Good Burger app.
+  IntelliJ reads this file to know which libraries the project needs (JavaFX, JUnit)
+  and which Java version to compile for. Open the "Good Burger" folder in IntelliJ
+  and it imports everything from here automatically.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.goodburger</groupId>
+    <artifactId>good-burger</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <name>Good Burger</name>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- Java 17 is the oldest version JavaFX 21 supports; any newer JDK also works. -->
+        <maven.compiler.release>17</maven.compiler.release>
+        <javafx.version>21.0.5</javafx.version>
+        <junit.version>5.10.2</junit.version>
+    </properties>
+
+    <dependencies>
+        <!-- JavaFX controls: Button, Label, CheckBox, ScrollPane, TilePane, etc. -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+        <!-- JUnit 5, only used by the tests in src/test (not shipped with the app). -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+            </plugin>
+            <!-- Lets you start the app with "mvn javafx:run" (or the Maven panel in IntelliJ). -->
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.8</version>
+                <configuration>
+                    <mainClass>com.goodburger/com.goodburger.GoodBurgerApp</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
