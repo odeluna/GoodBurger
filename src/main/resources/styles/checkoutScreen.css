@@ -1,21 +1,26 @@
 #non_selected{
-    -fx-background-color: #5398BE;
-    -fx-border-color: #3A1772;
+    -fx-background-color:  #45a0ab;
+    -fx-border-color: #ffffff;
+    -fx-text-fill: #ffffff;
 }
 #non_selected:hover{
-    -fx-background-color: #3A1772;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #45a0ab;
+    -fx-text-fill: #45a0ab;
 }
 #pay_button{
-    -fx-background-color: #1ca315;
+    -fx-background-color: #46ac41;
+    -fx-text-fill: #ffffff;
 }
 #pay_button:hover{
     -fx-background-color: #e1c11c;
 }
 #current_selected{
-    -fx-background-color: #F2CD5D;
-    -fx-border-color: #DEA54B;
+    -fx-background-color: #b52d5e;
+    -fx-border-color: #45a0ab;
+    -fx-text-fill: #ffffff;
 }
 #backboard{
-    -fx-background-color: #D741A7;
+    -fx-background-color: #ffffff;
 }
 

@@ -1,0 +1,42 @@
+package edu.utsa.cs3443.goodburger;
+import model.User;
+
+
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+import javafx.scene.Node;
+
+import java.io.IOException;
+
+public class GoodBurgerApplication extends Application {
+
+    private static User currentUser;
+
+    @Override
+    public void start(Stage stage) throws IOException {
+        FXMLLoader fxmlLoader = new FXMLLoader(GoodBurgerApplication.class.getResource("checkout_page.fxml"));
+        Scene scene = new Scene(fxmlLoader.load());
+        stage.setTitle("Hello!");
+        stage.setScene(scene);
+//        stage.setMaximized(true);
+        stage.sizeToScene();
+        stage.setResizable(false);
+        stage.show();
+    }
+    public static void switchScreen(Node source, String fxmlFile) throws IOException {
+        FXMLLoader loader = new FXMLLoader(GoodBurgerApplication.class.getResource(fxmlFile));
+        Scene scene = new Scene(loader.load());
+        Stage stage = (Stage) source.getScene().getWindow();
+        stage.setScene(scene);
+    }
+    // getter and setter
+    public static User getCurrentUser() {
+        return currentUser;
+    }
+
+    public static void setCurrentUser(User user) {
+        currentUser = user;
+    }
+}
