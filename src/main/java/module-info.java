@@ -8,6 +8,7 @@
  */
 module com.goodburger {
     requires javafx.controls;
+    requires java.desktop;
 
     exports com.goodburger;
     exports com.goodburger.model;
