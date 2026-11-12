@@ -8,6 +8,7 @@ package edu.utsa.cs3443.beef_login;
  * class: CS3443
  */
 
+import edu.utsa.cs3443.beef_login.model.AccountManager;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;

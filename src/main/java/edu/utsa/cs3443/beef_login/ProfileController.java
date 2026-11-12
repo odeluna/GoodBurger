@@ -8,6 +8,8 @@ package edu.utsa.cs3443.beef_login;
  * class: CS3443
  */
 
+import edu.utsa.cs3443.beef_login.model.AccountManager;
+import edu.utsa.cs3443.beef_login.model.User;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -31,6 +33,7 @@ public class ProfileController implements Initializable {
     @FXML private Button logoutButton;
     @FXML private Button deleteAccountButton;
     @FXML private Button createAccountButton;
+    @FXML private Button signInButton;
 
     private AccountManager accountManager = new AccountManager();
 
@@ -43,6 +46,7 @@ public class ProfileController implements Initializable {
         logoutButton.setVisible(!guest);
         deleteAccountButton.setVisible(!guest);
         createAccountButton.setVisible(guest);
+        signInButton.setVisible(guest);
 
         if (guest) {
             usernameLabel.setText("Guest");
@@ -67,6 +71,13 @@ public class ProfileController implements Initializable {
     @FXML
     private void logoutClicked(ActionEvent event) {
         accountManager.logout();
+        goTo(event, "sign_in_page.fxml");
+    }
+
+    // Guests go to the sign in screen to use an existing account
+    @FXML
+    private void signInClicked(ActionEvent event) {
+        accountManager.logout();                 // clears the guest user
         goTo(event, "sign_in_page.fxml");
     }
 

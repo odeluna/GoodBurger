@@ -8,6 +8,7 @@ package edu.utsa.cs3443.beef_login;
  * class: CS3443
  */
 
+import edu.utsa.cs3443.beef_login.model.AccountManager;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -26,6 +27,7 @@ public class RegisterController {
     @FXML private PasswordField confirmPasswordInput;
     @FXML private Button submitButton;
     @FXML private Label errorLabel;
+    @FXML private Button backButton;
 
     private AccountManager accountManager = new AccountManager();
 
@@ -115,4 +117,18 @@ public class RegisterController {
         errorLabel.setText(message);
         errorLabel.setVisible(true);
     }
+
+    // Returns to the sign in screen
+    @FXML
+    private void backClicked(ActionEvent event) {
+        try {
+            GoodBurgerApplication.switchScreen((Node) event.getSource(), "sign_in_page.fxml");
+        } catch (IOException e) {
+            showError("Error loading FXML");
+        }
+    }
+
 }
+
+
+

@@ -6,62 +6,42 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.shape.Rectangle?>
-<?import javafx.scene.text.Font?>
 
 <!--
-  Old-school Spurs palette (90s fiesta look):
-    Black #000000  Teal #00A3AD  Orange #F26B21  Fuchsia #C2185B  Silver #C4CED4
-  Everything sits directly in one AnchorPane (no VBox/HBox), so each item can be dragged freely.
-  fx:controller must match your real package, e.g. com.yourapp.SignInController
+  All colors and fonts come from style.css (same folder as this file).
+  Everything sits directly in one AnchorPane, so each item can be dragged freely.
 -->
 
-<AnchorPane prefHeight="600.0" prefWidth="800.0" style="-fx-background-color: #FFFFFF;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.utsa.cs3443.beef_login.SignInController">
+<AnchorPane prefHeight="600.0" prefWidth="800.0" styleClass="root-pane" stylesheets="@../../../../styles/style.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.utsa.cs3443.beef_login.SignInController">
    <children>
       <!-- Top stripes -->
-      <Rectangle fill="#00a3ad" height="22.0" width="800.0" />
-      <Rectangle fill="#f26b21" height="10.0" layoutY="22.0" width="800.0" />
-      <Rectangle fill="#c2185b" height="6.0" layoutY="32.0" width="800.0" />
+      <Rectangle height="22.0" styleClass="stripe-teal" width="800.0" />
+      <Rectangle height="10.0" layoutY="22.0" styleClass="stripe-orange" width="800.0" />
+      <Rectangle height="6.0" layoutY="32.0" styleClass="stripe-fuchsia" width="800.0" />
 
       <!-- Bottom stripes -->
-      <Rectangle fill="#c2185b" height="6.0" layoutY="562.0" width="800.0" />
-      <Rectangle fill="#f26b21" height="10.0" layoutY="568.0" width="800.0" />
-      <Rectangle fill="#00a3ad" height="22.0" layoutY="578.0" width="800.0" />
+      <Rectangle height="6.0" layoutY="562.0" styleClass="stripe-fuchsia" width="800.0" />
+      <Rectangle height="10.0" layoutY="568.0" styleClass="stripe-orange" width="800.0" />
+      <Rectangle height="22.0" layoutY="578.0" styleClass="stripe-teal" width="800.0" />
 
       <!-- Card background -->
-      <Rectangle arcHeight="12.0" arcWidth="12.0" fill="WHITE" height="440.0" layoutX="220.0" layoutY="80.0" stroke="#00a3ad" strokeWidth="3.0" width="360.0" />
+      <Rectangle height="440.0" layoutX="220.0" layoutY="80.0" styleClass="card" width="360.0" />
 
-      <Label alignment="CENTER" layoutX="220.0" layoutY="100.0" prefWidth="360.0" text="SIGN IN" textFill="#f26b21">
-         <font>
-            <Font name="System Bold" size="36.0" />
-         </font>
-      </Label>
-      <Label alignment="CENTER" layoutX="220.0" layoutY="150.0" prefWidth="360.0" text="Welcome back" textFill="#c4ced4">
-         <font>
-            <Font size="14.0" />
-         </font>
-      </Label>
+      <Label alignment="CENTER" layoutX="220.0" layoutY="100.0" prefWidth="360.0" styleClass="page-title-large" text="SIGN IN" />
+      <Label alignment="CENTER" layoutX="220.0" layoutY="150.0" prefWidth="360.0" styleClass="subtitle" text="Welcome back" />
 
-      <Label layoutX="250.0" layoutY="195.0" text="Email" textFill="#00a3ad">
-         <font>
-            <Font name="System Bold" size="13.0" />
-         </font>
-      </Label>
-      <TextField fx:id="emailInput" layoutX="250.0" layoutY="218.0" prefHeight="38.0" prefWidth="300.0" promptText="you@example.com" style="-fx-background-color: #FFFFFF; -fx-text-fill: #000000; -fx-prompt-text-fill: #6b767c; -fx-border-color: #C4CED4; -fx-border-radius: 4; -fx-background-radius: 4;" />
+      <Label layoutX="250.0" layoutY="195.0" styleClass="field-label" text="Email" />
+      <TextField fx:id="emailInput" layoutX="250.0" layoutY="212.0" prefHeight="38.0" prefWidth="300.0" promptText="you@example.com" />
 
-      <Label layoutX="250.0" layoutY="272.0" text="Password" textFill="#00a3ad">
-         <font>
-            <Font name="System Bold" size="13.0" />
-         </font>
-      </Label>
-      <!-- PasswordField extends TextField, so it works with "TextField passwordInput" in your controller -->
-      <PasswordField fx:id="passwordInput" layoutX="257.0" layoutY="295.0" prefHeight="38.0" prefWidth="300.0" promptText="Password" style="-fx-background-color: #FFFFFF; -fx-text-fill: #000000; -fx-prompt-text-fill: #6b767c; -fx-border-color: #C4CED4; -fx-border-radius: 4; -fx-background-radius: 4;" />
+      <Label layoutX="250.0" layoutY="272.0" styleClass="field-label" text="Password" />
+      <PasswordField fx:id="passwordInput" layoutX="250.0" layoutY="289.0" prefHeight="38.0" prefWidth="300.0" promptText="Password" />
 
-      <Label fx:id="errorLabel" layoutX="250.0" layoutY="342.0" prefHeight="36.0" prefWidth="300.0" textFill="#ff5c8a" wrapText="true" />
+      <Label fx:id="errorLabel" layoutX="250.0" layoutY="335.0" prefHeight="36.0" prefWidth="300.0" styleClass="error-label" wrapText="true" />
 
-      <Button fx:id="signInButton" defaultButton="true" layoutX="250.0" layoutY="385.0" mnemonicParsing="false" onAction="#signInClicked" prefHeight="42.0" prefWidth="300.0" style="-fx-background-color: #F26B21; -fx-text-fill: #000000; -fx-font-weight: bold; -fx-font-size: 15; -fx-background-radius: 4; -fx-cursor: hand;" text="SIGN IN" />
+      <Button fx:id="signInButton" defaultButton="true" layoutX="250.0" layoutY="378.0" mnemonicParsing="false" onAction="#signInClicked" prefHeight="42.0" prefWidth="300.0" styleClass="primary-button" text="SIGN IN" />
 
-      <!-- Create account / guest, right side under Sign In -->
-      <Button fx:id="createAccountButton" layoutX="350.0" layoutY="434.0" mnemonicParsing="false" onAction="#createAccountClicked" style="-fx-background-color: transparent; -fx-text-fill: #00A3AD; -fx-font-weight: bold; -fx-underline: true; -fx-cursor: hand;" text="Create Account" />
-      <Button fx:id="guestButton" layoutX="342.0" layoutY="467.0" mnemonicParsing="false" onAction="#guestClicked" style="-fx-background-color: transparent; -fx-text-fill: #00A3AD; -fx-font-weight: bold; -fx-underline: true; -fx-cursor: hand;" text="Continue as Guest" />
+      <!-- Create account / guest, under Sign In -->
+      <Button fx:id="createAccountButton" layoutX="341.0" layoutY="438.0" mnemonicParsing="false" onAction="#createAccountClicked" styleClass="link-button" text="Create Account" />
+      <Button fx:id="guestButton" layoutX="332.0" layoutY="467.0" mnemonicParsing="false" onAction="#guestClicked" styleClass="link-button" text="Continue as Guest" />
    </children>
 </AnchorPane>

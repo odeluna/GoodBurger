@@ -1,5 +1,6 @@
 package edu.utsa.cs3443.beef_login;
 
+import edu.utsa.cs3443.beef_login.model.User;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
