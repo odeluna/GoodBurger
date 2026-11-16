@@ -1,7 +1,16 @@
 # Build output
 build/
+target/
 *.class
 
 # Local runtime state (not part of the project)
 progress.properties
 *.log
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db

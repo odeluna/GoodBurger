@@ -1,0 +1,14 @@
+id,name,category,price,nutrition,cateringOnly
+B01,Classic Burger,ENTREE,6.99,0A73F29,false
+B02,Cheeseburger,ENTREE,7.49,0D18C64,false
+B03,Bacon Burger,ENTREE,8.49,0F62A1D,false
+B04,Double Burger,ENTREE,9.99,0C9E845,false
+B05,Mushroom Swiss Burger,ENTREE,8.29,0B417FE,false
+B06,Jalapeno Burger,ENTREE,7.99,0E25D7A,false
+B07,Chicken Sandwich,ENTREE,7.29,08B64F1,false
+B08,Veggie Burger,ENTREE,7.49,067AE3C,false
+S01,Fries,SIDE,2.49,042D9B8,false
+S02,Onion Rings,SIDE,3.29,05F18A7,false
+S03,Tater Tots,SIDE,2.79,03C72ED,false
+S04,Side Salad,SIDE,3.49,0118FA4,false
+D01,,DRINK,2.99,0118FA4,false
