@@ -31,7 +31,8 @@ public final class ProgressStore {
     public static final String[] REWARD_NAMES = {"Soda", "Fries", "Salad"};
     public static final int[] REWARD_COSTS = {300, 500, 1000};
     static final int TRADE_BACK_PERCENT = 50;
-    static final int GAMBLE_MIN_PIPES = 3;
+    /** Minimum pipes in a run before the double-or-nothing coin flip is offered. */
+    public static final int GAMBLE_MIN_PIPES = 3;
     private static final int FILE_VERSION = 2;
 
     private final Path file;
