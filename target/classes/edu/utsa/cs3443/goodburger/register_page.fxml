@@ -6,77 +6,52 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.shape.Rectangle?>
-<?import javafx.scene.text.Font?>
 
 <!--
-  Palette: White #FFFFFF  Teal #45A0AB  Orange #E0733A  Fuchsia #B52D5E  Grey #C4CED4
+  All colors and fonts come from style.css (same folder as this file).
   Everything sits directly in one AnchorPane, so each item can be dragged freely.
-  fx:controller must match your real package, e.g. com.yourapp.RegisterController
 -->
 
-<AnchorPane prefHeight="600.0" prefWidth="800.0" style="-fx-background-color: #FFFFFF;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.utsa.cs3443.goodburger.RegisterController">
-    <children>
-        <!-- Top stripes -->
-        <Rectangle fill="#45a0ab" height="22.0" width="800.0" />
-        <Rectangle fill="#e0733a" height="10.0" layoutY="22.0" width="800.0" />
-        <Rectangle fill="#b52d5e" height="6.0" layoutY="32.0" width="800.0" />
+<AnchorPane prefHeight="600.0" prefWidth="800.0" styleClass="root-pane" stylesheets="@../../../../styles/style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.utsa.cs3443.goodburger.RegisterController">
+   <children>
+      <!-- Top stripes -->
+      <Rectangle height="22.0" styleClass="stripe-teal" width="800.0" />
+      <Rectangle height="10.0" layoutY="22.0" styleClass="stripe-orange" width="800.0" />
+      <Rectangle height="6.0" layoutY="32.0" styleClass="stripe-fuchsia" width="800.0" />
 
-        <!-- Bottom stripes -->
-        <Rectangle fill="#b52d5e" height="6.0" layoutY="562.0" width="800.0" />
-        <Rectangle fill="#e0733a" height="10.0" layoutY="568.0" width="800.0" />
-        <Rectangle fill="#45a0ab" height="22.0" layoutY="578.0" width="800.0" />
+      <!-- Bottom stripes -->
+      <Rectangle height="6.0" layoutY="562.0" styleClass="stripe-fuchsia" width="800.0" />
+      <Rectangle height="10.0" layoutY="568.0" styleClass="stripe-orange" width="800.0" />
+      <Rectangle height="22.0" layoutY="578.0" styleClass="stripe-teal" width="800.0" />
 
-        <!-- Card background -->
-        <Rectangle arcHeight="12.0" arcWidth="12.0" fill="#ffffff" height="475.0" layoutX="220.0" layoutY="48.0" stroke="#45a0ab" strokeWidth="3.0" width="360.0" />
+      <!-- Card background -->
+      <Rectangle height="475.0" layoutX="220.0" layoutY="48.0" styleClass="card" width="360.0" />
 
-        <Label alignment="CENTER" layoutX="220.0" layoutY="58.0" prefWidth="360.0" text="CREATE ACCOUNT" textFill="#e0733a">
-            <font>
-                <Font name="System Bold" size="30.0" />
-            </font>
-        </Label>
+      <Label alignment="CENTER" layoutX="220.0" layoutY="58.0" prefWidth="360.0" styleClass="page-title" text="CREATE ACCOUNT" />
 
-        <!-- Name -->
-        <Label layoutX="250.0" layoutY="110.0" text="Name" textFill="#45a0ab">
-            <font>
-                <Font name="System Bold" size="13.0" />
-            </font>
-        </Label>
-        <TextField fx:id="nameInput" layoutX="250.0" layoutY="132.0" prefHeight="38.0" prefWidth="300.0" promptText="Full name" style="-fx-background-color: #FFFFFF; -fx-text-fill: #000000; -fx-prompt-text-fill: #8a8f94; -fx-border-color: #C4CED4; -fx-border-radius: 4; -fx-background-radius: 4;" />
+      <!-- Name -->
+      <Label layoutX="250.0" layoutY="110.0" styleClass="field-label" text="Name" />
+      <TextField fx:id="nameInput" layoutX="250.0" layoutY="132.0" prefHeight="38.0" prefWidth="300.0" promptText="Full name" />
 
-        <!-- Date of birth -->
-        <Label layoutX="250.0" layoutY="172.0" text="Date of Birth" textFill="#45a0ab">
-            <font>
-                <Font name="System Bold" size="13.0" />
-            </font>
-        </Label>
-        <TextField fx:id="birthdayInput" layoutX="250.0" layoutY="194.0" prefHeight="38.0" prefWidth="300.0" promptText="MM/DD/YYYY" style="-fx-background-color: #FFFFFF; -fx-text-fill: #000000; -fx-prompt-text-fill: #8a8f94; -fx-border-color: #C4CED4; -fx-border-radius: 4; -fx-background-radius: 4;" />
+      <!-- Date of birth -->
+      <Label layoutX="250.0" layoutY="172.0" styleClass="field-label" text="Date of Birth" />
+      <TextField fx:id="birthdayInput" layoutX="250.0" layoutY="194.0" prefHeight="38.0" prefWidth="300.0" promptText="MM/DD/YYYY" />
 
-        <!-- Email -->
-        <Label layoutX="250.0" layoutY="234.0" text="Email" textFill="#45a0ab">
-            <font>
-                <Font name="System Bold" size="13.0" />
-            </font>
-        </Label>
-        <TextField fx:id="emailInput" layoutX="250.0" layoutY="256.0" prefHeight="38.0" prefWidth="300.0" promptText="you@example.com" style="-fx-background-color: #FFFFFF; -fx-text-fill: #000000; -fx-prompt-text-fill: #8a8f94; -fx-border-color: #C4CED4; -fx-border-radius: 4; -fx-background-radius: 4;" />
+      <!-- Email -->
+      <Label layoutX="250.0" layoutY="234.0" styleClass="field-label" text="Email" />
+      <TextField fx:id="emailInput" layoutX="250.0" layoutY="256.0" prefHeight="38.0" prefWidth="300.0" promptText="you@example.com" />
 
-        <!-- Password -->
-        <Label layoutX="250.0" layoutY="296.0" text="Password" textFill="#45a0ab">
-            <font>
-                <Font name="System Bold" size="13.0" />
-            </font>
-        </Label>
-        <PasswordField fx:id="passwordInput" layoutX="250.0" layoutY="318.0" prefHeight="38.0" prefWidth="300.0" promptText="Password" style="-fx-background-color: #FFFFFF; -fx-text-fill: #000000; -fx-prompt-text-fill: #8a8f94; -fx-border-color: #C4CED4; -fx-border-radius: 4; -fx-background-radius: 4;" />
+      <!-- Password -->
+      <Label layoutX="250.0" layoutY="296.0" styleClass="field-label" text="Password" />
+      <PasswordField fx:id="passwordInput" layoutX="250.0" layoutY="318.0" prefHeight="38.0" prefWidth="300.0" promptText="Password" />
 
-        <!-- Confirm password -->
-        <Label layoutX="250.0" layoutY="358.0" text="Confirm Password" textFill="#45a0ab">
-            <font>
-                <Font name="System Bold" size="13.0" />
-            </font>
-        </Label>
-        <PasswordField fx:id="confirmPasswordInput" layoutX="250.0" layoutY="380.0" prefHeight="38.0" prefWidth="300.0" promptText="Re-enter password" style="-fx-background-color: #FFFFFF; -fx-text-fill: #000000; -fx-prompt-text-fill: #8a8f94; -fx-border-color: #C4CED4; -fx-border-radius: 4; -fx-background-radius: 4;" />
+      <!-- Confirm password -->
+      <Label layoutX="250.0" layoutY="358.0" styleClass="field-label" text="Confirm Password" />
+      <PasswordField fx:id="confirmPasswordInput" layoutX="250.0" layoutY="380.0" prefHeight="38.0" prefWidth="300.0" promptText="Re-enter password" />
 
-        <Label fx:id="errorLabel" layoutX="250.0" layoutY="422.0" prefHeight="30.0" prefWidth="300.0" textFill="#b52d5e" wrapText="true" />
+      <Label fx:id="errorLabel" layoutX="250.0" layoutY="422.0" prefHeight="30.0" prefWidth="300.0" styleClass="error-label" wrapText="true" />
 
-        <Button fx:id="submitButton" defaultButton="true" layoutX="250.0" layoutY="460.0" mnemonicParsing="false" onAction="#submitClicked" prefHeight="42.0" prefWidth="300.0" style="-fx-background-color: #e0733a; -fx-text-fill: #000000; -fx-font-weight: bold; -fx-font-size: 15; -fx-background-radius: 4; -fx-cursor: hand;" text="CREATE ACCOUNT" />
-    </children>
+      <Button fx:id="submitButton" defaultButton="true" layoutX="250.0" layoutY="460.0" mnemonicParsing="false" onAction="#submitClicked" prefHeight="42.0" prefWidth="300.0" styleClass="primary-button" text="CREATE ACCOUNT" />
+      <Button fx:id="backButton" layoutX="14.0" layoutY="47.0" mnemonicParsing="false" onAction="#backClicked" prefHeight="32.0" prefWidth="90.0" styleClass="outline-button" text="&lt; Back" />
+   </children>
 </AnchorPane>

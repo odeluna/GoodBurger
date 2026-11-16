@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import edu.utsa.cs3443.goodburger.view.NavBar?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.AnchorPane?>
@@ -84,10 +85,7 @@
             </font>
         </Label>
 
-        <!-- Navigation bar (matches checkout_page.fxml) -->
-        <Button fx:id="homeButton" layoutX="0.0" layoutY="500.0" mnemonicParsing="false" onAction="#homeButtonClicked" prefHeight="60.0" prefWidth="200.0" style="-fx-background-color: #45a0ab; -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-font-size: 18; -fx-background-radius: 0; -fx-border-color: #FFFFFF; -fx-border-width: 0 1 0 0;" text="home" />
-        <Button fx:id="menuButton" layoutX="200.0" layoutY="500.0" mnemonicParsing="false" onAction="#menuButtonClicked" prefHeight="60.0" prefWidth="200.0" style="-fx-background-color: #45a0ab; -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-font-size: 18; -fx-background-radius: 0; -fx-border-color: #FFFFFF; -fx-border-width: 0 1 0 0; -fx-cursor: hand;" text="menu" />
-        <Button fx:id="rewardsNavButton" layoutX="400.0" layoutY="500.0" mnemonicParsing="false" prefHeight="60.0" prefWidth="200.0" style="-fx-background-color: #b52d5e; -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-font-size: 18; -fx-background-radius: 0; -fx-border-color: #45a0ab; -fx-border-width: 0 1 0 0;" text="rewards" />
-        <Button fx:id="checkoutButton" layoutX="600.0" layoutY="500.0" mnemonicParsing="false" onAction="#checkoutButtonClicked" prefHeight="60.0" prefWidth="200.0" style="-fx-background-color: #45a0ab; -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-font-size: 18; -fx-background-radius: 0; -fx-border-color: #FFFFFF; -fx-border-width: 0 1 0 0; -fx-cursor: hand;" text="checkout" />
+        <!-- Navigation bar (shared NavBar) -->
+        <NavBar current="rewards" layoutY="500.0" />
     </children>
 </AnchorPane>

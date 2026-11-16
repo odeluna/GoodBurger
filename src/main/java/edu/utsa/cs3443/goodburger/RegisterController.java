@@ -1,4 +1,6 @@
 package edu.utsa.cs3443.goodburger;
+
+import edu.utsa.cs3443.goodburger.model.AccountManager;
 /**
  * RegisterController manages the register screen. It validates the entered
  * name, birthday, email and password, saves the new account to users.csv,
@@ -7,7 +9,7 @@ package edu.utsa.cs3443.goodburger;
  * author: Anthony Lassiter
  * class: CS3443
  */
-import model.AccountManager;import javafx.event.ActionEvent;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Button;

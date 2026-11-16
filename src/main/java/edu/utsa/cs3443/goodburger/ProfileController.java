@@ -1,5 +1,8 @@
 package edu.utsa.cs3443.goodburger;
 
+import edu.utsa.cs3443.goodburger.model.AccountManager;
+import edu.utsa.cs3443.goodburger.model.User;
+
 /**
  * ProfileController manages the profile screen. It shows the current user's
  * info, and only shows log out and delete account for signed in users, while
@@ -8,8 +11,7 @@ package edu.utsa.cs3443.goodburger;
  * author: Anthony Lassiter
  * class: CS3443
  */
-import model.AccountManager;
-import model.User;import javafx.event.ActionEvent;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;

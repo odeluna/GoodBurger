@@ -48,10 +48,6 @@ public class RewardsPageController {
     @FXML private Button redeem3Button;
     @FXML private Button miniGameButton;
     @FXML private Label miniGameStatsLabel;
-    @FXML private Button homeButton;
-    @FXML private Button menuButton;
-    @FXML private Button rewardsNavButton;
-    @FXML private Button checkoutButton;
 
     private ProgressStore progress;
     private SpriteAtlas sprites;
@@ -188,21 +184,6 @@ public class RewardsPageController {
         Platform.runLater(this::refreshData);
     }
 
-    @FXML private void homeButtonClicked(ActionEvent event) { goTo(event, "home_page.fxml"); }
-    @FXML private void menuButtonClicked(ActionEvent event) {
-        new Alert(Alert.AlertType.INFORMATION, "Menu screen is not built yet").show();
-    }
-    @FXML private void checkoutButtonClicked(ActionEvent event) { goTo(event, "checkout_page.fxml"); }
-
-    // Switches to another screen (same pattern as the other controllers).
-    private void goTo(ActionEvent event, String fxmlFile) {
-        try {
-            GoodBurgerApplication.switchScreen((Node) event.getSource(), fxmlFile);
-        } catch (IOException e) {
-            new Alert(Alert.AlertType.ERROR, "Could not open " + fxmlFile).show();
-        }
-    }
-
     // Small themed notification at the top of the page (auto-fades).
     private void toast(String message) {
         Label label = new Label(message);
@@ -211,7 +192,7 @@ public class RewardsPageController {
                 + "-fx-font-weight: bold; -fx-font-size: 13;");
         label.setLayoutX(40);
         label.setLayoutY(56);
-        Pane root = (Pane) homeButton.getScene().getRoot();
+        Pane root = (Pane) miniGameButton.getScene().getRoot();
         if (root == null) return;
         root.getChildren().add(label);
         PauseTransition fade = new PauseTransition(javafx.util.Duration.seconds(2.5));

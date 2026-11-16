@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import edu.utsa.cs3443.goodburger.view.NavBar?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Rectangle?>
+
+<!--
+  Menu screen. The food menu itself (categories, item grid, item details, cart) is built in Java
+  by view/menu/MenuScreen; MenuScreenController puts it into menuSlot.
+  Colors come from style.css, like the other screens.
+-->
+
+<BorderPane prefHeight="600.0" prefWidth="800.0" styleClass="root-pane" stylesheets="@../../../../styles/style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.utsa.cs3443.goodburger.MenuScreenController">
+    <top>
+        <VBox>
+            <Rectangle height="22.0" styleClass="stripe-teal" width="800.0" />
+            <Rectangle height="10.0" styleClass="stripe-orange" width="800.0" />
+            <Rectangle height="6.0" styleClass="stripe-fuchsia" width="800.0" />
+        </VBox>
+    </top>
+    <center>
+        <StackPane fx:id="menuSlot" />
+    </center>
+    <bottom>
+        <VBox>
+            <NavBar current="menu" />
+            <Rectangle height="6.0" styleClass="stripe-fuchsia" width="800.0" />
+            <Rectangle height="10.0" styleClass="stripe-orange" width="800.0" />
+            <Rectangle height="22.0" styleClass="stripe-teal" width="800.0" />
+        </VBox>
+    </bottom>
+</BorderPane>

@@ -1,5 +1,7 @@
 package edu.utsa.cs3443.goodburger;
-import model.User;
+
+import edu.utsa.cs3443.goodburger.model.Session;
+import edu.utsa.cs3443.goodburger.model.User;
 
 
 import javafx.application.Application;
@@ -16,6 +18,7 @@ public class GoodBurgerApplication extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
+        Session.get().loadMenu();   // menu_page.fxml needs the menu; without this MenuManager is null and the page fails to load
         FXMLLoader fxmlLoader = new FXMLLoader(GoodBurgerApplication.class.getResource("home_page.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
         stage.setTitle("Hello!");

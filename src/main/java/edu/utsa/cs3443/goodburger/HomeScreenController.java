@@ -20,36 +20,11 @@ import java.io.IOException;
 public class HomeScreenController {
     @FXML private ImageView welcomeImage;
     @FXML private Button profileButton;
-    @FXML private Button homeButton;
-    @FXML private Button menuButton;
-    @FXML private Button rewardsButton;
-    @FXML private Button checkoutButton;
 
     // Opens the profile screen
     @FXML
     private void profileClicked(ActionEvent event) {
         goTo(event, "profile_page.fxml");
-    }
-
-    // Opens the menu screen
-    @FXML
-    private void menuClicked(ActionEvent event) {
-         goTo(event, "menu_page.fxml");
-//        System.out.println("Menu screen is not built yet");
-    }
-
-    // Opens the rewards screen
-    @FXML
-    private void rewardsClicked(ActionEvent event) {
-         goTo(event, "rewards_page.fxml");
-//        System.out.println("Rewards screen is not built yet");
-    }
-
-    // Opens the checkout screen
-    @FXML
-    private void checkoutClicked(ActionEvent event)  {
-         goTo(event, "checkout_page.fxml");
-//        System.out.println("Checkout screen is not built yet");
     }
 
     // Switches to another screen
