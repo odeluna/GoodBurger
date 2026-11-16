@@ -7,15 +7,13 @@ package edu.utsa.cs3443.goodburger;
  * author: Anthony Lassiter
  * class: CS3443
  */
-
-import javafx.event.ActionEvent;
+import model.AccountManager;import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-import model.AccountManager;
 
 import java.io.IOException;
 
@@ -27,6 +25,7 @@ public class RegisterController {
     @FXML private PasswordField confirmPasswordInput;
     @FXML private Button submitButton;
     @FXML private Label errorLabel;
+    @FXML private Button backButton;
 
     private AccountManager accountManager = new AccountManager();
 
@@ -116,4 +115,15 @@ public class RegisterController {
         errorLabel.setText(message);
         errorLabel.setVisible(true);
     }
+
+    // Returns to the sign in screen
+    @FXML
+    private void backClicked(ActionEvent event) {
+        try {
+            GoodBurgerApplication.switchScreen((Node) event.getSource(), "sign_in_page.fxml");
+        } catch (IOException e) {
+            showError("Error loading FXML");
+        }
+    }
+
 }

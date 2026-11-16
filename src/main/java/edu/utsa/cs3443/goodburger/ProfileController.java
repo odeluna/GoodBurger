@@ -8,8 +8,8 @@ package edu.utsa.cs3443.goodburger;
  * author: Anthony Lassiter
  * class: CS3443
  */
-
-import javafx.event.ActionEvent;
+import model.AccountManager;
+import model.User;import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
@@ -17,8 +17,6 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
-import model.AccountManager;
-import model.User;
 
 import java.io.IOException;
 import java.net.URL;
@@ -34,6 +32,7 @@ public class ProfileController implements Initializable {
     @FXML private Button logoutButton;
     @FXML private Button deleteAccountButton;
     @FXML private Button createAccountButton;
+    @FXML private Button signInButton;
 
     private AccountManager accountManager = new AccountManager();
 
@@ -46,6 +45,7 @@ public class ProfileController implements Initializable {
         logoutButton.setVisible(!guest);
         deleteAccountButton.setVisible(!guest);
         createAccountButton.setVisible(guest);
+        signInButton.setVisible(guest);
 
         if (guest) {
             usernameLabel.setText("Guest");
@@ -70,6 +70,13 @@ public class ProfileController implements Initializable {
     @FXML
     private void logoutClicked(ActionEvent event) {
         accountManager.logout();
+        goTo(event, "sign_in_page.fxml");
+    }
+
+    // Guests go to the sign in screen to use an existing account
+    @FXML
+    private void signInClicked(ActionEvent event) {
+        accountManager.logout();                 // clears the guest user
         goTo(event, "sign_in_page.fxml");
     }
 

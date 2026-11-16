@@ -7,15 +7,13 @@ package edu.utsa.cs3443.goodburger;
  * author: Anthony Lassiter
  * class: CS3443
  */
-
-import javafx.event.ActionEvent;
+import model.AccountManager;import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-import model.AccountManager;
 
 import java.io.IOException;
 
