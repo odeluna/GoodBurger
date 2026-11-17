@@ -21,6 +21,7 @@ D03,MilkShake,DRINK,1.99,90,0,23,0,10,false
 D04,Lemonade,DRINK,4.49,640,14,92,23,390,false
 D05,Iced Tea,DRINK,4.49,590,13,85,22,360,false
 D06,Bottled Water,DRINK,1.49,0,0,0,0,0,false
-T01,Chocolate Chip Cookie,DESSERT,1.79,220,2,30,11,160,false
-T02,Brownie,DESSERT,2.49,380,4,50,19,190,false
-T03,Apple Pie,DESSERT,2.29,300,3,40,14,240,false
+DD01,Chocolate Chip Cookie,DESSERT,1.79,220,2,30,11,160,false
+DD02,Brownie,DESSERT,2.49,380,4,50,19,190,false
+DD03,Apple Pie,DESSERT,2.29,300,3,40,14,240,false
+DD04,Ice Cream,DESSERT,4.59,520,10,80,15,12,false
