@@ -1,4 +1,4 @@
-package edu.utsa.cs3443.goodburger;
+package edu.utsa.cs3443.goodburger.controller;
 
 /**
  * HomeController manages the home screen, which is the hub that lets the
@@ -8,6 +8,7 @@ package edu.utsa.cs3443.goodburger;
  * class: CS3443
  */
 
+import edu.utsa.cs3443.goodburger.GoodBurgerApplication;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;

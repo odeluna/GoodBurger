@@ -9,19 +9,19 @@
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane id="backboard" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="603.0" prefWidth="785.0" stylesheets="@../../../../styles/checkoutScreen.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.utsa.cs3443.goodburger.CheckoutScreenController">
+<AnchorPane id="backboard" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" stylesheets="@../../../../styles/checkoutScreen.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.utsa.cs3443.goodburger.CheckoutScreenController">
    <children>
       <Button id="pay_button" layoutX="622.0" layoutY="379.0" mnemonicParsing="false" onAction="#pay_now_clicked" prefHeight="45.0" prefWidth="131.0" stylesheets="@../../../../styles/checkoutScreen.css" text="SUBMIT">
          <font>
             <Font name="Elephant" size="18.0" />
          </font></Button>
       <NavBar current="checkout" layoutY="500.0" />
-      <Rectangle fill="#45a0ab" height="22.0" layoutX="-12.0" layoutY="3.0" width="800.0" />
-      <Rectangle fill="#e0733a" height="10.0" layoutX="-12.0" layoutY="25.0" width="800.0" />
-      <Rectangle fill="#b52d5e" height="6.0" layoutX="-12.0" layoutY="35.0" width="800.0" />
-      <Rectangle fill="#b52d5e" height="6.0" layoutX="-12.0" layoutY="565.0" width="800.0" />
-      <Rectangle fill="#e0733a" height="10.0" layoutX="-12.0" layoutY="571.0" width="800.0" />
-      <Rectangle fill="#45a0ab" height="22.0" layoutX="-12.0" layoutY="581.0" width="800.0" />
+      <Rectangle fill="#45a0ab" height="22.0" width="800.0" />
+      <Rectangle fill="#e0733a" height="10.0" layoutY="25.0" width="800.0" />
+      <Rectangle fill="#b52d5e" height="6.0" layoutY="35.0" width="800.0" />
+      <Rectangle fill="#b52d5e" height="6.0" layoutY="565.0" width="800.0" />
+      <Rectangle fill="#e0733a" height="10.0" layoutY="571.0" width="800.0" />
+      <Rectangle fill="#45a0ab" height="22.0" layoutY="581.0" width="800.0" />
       <StackPane fx:id="cartSlot" layoutX="41.0" layoutY="119.0" prefHeight="355.0" prefWidth="380.0" />
       <Label layoutX="41.0" layoutY="57.0" prefHeight="62.0" prefWidth="356.0" text="Current Order" textFill="#dea54b">
          <font>

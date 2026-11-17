@@ -12,7 +12,7 @@
   Everything sits directly in one AnchorPane, so each item can be dragged freely.
 -->
 
-<AnchorPane prefHeight="600.0" prefWidth="800.0" styleClass="root-pane" stylesheets="@../../../../styles/style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.utsa.cs3443.goodburger.SignInController">
+<AnchorPane prefHeight="600.0" prefWidth="800.0" styleClass="root-pane" stylesheets="@../../../../styles/style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.utsa.cs3443.goodburger.controller.SignInController">
    <children>
       <!-- Top stripes -->
       <Rectangle height="22.0" styleClass="stripe-teal" width="800.0" />

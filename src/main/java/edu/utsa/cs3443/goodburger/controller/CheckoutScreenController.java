@@ -1,5 +1,6 @@
-package edu.utsa.cs3443.goodburger;
+package edu.utsa.cs3443.goodburger.controller;
 
+import edu.utsa.cs3443.goodburger.GoodBurgerApplication;
 import edu.utsa.cs3443.goodburger.model.OrderItem;
 import edu.utsa.cs3443.goodburger.model.OrderManager;
 import edu.utsa.cs3443.goodburger.model.OrderType;

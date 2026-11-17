@@ -1,4 +1,4 @@
-package edu.utsa.cs3443.goodburger;
+package edu.utsa.cs3443.goodburger.controller;
 
 import edu.utsa.cs3443.goodburger.model.Session;
 import edu.utsa.cs3443.goodburger.view.menuPanels.MenuScreen;

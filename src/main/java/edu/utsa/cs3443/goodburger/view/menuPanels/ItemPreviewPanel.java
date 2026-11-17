@@ -1,7 +1,7 @@
 package edu.utsa.cs3443.goodburger.view.menuPanels;
 
 
-import edu.utsa.cs3443.goodburger.MenuScreenController;
+import edu.utsa.cs3443.goodburger.controller.MenuScreenController;
 import edu.utsa.cs3443.goodburger.model.OrderItem;
 import edu.utsa.cs3443.goodburger.model.Modifier;
 import javafx.geometry.Insets;
