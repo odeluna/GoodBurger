@@ -10,6 +10,7 @@ import java.io.IOException;
  */
 public final class Session {
 
+    public static final double WIDTH = 800, HEIGHT = 600;
     private static Session instance;
 
     private final DataManager dataManager;

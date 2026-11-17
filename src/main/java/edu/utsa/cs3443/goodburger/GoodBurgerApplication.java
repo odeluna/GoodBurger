@@ -20,7 +20,7 @@ public class GoodBurgerApplication extends Application {
     public void start(Stage stage) throws IOException {
         Session.get().loadMenu();   // menu_page.fxml needs the menu; without this MenuManager is null and the page fails to load
         FXMLLoader fxmlLoader = new FXMLLoader(GoodBurgerApplication.class.getResource("home_page.fxml"));
-        Scene scene = new Scene(fxmlLoader.load());
+        Scene scene = new Scene(fxmlLoader.load(),Session.WIDTH, Session.HEIGHT);
         stage.setTitle("Hello!");
         stage.setScene(scene);
 //        stage.setMaximized(true);
@@ -30,7 +30,7 @@ public class GoodBurgerApplication extends Application {
     }
     public static void switchScreen(Node source, String fxmlFile) throws IOException {
         FXMLLoader loader = new FXMLLoader(GoodBurgerApplication.class.getResource(fxmlFile));
-        Scene scene = new Scene(loader.load());
+        Scene scene = new Scene(loader.load(), Session.WIDTH, Session.HEIGHT);
         Stage stage = (Stage) source.getScene().getWindow();
         stage.setScene(scene);
     }
