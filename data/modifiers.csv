@@ -107,3 +107,13 @@ S04,Add Cheese Sauce,0.99,90
 S04,Add Ranch Dip,0.50,110
 S04,Add Bacon,0.99,120
 S04,Add Jalapenos,.50,30
+D03,Add Chocolate,0,40
+D03,Add Strawberry,0,15
+D03,Add Caramel,0,20
+D03,Add Banana, 0,25
+D03,Add Peanut Butter,0,50
+DD04,Add Chocolate,0,40
+DD04,Add Strawberry,0,15
+DD04,Add Caramel,0,20
+DD04,Add Banana, 0,25
+DD04,Add Peanut Butter,0,50

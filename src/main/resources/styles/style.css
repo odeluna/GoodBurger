@@ -177,3 +177,20 @@
     -fx-fill: #8A7F84;
 }
 
+.menu-item-button {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-border-color: -gb-grey;
+    -fx-border-radius: 10;
+    -fx-alignment: top-left;          /* left-aligns the whole button's content */
+    -fx-text-alignment: left;         /* left-aligns each line of text */
+    -fx-font-family: "Segoe UI";      /* any font installed on the PC */
+    -fx-font-size: 13px;
+    -fx-text-fill: -gb-text;
+    -fx-cursor: hand;
+}
+.menu-item-button:hover {
+    -fx-background-color: -gb-teal;   /* your existing palette colors work here */
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}

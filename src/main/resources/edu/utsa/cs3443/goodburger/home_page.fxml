@@ -25,7 +25,7 @@
       <!-- Bottom stripes -->
       <Rectangle height="6.0" layoutY="562.0" styleClass="stripe-fuchsia" width="800.0" />
       <Rectangle height="10.0" layoutY="568.0" styleClass="stripe-orange" width="800.0" />
-      <Rectangle height="22.0" layoutY="578.0" styleClass="stripe-teal" width="800.0" />
+      <Rectangle height="24.0" layoutY="578.0" styleClass="stripe-teal" width="800.0" />
 
       <!-- Logo -->
       <ImageView fx:id="welcomeImage" fitWidth="560.0" layoutX="120.0" layoutY="95.0" pickOnBounds="true" preserveRatio="true" />
