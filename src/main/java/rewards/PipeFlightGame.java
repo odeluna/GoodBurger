@@ -5,7 +5,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-/** Three-stage Pipe Flight rules translated from the extended Go project. No UI dependencies. */
+/**
+ * Three-stage Pipe Flight rules translated from the extended Go project. No UI dependencies.
+ *
+ * <p>Vertical control is DIRECT, not physics-based: no gravity, no velocity integration,
+ * no inertia. Holding a key translates the player at a constant speed; releasing it stops
+ * the movement immediately (air) or switches to the stage's constant sink (ocean).
+ * W/UP/SPACE holds the player up, S/DOWN brings them down, release: no motion.</p>
+ */
 public final class PipeFlightGame {
     public static final int WIDTH = 1280;
     public static final int HEIGHT = 720;
@@ -14,6 +21,11 @@ public final class PipeFlightGame {
     public static final double PIPE_WIDTH = 96;
     public static final double GAP_HEIGHT = 256;
     public static final int AIR = 0, OCEAN = 1, WATER = 2, DROWNING = 3;
+
+    /** Constant speeds (px/s) for direct, physics-free movement: no acceleration, no gravity. */
+    static final double AIR_UP_SPEED = 380, AIR_DOWN_SPEED = 500;
+    static final double OCEAN_RISE_SPEED = 220, OCEAN_DIVE_SPEED = 260, OCEAN_SINK_SPEED = 110;
+
     private static final double START_MOVE_SPEED = 360, START_PIPE_SPEED = 180;
     private static final double MAX_MOVE_SPEED = 840, MAX_PIPE_SPEED = 480;
     private static final String[] UPGRADE_NAMES = {"Power", "Armor", "Recovery"};
@@ -21,14 +33,14 @@ public final class PipeFlightGame {
     final SpriteAtlas sprites;
     final Random random;
     double sceneTime, hazardTimer = .6, drowningTime;
-    double playerX = 180, playerY, velocityY;
+    double playerX = 180, playerY;
     double pipeX, gapY;
     double moveSpeed = START_MOVE_SPEED, pipeSpeed = START_PIPE_SPEED;
     double verticalInput, hitGrace, animationTime;
     int health = 100, score, totalPipes, pokerPoints, pokerWins, pokerLosses, failureCount;
     int upgradesChosen, resetSerial, animationFrame;
     final int[] upgrades = new int[3];
-    boolean scored, gameOver, drowning, facingLeft, holdJump, upgradeMenu;
+    boolean scored, gameOver, drowning, facingLeft, upgradeMenu;
     boolean doubled, doubleOffered, doubleWon;
     int pendingPips, pendingBonus;
     String lossReason = "";
@@ -43,6 +55,7 @@ public final class PipeFlightGame {
     public record Input(boolean flap, boolean up, boolean down, boolean left, boolean right) { }
     public record Rect(double x, double y, double width, double height) { }
 
+    /** A moving threat; kind selects stage visuals: 0 = rain, 1 = seagull, 2 = fish. */
     public static final class Hazard {
         double x, y, vx, vy, age, baseY;
         final int kind;
@@ -66,9 +79,7 @@ public final class PipeFlightGame {
     public boolean canDouble() { return doubleOffered && !doubled; }
     public boolean doubleWon() { return doubleWon; }
     /** The UI arms the gamble when a run ends; one coin flip per run. */
-    public void offerGamble() {
-        if (!doubled) doubleOffered = true;
-    }
+    public void offerGamble() { if (!doubled) doubleOffered = true; }
     /** Resolves the coin flip; called by the UI with the flip result. */
     public void resolveGamble(boolean win) {
         if (!canDouble()) return;
@@ -89,10 +100,6 @@ public final class PipeFlightGame {
         if (horizontal != 0) facingLeft = horizontal < 0;
         verticalInput = (input.down ? 1 : 0) - (input.up ? 1 : 0);
         holdJump = input.up;
-        if (stage() == AIR) {
-            if (input.flap && !input.down) velocityY = -380;
-            if (input.down) velocityY = Math.max(velocityY, 160);
-        }
         int oldStage = stage(), oldSerial = resetSerial;
         while (dt > 0 && oldSerial == resetSerial && oldStage == stage()
                 && !gameOver && !drowning && poker == null && !upgradeMenu) {
@@ -142,30 +149,34 @@ public final class PipeFlightGame {
         if (pipeX + PIPE_WIDTH < 0) resetPipe();
     }
 
+    /**
+     * Direct movement, deliberately physics-free: no gravity term, no velocity state,
+     * no integration of acceleration. Each input maps to a constant translation speed;
+     * removing the input removes the motion. holdJump is input state (key held this
+     * frame), never a force: it only selects which constant speed applies this frame.
+     */
     private void movePlayer(double dt, double horizontal, boolean dive) {
         switch (stage()) {
             case AIR -> {
-                velocityY = Math.min(680, velocityY + (1050 + (dive ? 1500 : 0)) * dt);
-                playerY += velocityY * dt;
+                // Hold W/UP/SPACE to rise; hold S/DOWN to drop; release: hover in place.
+                if (dive) playerY += AIR_DOWN_SPEED * dt;
+                else if (holdJump) playerY -= AIR_UP_SPEED * dt;
             }
             case OCEAN -> {
-                if (dive) velocityY = Math.min(250, Math.max(velocityY, 120) + 1690 * dt);
-                else if (holdJump) velocityY = -220;
-                else velocityY = Math.min(110, Math.max(0, velocityY) + 190 * dt);
-                playerY += velocityY * dt;
+                // Hold SPACE/W/UP to rise; release to sink at a constant rate.
+                if (dive) playerY += OCEAN_DIVE_SPEED * dt;
+                else if (holdJump) playerY -= OCEAN_RISE_SPEED * dt;
+                else playerY += OCEAN_SINK_SPEED * dt;
             }
-            default -> {
-                velocityY = 0;
-                playerY += verticalInput * moveSpeed * dt;
-            }
+            default -> playerY += verticalInput * moveSpeed * dt;
         }
         playerX = clamp(playerX + horizontal * moveSpeed * dt, 0, WIDTH - playerSize());
-        if (playerY < PLAY_TOP) { playerY = PLAY_TOP; velocityY = 0; }
-        if (playerY > PLAY_BOTTOM - playerSize()) {
-            playerY = PLAY_BOTTOM - playerSize();
-            velocityY = 0;
-        }
+        if (playerY < PLAY_TOP) playerY = PLAY_TOP;
+        if (playerY > PLAY_BOTTOM - playerSize()) playerY = PLAY_BOTTOM - playerSize();
     }
+
+    /** Input state, not physics: true while the jump key is held down this frame. */
+    boolean holdJump;
 
     private static double clamp(double value, double low, double high) {
         return Math.max(low, Math.min(value, high));
@@ -291,7 +302,7 @@ public final class PipeFlightGame {
         deck = null;
         topCard = bottomCard = null;
         hazards.clear();
-        velocityY = verticalInput = 0;
+        verticalInput = 0;
         holdJump = facingLeft = false;
         if (stage() == DROWNING) {
             startDrowning();
@@ -309,7 +320,6 @@ public final class PipeFlightGame {
         drowningTime = 0;
         playerX = (WIDTH - playerSize()) / 2.0;
         playerY = (PLAY_TOP + PLAY_BOTTOM - playerSize()) / 2;
-        velocityY = 0;
     }
 
     public void advanceDrowning(double dt) {
@@ -367,7 +377,19 @@ public final class PipeFlightGame {
     public void pokerAction() {
         if (poker == null) return;
         if (poker.revealed) resumeFlight();
+        else if (poker.phase == Poker.Phase.DISCARD) commitDraw();
         else revealPoker();
+    }
+
+    /** Locks the hand: every discarded card is replaced by a fresh deck draw. */
+    public void commitDraw() {
+        Poker.Round round = poker;
+        if (round == null || round.phase != Poker.Phase.DISCARD) return;
+        round.commitDraw(deck);
+    }
+
+    public void setPokerHold(int index, boolean held) {
+        if (poker != null) poker.setHold(index, held);
     }
 
     private void revealPoker() {

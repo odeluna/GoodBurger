@@ -30,40 +30,27 @@ JavaFX 26 Linux libraries are included in `lib/`, so running the project does no
 
 In poker, Enter or Space reveals and then continues. After a poker win, 1, 2, or 3 selects an upgrade. M toggles sound. Esc returns to rewards. After FAILED, R or Enter starts another paid play if the balance and daily cap allow it.
 
-## UML
-
-Class diagrams live in [`docs/UML/`](docs/UML/):
-
-- `goodburger-full.png` — integrated model merging all source diagrams into one page: Application & Navigation, Menu Customization & Checkout, Accounts & Shared User, and Rewards/Tasks/Points (with a relationship legend).
-- `rewards-class-diagram.png` — RewardsJavaFX class diagram (RewardsApp, MainView, RewardsController, data models `UserModel`/`Task`/`RewardItem`, and `PointsService`/`TaskService`).
-- `menu-checkout.png` — GoodBurger menu/checkout layer diagram: `GoodBurgerApplication` (extends `Application`), `CheckoutScreenController` bound to `checkout_page.fxml`, `MenuItemManager` composing `MenuItem`, `MenuItem` referencing `Item` ingredients, and `Order` composing ordered `MenuItem`s for a `User`.
-- `rewards-nogame.puml` — PlantUML source (source of truth: `src/main/java/rewards/*.java`)
-- `rewards-nogame.svg` / `rewards-nogame.png` — rendered diagram
-- `combine-guide/` — the UML integration guide (how the four reference diagrams merge into the single shared model):
-  - `how-the-diagrams-combine.jpg` — merge overview: 42 classes / 63 relationships, per-reference contributions
-  - `merge-repeated-classes.jpg` — source-class → unified-name mapping (incl. the `OrderItem` bridge between catalog `MenuItem` and checkout)
-  - `connect-the-modules.jpg` — the 6 steps to wire the modules together, plus relationship-reading notes and known implementation gaps
-- `signin-to-checkout.puml` / `.svg` / `.png` — the linear sign-in → checkout flow as a sequence diagram: 22 lifelines across all four modules (app/nav → accounts/shared user → menu/checkout → rewards), every class touched on the path (GoodBurgerApplication → … → AccountManager.login → User → Home → MenuScreen/panels → OrderItem/Order → CheckoutScreenController → RewardsController → PointsService).
-- `signin-to-checkout-classes.puml` / `.svg` / `.png` — the same linear path drawn as a class diagram: all 22 classes touched, numbered flow edges 1–22 plus real composition (`Order *-- OrderItem`, `OrderItem *-- MenuItem/Modifier`).
-
-![GoodBurger integrated class diagram](docs/UML/goodburger-full.png)
-
-Relationships follow the CS 3443 arrow vocabulary: composition (`*--`, has-a/owned), dependency (`..>`), generalization (`--|>`, `extends`), and realization (`..|>`, `implements`).
-
-### Linear sign-in → checkout (all classes touched)
-
-The flow from sign-in to checkout is linear — one path through all four modules; the only branch is the guest option at sign-in. Sequence view (every call on the path):
-
-![Sign-in to checkout sequence](docs/UML/signin-to-checkout.png)
-
-Class view (every class touched, numbered 1–22):
-
-![Sign-in to checkout classes](docs/UML/signin-to-checkout-classes.png)
-
-> **Source note:** these diagrams model the *integrated design* (from the combined reference diagrams). They are not yet backed by code — `src/main/java` currently holds only the `rewards/` package (Pipe Flight + rewards), so `GoodBurgerApplication`, `AccountManager`, `MenuScreen`, `OrderItem`, `CheckoutScreenController`, etc. are not yet present in the repo. The `rewards-nogame` diagram, by contrast, is sourced from real code.
-
 ## Design
 
 The [Figma design](https://www.figma.com/design/4qoghK6Hi24ovxvCw7Nmnl/Rewards---Pipe-Flight---JavaFX-UI) contains the original editable vector rewards layout alongside screenshots of the JavaFX rewards screen, all three game stages, poker, upgrades, and the ending. These JavaFX screenshots are also in `previews/`.
 
 The OpenJFX runtime in `lib/` comes from the [official Maven Central OpenJFX 26 artifacts](https://repo.maven.apache.org/maven2/org/openjfx/). These files are platform-specific; on another operating system, replace them with that platform's JavaFX 26 modules.
+
+## GoodBurger model
+
+The GoodBurger catalog and sample account/order data use six CSVs:
+`menu.csv`, `modifiers.csv`, `orders.csv`, `orders_items.csv`, `users.csv`, and
+`favoriteorders.csv`. `DataManager` is the only class that reads or writes
+these files. On first launch it copies the bundled seeds into
+`~/.local/share/rewards-javafx/goodburger/`, where subsequent orders are saved;
+the bundled seeds remain unchanged. `OrderManager` owns the current order,
+adds catalog items and modifiers, calculates the amount due, and checks out.
+The Menu and Checkout pages use these models while rewards progress remains
+in its existing `progress.properties` store.
+
+`User.hashPassword(String)` uses Java SHA-256 and lowercase hexadecimal;
+`checkPassword` rehashes the supplied text and compares the digest. Menu
+nutrition is stored as explicit integers. An order stores its item lines,
+quantities, and modifiers; per-order nutrition is calculated from those lines
+and is never stored in `orders.csv`. The CSV `total` is the item subtotal,
+with `tax` in its own column; checkout shows the sum of both.

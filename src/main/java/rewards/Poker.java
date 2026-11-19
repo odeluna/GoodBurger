@@ -121,9 +121,13 @@ public final class Poker {
         return new BestHand(best, bestRank);
     }
 
+    public enum Phase { DISCARD, REVEAL }
+
     public static final class Round {
-        public final List<Card> playerCards;
+        public List<Card> playerCards;
         public final List<Card> dealerCards = new ArrayList<>();
+        public final List<Boolean> hold = new ArrayList<>();
+        public Phase phase = Phase.DISCARD;
         public BestHand playerBest;
         public BestHand dealerBest;
         public boolean revealed;
@@ -134,9 +138,37 @@ public final class Poker {
 
         public Round(List<Card> playerCards, Deck deck) {
             this.playerCards = List.copyOf(playerCards);
-            for (int i = 0; i < 8; i++) dealerCards.add(deck.drawTop());
+            for (int i = 0; i < 8; i++) {
+                dealerCards.add(deck.drawTop());
+                hold.add(true);
+            }
             playerBest = bestFive(this.playerCards);
             dealerBest = bestFive(dealerCards);
+        }
+
+        public void setHold(int index, boolean held) {
+            if (phase != Phase.DISCARD) throw new IllegalStateException("cards are locked");
+            hold.set(index, held);
+        }
+
+        /** Replaces every discarded card with a fresh deck draw and locks the hand. */
+        public void commitDraw(Deck deck) {
+            if (phase != Phase.DISCARD) throw new IllegalStateException("draw already committed");
+            List<Card> hand = new ArrayList<>(8);
+            for (int i = 0; i < playerCards.size(); i++)
+                hand.add(hold.get(i) ? playerCards.get(i) : deck.drawTop());
+            playerCards = List.copyOf(hand);
+            playerBest = bestFive(playerCards);
+            phase = Phase.REVEAL;
+        }
+
+        /** Best five of the cards being kept, or null while the hand is incomplete. */
+        public BestHand currentHoldValue() {
+            if (phase != Phase.DISCARD) return playerBest;
+            List<Card> held = new ArrayList<>();
+            for (int i = 0; i < playerCards.size(); i++)
+                if (hold.get(i)) held.add(playerCards.get(i));
+            return held.size() >= 5 ? bestFive(held) : null;
         }
     }
 }

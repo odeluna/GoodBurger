@@ -271,16 +271,34 @@ public final class PipeFlightCanvas extends Canvas {
         Poker.Round p = game.poker;
         g.setFill(Color.rgb(30, 30, 46)); g.fillRect(12, 12, 1256, 696);
         g.setStroke(GOLD); g.setLineWidth(2); g.strokeRect(12, 12, 1256, 696);
-        text("POKER - FLIGHT PAUSED", 30, 27, 28, Color.WHITE, true);
+        text(p.phase == Poker.Phase.DISCARD ? "POKER - CHOOSE YOUR DISCARDS"
+                : "POKER - FLIGHT PAUSED", 30, 27, 28, Color.WHITE, true);
         text("Poker points: " + game.pokerPoints, 1030, 32, 22, GOLD, false);
         centered("Failures: " + game.failureCount + "/3   Poker losses: " + game.pokerLosses
                 + "   Used: " + game.usedCards.size() + "   Available: "
                 + (52 - game.usedCards.size()), 92, 18, Color.LIGHTGRAY, false);
         int handX = (1280 - (7 * 88 + 72)) / 2;
-        text("Your eight cards - gold border marks your best five", handX, 126, 20, Color.WHITE, false);
-        for (int i = 0; i < 8; i++) pokerCard(p.playerCards.get(i), handX + i * 88, 164,
-                false, p.playerBest.cards().contains(p.playerCards.get(i)));
-        text("Your hand: " + p.playerBest.rank().name(), handX, 269, 22, GOLD, false);
+        if (p.phase == Poker.Phase.DISCARD) {
+            text("Your eight cards - gold border means kept", handX, 126, 20, Color.WHITE, false);
+            for (int i = 0; i < 8; i++) {
+                boolean held = p.hold.get(i);
+                pokerCard(p.playerCards.get(i), handX + i * 88, 164, false, held);
+                text(held ? "KEEP" : "DRAW", handX + i * 88 + 22, 258, 16,
+                        held ? GOLD : Color.GRAY, false);
+            }
+            int kept = 0;
+            for (boolean h : p.hold) if (h) kept++;
+            Poker.BestHand value = p.currentHoldValue();
+            text(value == null ? "Keeping " + kept + " of 8 - need five to show a hand"
+                    : "Keeping " + kept + " - your best five: " + value.rank().name(),
+                    handX, 285, 22, GOLD, false);
+        } else {
+            text("Your eight cards - gold border marks your best five", handX, 126, 20,
+                    Color.WHITE, false);
+            for (int i = 0; i < 8; i++) pokerCard(p.playerCards.get(i), handX + i * 88, 164,
+                    false, p.playerBest.cards().contains(p.playerCards.get(i)));
+            text("Your hand: " + p.playerBest.rank().name(), handX, 269, 22, GOLD, false);
+        }
         text("Machine's eight cards", handX, 327, 20, Color.WHITE, false);
         for (int i = 0; i < 8; i++) pokerCard(p.dealerCards.get(i), handX + i * 88, 362,
                 !p.revealed, p.revealed && p.dealerBest.cards().contains(p.dealerCards.get(i)));
@@ -290,9 +308,15 @@ public final class PipeFlightCanvas extends Canvas {
             centered(p.outcome, 540, 22, GOLD, false);
             centered(p.upgradeDue ? "ENTER / SPACE: choose your upgrade"
                     : "ENTER / SPACE: return to flight", 600, 22, Color.WHITE, false);
+        } else if (p.phase == Poker.Phase.DISCARD) {
+            centered("1-8: keep or discard each card   ENTER / SPACE: commit the draw",
+                    540, 22, GOLD, false);
+            centered("Discarded cards are replaced by fresh draws from the deck.",
+                    600, 18, Color.WHITE, false);
         } else {
             centered("ENTER / SPACE: reveal both best five-card hands", 540, 22, GOLD, false);
-            centered("Win: +1 poker coin, keep flying. Loss: advance stage.", 600, 18, Color.WHITE, false);
+            centered("Win: +1 poker coin, keep flying. Loss: advance stage.", 600, 18,
+                    Color.WHITE, false);
         }
         centered("C = Clubs   D = Diamonds   H = Hearts   S = Spades", 670,
                 16, Color.LIGHTGRAY, false);

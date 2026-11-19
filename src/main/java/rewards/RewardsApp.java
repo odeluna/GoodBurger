@@ -7,6 +7,10 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Spinner;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tooltip;
@@ -24,6 +28,9 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -38,6 +45,10 @@ public final class RewardsApp extends Application {
     private SpriteAtlas sprites;
     private PipeFlightGame previousGame;
     private GameSession session;
+    private DataManager dataManager;
+    private OrderManager orderManager;
+    private List<MenuItem> catalog;
+    private String customerId;
 
     @Override public void start(Stage stage) throws Exception {
         this.stage = stage;
@@ -48,6 +59,12 @@ public final class RewardsApp extends Application {
         progress.onAchievementAwarded(event -> Platform.runLater(() -> showInfo(
                 "Achievement unlocked",
                 event.definition().name() + ": +" + event.grant() + " points.")));
+        dataManager = new DataManager(DataManager.resourceDir());
+        catalog = dataManager.loadMenu();
+        List<User> users = dataManager.loadUsers();
+        customerId = users.isEmpty() ? "GUEST" : users.get(0).id();
+        orderManager = new OrderManager(catalog);
+        startNewOrder();
         sprites = new SpriteAtlas();
         stage.setTitle("Rewards Screen · Pipe Flight");
         stage.setOnCloseRequest(event -> { if (session != null) session.stop(); });
@@ -82,14 +99,20 @@ public final class RewardsApp extends Application {
             });
             return;
         }
-        if (args.size() == 2 && List.of("--poker-preview", "--upgrade-preview",
-                "--ending-preview", "--gamble-preview").contains(args.get(0))) {
+        if (args.size() == 2 && List.of("--poker-preview", "--poker-discard-preview",
+                "--upgrade-preview", "--ending-preview", "--gamble-preview").contains(args.get(0))) {
             PipeFlightGame preview = new PipeFlightGame(new Random(12), sprites);
             switch (args.get(0)) {
                 case "--poker-preview" -> {
                     for (int i = 0; i < 8; i++) preview.collected.add(preview.deck.drawTop());
                     preview.beginPoker();
-                    preview.pokerAction();
+                    preview.pokerAction(); // commit the draw (all cards kept)
+                    preview.pokerAction(); // reveal
+                }
+                case "--poker-discard-preview" -> {
+                    for (int i = 0; i < 8; i++) preview.collected.add(preview.deck.drawTop());
+                    preview.beginPoker();
+                    preview.setPokerHold(2, false); // show one card marked for draw
                 }
                 case "--upgrade-preview" -> {
                     preview.pokerPoints = 1;
@@ -288,55 +311,121 @@ public final class RewardsApp extends Application {
         root.getChildren().add(go);
     }
 
+    private void startNewOrder() {
+        String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+        orderManager.newOrder(customerId, OrderType.PICKUP, time);
+    }
+
     private void menu(Pane root) {
-        root.getChildren().add(label("Rewards menu", 25, 25, 490, 44, 28, true));
-        root.getChildren().add(label("Use your points for one of these items.",
-                25, 68, 490, 30, 16, false));
-        for (int i = 0; i < ProgressStore.REWARD_NAMES.length; i++)
-            root.getChildren().add(label(ProgressStore.REWARD_NAMES[i] + " · "
-                    + ProgressStore.REWARD_COSTS[i] + " points", 90, 108 + i * 48, 360, 42, 19, true));
+        root.getChildren().add(label("GoodBurger menu", 25, 20, 490, 44, 28, true));
+        root.getChildren().add(label("Choose items to add to your current order.",
+                25, 62, 490, 27, 15, false));
+        javafx.scene.layout.VBox list = new javafx.scene.layout.VBox(5);
+        list.setStyle("-fx-background-color: #CFE0F1; -fx-padding: 8;");
+        for (MenuItem item : catalog) {
+            javafx.scene.layout.HBox row = new javafx.scene.layout.HBox(8);
+            row.setAlignment(Pos.CENTER_LEFT);
+            Label name = new Label(item.name() + "  $" + String.format("%.2f", item.price())
+                    + "  ·  " + item.calories() + " cal");
+            name.setPrefWidth(365);
+            Button add = new Button("Add");
+            add.setOnAction(event -> chooseItem(item));
+            row.getChildren().addAll(name, add);
+            list.getChildren().add(row);
+        }
+        ScrollPane scroll = new ScrollPane(list);
+        scroll.setLayoutX(25); scroll.setLayoutY(95);
+        scroll.setPrefSize(490, 182);
+        scroll.setFitToWidth(true);
+        root.getChildren().add(scroll);
+    }
+
+    private void chooseItem(MenuItem item) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.initOwner(stage);
+        dialog.setTitle("Add " + item.name());
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        Spinner<Integer> quantity = new Spinner<>(1, 99, 1);
+        quantity.setEditable(true);
+        javafx.scene.layout.VBox content = new javafx.scene.layout.VBox(8);
+        content.getChildren().addAll(new Label("Quantity"), quantity);
+        List<CheckBox> checks = new ArrayList<>();
+        for (Modifier modifier : item.modifiers()) {
+            CheckBox check = new CheckBox(modifier.name() + "  (+$"
+                    + String.format("%.2f", modifier.extraPrice()) + ")");
+            checks.add(check);
+            content.getChildren().add(check);
+        }
+        dialog.getDialogPane().setContent(content);
+        if (dialog.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) return;
+        try {
+            List<Modifier> selected = new ArrayList<>();
+            for (int i = 0; i < checks.size(); i++)
+                if (checks.get(i).isSelected()) selected.add(item.modifiers().get(i));
+            orderManager.addToOrder(item.id(), quantity.getValue(), selected);
+            showPage("Menu");
+            toast(item.name() + " added to your order");
+        } catch (RuntimeException error) { showError("Could not add item", error); }
     }
 
     private void checkout(Pane root) {
-        root.getChildren().add(label("Checkout", 25, 23, 490, 44, 28, true));
-        root.getChildren().add(label("Trade in an item for half its points.",
-                25, 68, 490, 29, 16, false));
-        int count = progress.totalRedemptions();
-        root.getChildren().add(label(count + (count == 1 ? " reward redeemed" : " rewards redeemed"),
-                55, 98, 430, 31, 18, true));
+        root.getChildren().add(label("Checkout", 25, 18, 490, 44, 28, true));
+        Order order = orderManager.currentOrder();
+        String summary = order.items().size() + " lines · $"
+                + String.format("%.2f", orderManager.calculateTotal()) + " due (with tax)";
+        root.getChildren().add(label(summary, 25, 62, 325, 30, 16, true));
+        Button place = button("Place order", 365, 62, 140, 34, ORANGE, 14);
+        place.setDisable(order.items().isEmpty());
+        place.setOnAction(event -> {
+            try {
+                Order finished = orderManager.checkout();
+                dataManager.saveOrder(finished);
+                startNewOrder();
+                showPage("Checkout");
+                showInfo("Order placed", "Saved " + finished.orderId() + " · $"
+                        + String.format("%.2f", finished.amountDue()) + " including tax.");
+            } catch (IOException | RuntimeException error) { showError("Could not place order", error); }
+        });
+        root.getChildren().add(place);
         javafx.scene.layout.VBox list = new javafx.scene.layout.VBox(8);
         list.setStyle("-fx-background-color: #CFE0F1; -fx-padding: 12;");
-        if (count == 0) {
-            list.getChildren().add(new Label("No rewards redeemed yet."));
-        } else {
-            for (int i = 0; i < ProgressStore.REWARD_NAMES.length; i++) {
-                int qty = progress.redeemedCount(i);
-                if (qty == 0) continue;
-                final int index = i;
-                javafx.scene.layout.HBox row = new javafx.scene.layout.HBox(10);
-                row.setAlignment(Pos.CENTER_LEFT);
-                Label item = new Label(ProgressStore.REWARD_NAMES[i] + " × " + qty);
-                item.setFont(Font.font("SansSerif", FontWeight.BOLD, 15));
-                Button tradeIn = new Button("Trade in (+"
-                        + (int) progress.tradeBackValue(i) + " pts each)");
-                tradeIn.setOnAction(event -> {
-                    try {
-                        int refund = progress.tradeIn(index);
-                        if (refund > 0) {
-                            showPage("Checkout");
-                            toast("Traded in " + ProgressStore.REWARD_NAMES[index] + " for +"
-                                    + refund + " pts");
-                        }
-                    } catch (IOException error) { showError("Could not save the trade-in", error); }
-                });
-                row.getChildren().add(item);
-                row.getChildren().add(tradeIn);
-                list.getChildren().add(row);
-            }
+        if (order.items().isEmpty()) list.getChildren().add(new Label("No food items added yet."));
+        for (OrderItem line : order.items()) {
+            MenuItem item = order.menu().findById(line.itemId());
+            String mods = line.modifiers().isEmpty() ? "" : " (" + line.modifiers().stream()
+                    .map(Modifier::name).collect(java.util.stream.Collectors.joining("; ")) + ")";
+            list.getChildren().add(new Label(line.quantity() + " × " + item.name() + mods
+                    + "  $" + String.format("%.2f", line.lineTotal(order.menu()))));
+        }
+        int count = progress.totalRedemptions();
+        list.getChildren().add(new Label(count + (count == 1
+                ? " reward redeemed" : " rewards redeemed")));
+        for (int i = 0; i < ProgressStore.REWARD_NAMES.length; i++) {
+            int qty = progress.redeemedCount(i);
+            if (qty == 0) continue;
+            final int index = i;
+            javafx.scene.layout.HBox row = new javafx.scene.layout.HBox(10);
+            row.setAlignment(Pos.CENTER_LEFT);
+            Label item = new Label(ProgressStore.REWARD_NAMES[i] + " × " + qty);
+            item.setFont(Font.font("SansSerif", FontWeight.BOLD, 15));
+            Button tradeIn = new Button("Trade in (+"
+                    + (int) progress.tradeBackValue(i) + " pts each)");
+            tradeIn.setOnAction(event -> {
+                try {
+                    int refund = progress.tradeIn(index);
+                    if (refund > 0) {
+                        showPage("Checkout");
+                        toast("Traded in " + ProgressStore.REWARD_NAMES[index] + " for +"
+                                + refund + " pts");
+                    }
+                } catch (IOException error) { showError("Could not save the trade-in", error); }
+            });
+            row.getChildren().addAll(item, tradeIn);
+            list.getChildren().add(row);
         }
         ScrollPane scroll = new ScrollPane(list);
-        scroll.setLayoutX(98); scroll.setLayoutY(136);
-        scroll.setPrefSize(344, 135);
+        scroll.setLayoutX(25); scroll.setLayoutY(104);
+        scroll.setPrefSize(490, 170);
         scroll.setFitToWidth(true);
         root.getChildren().add(scroll);
     }
@@ -483,6 +572,14 @@ public final class RewardsApp extends Application {
                 return;
             }
             if (game.poker != null) {
+                if (!game.poker.revealed && game.poker.phase == Poker.Phase.DISCARD) {
+                    KeyCode[] holdKeys = {KeyCode.DIGIT1, KeyCode.DIGIT2, KeyCode.DIGIT3,
+                            KeyCode.DIGIT4, KeyCode.DIGIT5, KeyCode.DIGIT6, KeyCode.DIGIT7,
+                            KeyCode.DIGIT8};
+                    for (int i = 0; i < 8; i++) {
+                        if (code == holdKeys[i]) game.setPokerHold(i, !game.poker.hold.get(i));
+                    }
+                }
                 if (code == KeyCode.ENTER || code == KeyCode.SPACE) game.pokerAction();
                 return;
             }

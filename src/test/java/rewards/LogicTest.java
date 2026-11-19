@@ -1,12 +1,16 @@
 package rewards;
 
 import java.nio.file.Files;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.Properties;
 import java.util.Random;
 
@@ -211,13 +215,74 @@ public final class LogicTest {
         for (int i = 0; i < 8; i++) game.collected.add(game.deck.drawTop());
         game.beginPoker();
         check(game.poker != null, "eight pickups start poker");
+        check(game.poker.phase == Poker.Phase.DISCARD, "round opens in discard phase");
         double x = game.pipeX;
         game.update(1, new PipeFlightGame.Input(false, false, false, false, false));
         check(game.pipeX == x, "poker pauses flight");
+        game.setPokerHold(0, false);
+        check(!game.poker.hold.get(0), "hold toggled off");
+        Poker.Card before = game.poker.playerCards.get(0);
         game.pokerAction();
-        check(game.poker.revealed, "first action reveals showdown");
+        check(game.poker.phase == Poker.Phase.REVEAL && !game.poker.revealed,
+                "first action commits the draw");
+        check(!game.poker.playerCards.get(0).equals(before), "discarded card replaced");
         game.pokerAction();
-        check(game.poker == null, "second action resumes or advances");
+        check(game.poker.revealed, "second action reveals showdown");
+        game.pokerAction();
+        check(game.poker == null, "third action resumes or advances");
+    }
+
+    private static void discardDraw() {
+        Poker.Deck deck = new Poker.Deck(new Random(7), List.of());
+        List<Poker.Card> eight = new ArrayList<>();
+        for (int i = 0; i < 8; i++) eight.add(deck.drawTop());
+        Poker.Round round = new Poker.Round(eight, deck);
+        check(round.phase == Poker.Phase.DISCARD, "round starts in discard phase");
+        check(round.hold.size() == 8 && round.hold.stream().allMatch(h -> h),
+                "all eight cards start held");
+        Poker.Card before = round.playerCards.get(2);
+        round.setHold(2, false);
+        round.commitDraw(deck);
+        check(round.phase == Poker.Phase.REVEAL, "commit locks the hand");
+        check(round.playerCards.size() == 8, "hand stays eight cards");
+        check(!round.playerCards.get(2).equals(before), "discarded card replaced");
+        check(round.playerCards.get(0).equals(eight.get(0)), "kept card unchanged");
+        check(deck.size() == 52 - 8 - 8 - 1, "one draw consumed from the deck");
+        check(!deck.contains(round.playerCards.get(2)), "drawn card left the deck");
+        check(round.playerBest.rank().equals(
+                Poker.bestFive(round.playerCards).rank()), "best five recomputed after draw");
+        try {
+            round.setHold(0, false);
+            check(false, "hold after commit should fail");
+        } catch (IllegalStateException expected) {
+            check(true, "cards locked after commit");
+        }
+        try {
+            round.commitDraw(deck);
+            check(false, "second commit should fail");
+        } catch (IllegalStateException expected) {
+            check(true, "draw commits once");
+        }
+        Poker.Deck fresh = new Poker.Deck(new Random(7), List.of());
+        List<Poker.Card> kept = new ArrayList<>();
+        for (int i = 0; i < 8; i++) kept.add(fresh.drawTop());
+        Poker.Round allHeld = new Poker.Round(kept, fresh);
+        Poker.BestHand value = allHeld.currentHoldValue();
+        check(value != null && value.rank().equals(allHeld.playerBest.rank()),
+                "keeping all eight shows the same value");
+        allHeld.setHold(1, false);
+        check(allHeld.currentHoldValue().rank().compareTo(value.rank()) <= 0,
+                "holding fewer cards cannot raise the value");
+        allHeld.setHold(0, false);
+        allHeld.setHold(2, false);
+        allHeld.setHold(3, false);
+        allHeld.setHold(4, false);
+        allHeld.setHold(5, false);
+        allHeld.setHold(6, false);
+        allHeld.setHold(7, false);
+        check(allHeld.currentHoldValue() == null, "incomplete hand shows no value");
+        allHeld.commitDraw(fresh);
+        check(allHeld.playerBest != null, "draw completes the hand");
     }
 
     private static void finalFailure() throws Exception {
@@ -234,14 +299,143 @@ public final class LogicTest {
         check(game.gameOver, "drowning ends after 3.5 seconds");
     }
 
+    private static void goodburger() throws Exception {
+        Path project = Path.of(LogicTest.class.getProtectionDomain().getCodeSource()
+                .getLocation().toURI()).getParent().getParent();
+        Path source = project.resolve("src/main/resources/goodburger");
+        Path copy = Files.createTempDirectory("goodburger-test-");
+        String[] files = {"menu.csv", "modifiers.csv", "orders.csv", "orders_items.csv",
+                "users.csv", "favoriteorders.csv"};
+        try {
+            for (String name : files) Files.copy(source.resolve(name), copy.resolve(name));
+            DataManager data = new DataManager(copy);
+            String previousHome = System.getProperty("user.home");
+            try {
+                System.setProperty("user.home", copy.toString());
+                Path installed = DataManager.resourceDir();
+                check(new DataManager(installed).loadMenu().size() == 12,
+                        "bundled jar resources seed a writable data directory");
+                try (var copiedFiles = Files.list(installed)) {
+                    check(copiedFiles.count() == 6, "all six bundled CSVs copied");
+                }
+            } finally {
+                System.setProperty("user.home", previousHome);
+            }
+            List<MenuItem> menu = data.loadMenu();
+            check(menu.size() == 12, "menu has twelve items");
+            check(data.loadModifiers().size() == 11, "eleven modifiers loaded");
+            check(Files.readAllLines(copy.resolve("menu.csv")).get(0).equals(
+                    "id,name,category,price,calories,protein,carbs,fat,sodium,cateringOnly"),
+                    "menu header contains all nutrition fields");
+            for (MenuItem item : menu) {
+                check(item.calories() > 0 && item.protein() >= 0 && item.carbs() >= 0
+                        && item.fat() >= 0 && item.sodium() >= 0, "nutrition parsed for " + item.id());
+            }
+            for (String name : List.of("menu.csv", "modifiers.csv", "orders.csv")) {
+                String contents = Files.readString(copy.resolve(name));
+                check(!contents.contains("nutrition")
+                        && !java.util.regex.Pattern.compile("[0-9A-F]{7}").matcher(contents).find(),
+                        "no placeholder hex nutrition in " + name);
+            }
+
+            List<Order> orders = data.loadOrders();
+            check(orders.size() == 10, "all ten orders loaded");
+            Map<String, double[]> stored = new HashMap<>();
+            for (String line : Files.readAllLines(copy.resolve("orders.csv")).subList(1, 11)) {
+                String[] columns = line.split(",", -1);
+                stored.put(columns[0], new double[] {Double.parseDouble(columns[3]),
+                        Double.parseDouble(columns[4])});
+            }
+            System.out.println("orderId | stored | computed | OK");
+            for (Order order : orders) {
+                double computed = 0;
+                for (OrderItem item : order.items()) computed += item.lineTotal(order.menu());
+                double expected = stored.get(order.orderId())[0];
+                check(Math.abs(computed - expected) < 0.005, "line sum " + order.orderId());
+                check(Math.abs(order.total() - expected) < 0.005, "order total " + order.orderId());
+                check(Math.abs(order.tax() - stored.get(order.orderId())[1]) < 0.005,
+                        "order tax " + order.orderId());
+                System.out.printf(java.util.Locale.ROOT, "%s | %.2f | %.2f | OK%n",
+                        order.orderId(), expected, computed);
+            }
+            check(orders.get(0).totalCalories() == 770, "modifier calories included");
+            check(orders.get(0).totalProtein() == 32, "protein derived from menu");
+            check(data.loadFavoriteOrders().size() == 3, "favorites joined to orders");
+
+            List<User> users = data.loadUsers();
+            check(users.size() == 9, "nine users loaded");
+            for (User user : users) check(user.passwordHash().matches("[0-9a-f]{64}"),
+                    "seed password is SHA-256 hex");
+            String digest = User.hashPassword("known");
+            check(digest.equals(User.hashPassword("known")) && digest.matches("[0-9a-f]{64}"),
+                    "hashPassword is deterministic lowercase SHA-256 hex");
+            // Seed plaintext verified against the pre-migration users.csv
+            // (pcd-audit-2026-11-02/submitted/extracted/data/users.csv, row 001).
+            check(User.hashPassword("2Ao1$tObuCI*").equals(
+                    "705c89bced4932353ede0f371f9b8788c3e3c6eda5dae753a53aab68a93cdc85"),
+                    "hashPassword reproduces the stored SHA-256 seed digest for user 001");
+            check(users.get(0).checkPassword("2Ao1$tObuCI*")
+                    && !users.get(0).checkPassword("wrong-password"),
+                    "user 001 verifies against its seed plaintext");
+            User fresh = new User("T01", "Test User", "01/01/2000", "test@example.com",
+                    User.hashPassword("known"), 0);
+            data.saveUser(fresh);
+            User reloadedUser = data.loadUsers().stream().filter(u -> u.id().equals("T01"))
+                    .findFirst().orElseThrow();
+            check(reloadedUser.checkPassword("known") && !reloadedUser.checkPassword("wrong"),
+                    "saved user rehashes and verifies password");
+
+            OrderManager manager = new OrderManager(menu);
+            manager.newOrder("001", OrderType.PICKUP, "2026-11-02 12:00");
+            MenuItem burger = new Menu(menu).findById("B01");
+            Modifier bacon = burger.modifiers().stream().filter(m -> m.name().equals("Add bacon"))
+                    .findFirst().orElseThrow();
+            manager.addToOrder("B01", 2, List.of(bacon));
+            manager.addToOrder("S01", 1, List.of());
+            Order finished = manager.checkout();
+            check(Math.abs(manager.calculateTotal() - finished.amountDue()) < 0.005,
+                    "manager calculates amount due with tax");
+            data.saveOrder(finished);
+            Order loaded = data.loadOrders().stream()
+                    .filter(o -> o.orderId().equals(finished.orderId())).findFirst().orElseThrow();
+            check(loaded.items().size() == 2 && loaded.items().get(0).quantity() == 2
+                    && loaded.items().get(0).modifiers().get(0).name().equals("Add bacon"),
+                    "order lines and modifiers survive reload");
+            check(Math.abs(loaded.total() - finished.total()) < 0.005
+                    && Math.abs(loaded.tax() - finished.tax()) < 0.005,
+                    "order money survives reload");
+            data.saveFavoriteOrder("001", loaded);
+            check(data.loadFavoriteOrders().size() == 4, "new favorite survives reload");
+            manager.newOrder("001", OrderType.DINEIN, "2026-11-02 13:00");
+            boolean rejected = false;
+            try { manager.checkout(); } catch (IllegalStateException expected) { rejected = true; }
+            check(rejected, "empty checkout rejected");
+
+            for (Path file : Files.newDirectoryStream(project.resolve("src/main/java/rewards"), "*.java")) {
+                if (file.getFileName().toString().equals("DataManager.java")) continue;
+                String sourceText = Files.readString(file, StandardCharsets.UTF_8);
+                for (String name : files) check(!sourceText.contains("\"" + name + "\""),
+                        "only DataManager names GoodBurger CSV files: " + file);
+            }
+            System.out.println("All GoodBurger model checks passed.");
+        } finally {
+            try (var paths = Files.walk(copy)) {
+                for (Path path : paths.sorted(java.util.Comparator.reverseOrder()).toList())
+                    Files.deleteIfExists(path);
+            }
+        }
+    }
+
     public static void main(String[] args) throws Exception {
         economy();
         foodie();
         poker();
         flight();
         gamble();
+        discardDraw();
         pokerPause();
         finalFailure();
+        goodburger();
         System.out.println("All JavaFX rewards and Pipe Flight logic checks passed.");
     }
 }
