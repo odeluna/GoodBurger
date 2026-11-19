@@ -6,8 +6,10 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 /** Dependency-free checks for the translated game and the reward economy. */
 public final class LogicTest {
@@ -46,6 +48,96 @@ public final class LogicTest {
         check(Poker.bestFive(eight).rank().category() == 5, "best five of eight");
     }
 
+    private static void stud() {
+        Poker.Stud table = Poker.Stud.deal(new Random(7), 500);
+        Set<Poker.Card> all = new HashSet<>(table.playerCards());
+        all.addAll(table.dealerCards());
+        check(table.playerCards().size() == 7 && table.dealerCards().size() == 7
+                && all.size() == 14, "two unique seven-card hands from one deck");
+        check(table.pot() == 100 && table.stake() == 50 && table.bankroll() == 450, "ante posts both sides");
+        check(table.street() == 1 && table.playerUpRevealed().isEmpty()
+                && table.dealerUpRevealed().isEmpty(), "nothing shown before street one");
+        check(table.canCheck() && !table.canCall() && table.canRaise(), "street one starts free to check or bet");
+
+        while (!table.isOver()) {
+            if (table.canCheck()) table.playerCheck();
+            else table.playerCall();
+        }
+        check(table.playerUpRevealed().size() == 5 && table.dealerUpRevealed().size() == 5
+                && table.playerRank() != null && table.dealerRank() != null,
+                "check/call runs all six streets to a showdown");
+
+        check(Poker.Stud.dealerPlay(1, 0, List.of(card("Hearts", 14), card("Spades", 14)))
+                == Poker.DealerPlay.RAISE, "strong hand check-raises");
+        check(Poker.Stud.dealerPlay(1, 100, List.of(card("Hearts", 14), card("Spades", 14)))
+                == Poker.DealerPlay.CALL, "strong hand calls an oversize bet");
+        check(Poker.Stud.dealerPlay(1, 50, List.of(card("Hearts", 2), card("Spades", 3)))
+                == Poker.DealerPlay.CALL, "junk limps early streets");
+        check(Poker.Stud.dealerPlay(3, 50, List.of(card("Hearts", 2), card("Spades", 3)))
+                == Poker.DealerPlay.FOLD, "junk folds a later street");
+
+        Poker.Stud allIn = Poker.Stud.withCards(
+                List.of(card("Hearts", 14), card("Spades", 13), card("Hearts", 5), card("Diamonds", 11),
+                        card("Clubs", 12), card("Spades", 7), card("Diamonds", 3)),
+                List.of(card("Hearts", 2), card("Clubs", 3), card("Diamonds", 9), card("Spades", 8),
+                        card("Hearts", 6), card("Clubs", 13), card("Spades", 4)),
+                450);
+        while (!allIn.isOver()) {
+            if (allIn.facing() == 0) allIn.playerRaise();
+            else allIn.playerCall();
+        }
+        check(allIn.winner() == Poker.Winner.PLAYER && allIn.playerRank() == null,
+                "dealer folds a weak hand before showdown");
+        check(allIn.street() <= 3, "junk folds by street three");
+        check(allIn.netDelta() > 0 && allIn.pot() > allIn.stake(), "winning pot pays more than the stake");
+
+        Poker.Stud matched = Poker.Stud.withCards(
+                List.of(card("Clubs", 7), card("Diamonds", 2), card("Hearts", 13), card("Spades", 12),
+                        card("Hearts", 4), card("Clubs", 11), card("Diamonds", 9)),
+                List.of(card("Spades", 3), card("Hearts", 8), card("Diamonds", 13), card("Clubs", 5),
+                        card("Spades", 10), card("Diamonds", 14), card("Spades", 2)),
+                500);
+        while (!matched.isOver()) {
+            if (matched.canCheck()) matched.playerCheck();
+            else matched.playerCall();
+        }
+        check(matched.isMatched() && matched.winner() == Poker.Winner.PUSH,
+                "matched shown ranks push even against a better hand");
+        check(matched.netDelta() == 0, "push returns the stake");
+        check(matched.playerRank() != null && matched.dealerRank() != null,
+                "showdown still evaluates both hands");
+
+        Poker.Stud win = Poker.Stud.withCards(
+                List.of(card("Hearts", 14), card("Spades", 13), card("Hearts", 12), card("Spades", 11),
+                        card("Hearts", 10), card("Spades", 2), card("Hearts", 6)),
+                List.of(card("Clubs", 9), card("Diamonds", 8), card("Diamonds", 7), card("Spades", 5),
+                        card("Clubs", 4), card("Diamonds", 3), card("Diamonds", 14)),
+                500);
+        while (!win.isOver()) {
+            if (win.canCheck()) win.playerCheck();
+            else win.playerCall();
+        }
+        check(win.winner() == Poker.Winner.PLAYER && win.playerRank().category() == 4,
+                "best five of seven decides the showdown");
+        check(win.netDelta() == 50, "untouched pot pays the winner the full pot");
+
+        Poker.Stud first = runStud(new Random(11), 500);
+        Poker.Stud second = runStud(new Random(11), 500);
+        check(first.playerCards().equals(second.playerCards())
+                && first.dealerCards().equals(second.dealerCards()), "seeded stud deals are stable");
+        check(first.pot() == second.pot() && first.winner() == second.winner()
+                && first.netDelta() == second.netDelta(), "identical play gives identical payouts");
+    }
+
+    private static Poker.Stud runStud(Random random, int points) {
+        Poker.Stud table = Poker.Stud.deal(random, points);
+        while (!table.isOver()) {
+            if (table.canCheck()) table.playerCheck();
+            else table.playerCall();
+        }
+        return table;
+    }
+
     private static void progress() throws Exception {
         Path file = Files.createTempDirectory("poker-progress").resolve("progress.properties");
         Files.writeString(file, "version=2\npoints=800\nredeemed.0=1\npokerWins=0\n"
@@ -61,15 +153,15 @@ public final class LogicTest {
         check(reloaded.points() == 1100 && reloaded.pokerWins() == 2, "wins persist and grant once");
         check(reloaded.hasUnlocked("poker_win"), "first-win achievement");
         check(reloaded.tradeIn(0) == 150 && reloaded.redeem(0), "food rewards still work");
+        reloaded.adjustPoints(-100);
+        check(reloaded.points() == 850, "poker loss deducts points");
+        reloaded.adjustPoints(-9000);
+        check(reloaded.points() == 0, "balance floors at zero");
     }
 
     public static void main(String[] args) throws Exception {
         poker();
-        Poker.Round round = Poker.Round.deal(new Random(1));
-        var all = new java.util.HashSet<>(round.playerCards());
-        all.addAll(round.dealerCards());
-        check(round.playerCards().size() == 8 && round.dealerCards().size() == 8
-                && all.size() == 16, "two unique eight-card hands from one deck");
+        stud();
         progress();
         System.out.println("All poker and rewards logic checks passed.");
     }

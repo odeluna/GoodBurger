@@ -131,6 +131,18 @@ public final class ProgressStore {
         fire(fired);
     }
 
+    /** Adds or removes points from a poker settlement; the balance floors at zero. */
+    public synchronized void adjustPoints(int delta) throws IOException {
+        int before = points;
+        points = Math.max(0, points + delta);
+        try {
+            save();
+        } catch (IOException error) {
+            points = before;
+            throw error;
+        }
+    }
+
     public synchronized boolean redeem(int index) throws IOException {
         if (index < 0 || index >= REWARD_NAMES.length) throw new IndexOutOfBoundsException(index);
         if (!canRedeem(index)) return false;

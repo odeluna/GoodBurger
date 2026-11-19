@@ -1,5 +1,6 @@
 # Build output
 build/
+target/
 *.class
 
 # Local runtime state (not part of the project)

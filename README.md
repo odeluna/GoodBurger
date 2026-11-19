@@ -1,8 +1,9 @@
 # GoodBurger First Edition
 
-GoodBurger includes the ordering app and a free eight-card poker game on the
-Rewards page. Each side plays its best five cards. Reveal the dealer's hand to
-see who wins, then deal again or return to Rewards.
+GoodBurger includes the ordering app and a seven-card stud poker game on the
+Rewards page. Both sides are dealt seven cards: two stay hidden, five are shown
+one per street, and you bet, call, raise, or fold on each street. The best five
+of the seven cards wins the pot at showdown.
 
 Completing a showdown can claim the daily bonus. The first poker win earns the
 one-time Card Shark award of 200 points. Existing balances and redemptions are

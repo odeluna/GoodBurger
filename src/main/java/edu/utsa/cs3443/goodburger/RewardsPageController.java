@@ -75,7 +75,7 @@ public class RewardsPageController {
         reward1Name.setText(ProgressStore.REWARD_NAMES[0] + ": " + ProgressStore.REWARD_COSTS[0] + " pts");
         reward2Name.setText(ProgressStore.REWARD_NAMES[1] + ": " + ProgressStore.REWARD_COSTS[1] + " pts");
         reward3Name.setText(ProgressStore.REWARD_NAMES[2] + ": " + ProgressStore.REWARD_COSTS[2] + " pts");
-        miniGameButton.setTooltip(new Tooltip("Play a free eight-card poker showdown."));
+        miniGameButton.setTooltip(new Tooltip("Play seven-card stud for points"));
         miniGameStatsLabel.setText("Poker wins: " + progress.pokerWins() + "\nDaily bonus: "
                 + (progress.bonusClaimedToday() ? "claimed" : progress.dailyBonusForToday() + " pts"));
     }
