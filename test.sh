@@ -2,4 +2,4 @@
 set -euo pipefail
 cd -- "$(dirname -- "$0")"
 mvn test-compile
-exec java -cp target/test-classes:target/classes rewards.LogicTest
+exec java --enable-preview -cp target/test-classes:target/classes rewards.LogicTest

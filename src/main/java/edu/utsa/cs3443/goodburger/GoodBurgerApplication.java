@@ -1,5 +1,7 @@
 package edu.utsa.cs3443.goodburger;
-import model.User;
+
+import edu.utsa.cs3443.goodburger.model.Session;
+import edu.utsa.cs3443.goodburger.model.User;
 
 
 import javafx.application.Application;
@@ -16,8 +18,9 @@ public class GoodBurgerApplication extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
+        Session.get().loadMenu();   // menu_page.fxml needs the menu; without this MenuManager is null and the page fails to load
         FXMLLoader fxmlLoader = new FXMLLoader(GoodBurgerApplication.class.getResource("home_page.fxml"));
-        Scene scene = new Scene(fxmlLoader.load());
+        Scene scene = new Scene(fxmlLoader.load(), Session.WIDTH, Session.HEIGHT);
         stage.setTitle("Hello!");
         stage.setScene(scene);
 //        stage.setMaximized(true);
@@ -25,18 +28,11 @@ public class GoodBurgerApplication extends Application {
         stage.setResizable(false);
         stage.show();
     }
+
     public static void switchScreen(Node source, String fxmlFile) throws IOException {
         FXMLLoader loader = new FXMLLoader(GoodBurgerApplication.class.getResource(fxmlFile));
-        Scene scene = new Scene(loader.load());
+        Scene scene = new Scene(loader.load(), Session.WIDTH, Session.HEIGHT);
         Stage stage = (Stage) source.getScene().getWindow();
         stage.setScene(scene);
-    }
-    // getter and setter
-    public static User getCurrentUser() {
-        return currentUser;
-    }
-
-    public static void setCurrentUser(User user) {
-        currentUser = user;
     }
 }

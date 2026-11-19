@@ -10,13 +10,13 @@ if exist "windows-runtime\java\bin\java.exe" set "GOODBURGER_JAVA=%CD%\windows-r
 
 if not exist "windows-runtime\goodburger.jar" goto missing_files
 if not exist "windows-runtime\javafx\javafx-fxml-21.0.6-win.jar" goto missing_files
-if not exist "data\menu_items.csv" goto missing_files
+if not exist "data\menu.csv" goto missing_files
 
 "%GOODBURGER_JAVA%" -version >nul 2>&1
 if errorlevel 1 goto missing_java
 
 echo Starting GoodBurger...
-"%GOODBURGER_JAVA%" --module-path "windows-runtime\javafx" --add-modules javafx.controls,javafx.fxml -cp "windows-runtime\goodburger.jar" edu.utsa.cs3443.goodburger.GoodBurgerApplication
+"%GOODBURGER_JAVA%" --enable-preview --module-path "windows-runtime\javafx" --add-modules javafx.controls,javafx.fxml -cp "windows-runtime\goodburger.jar" edu.utsa.cs3443.goodburger.GoodBurgerApplication
 set "APP_EXIT=%ERRORLEVEL%"
 if "%APP_EXIT%"=="0" goto finished
 echo.
