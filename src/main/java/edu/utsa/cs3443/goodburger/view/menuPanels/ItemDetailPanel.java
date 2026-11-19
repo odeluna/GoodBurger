@@ -146,6 +146,7 @@ public class ItemDetailPanel extends ScrollPane {
         photoView.setFitHeight(h * scale);
         photoView.setX((PHOTO_BOX - w * scale) / 2);   // center the oversized image in the box
         photoView.setY((PHOTO_BOX - h * scale) / 2);
+        photoView.setImage(image);
         Rectangle clip = new Rectangle(0, 0, PHOTO_BOX, PHOTO_BOX);   // trim the overflow
         clip.setArcWidth(10);                                          // rounded corners
         clip.setArcHeight(10);
