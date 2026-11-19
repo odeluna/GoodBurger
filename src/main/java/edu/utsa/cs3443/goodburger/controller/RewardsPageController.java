@@ -11,7 +11,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-import javafx.scene.Window;
+import javafx.stage.Window;
 
 import rewards.EconomyRules;
 import rewards.PipeFlightGame;

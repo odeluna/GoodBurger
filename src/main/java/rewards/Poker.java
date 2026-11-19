@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-/** Seven-card stud: two hidden cards, five shown cards, six betting streets, best five of seven. */
+/** Card deck and hand evaluation shared by the Pipe Flight eight-card Round and the seven-card stud. */
 public final class Poker {
     private Poker() { }
 
@@ -123,7 +123,25 @@ public final class Poker {
         return new BestHand(best, bestRank);
     }
 
-    /** Winner of a finished hand. PUSH = the pot is returned (matched shown cards or tied hands). */
+    public static final class Round {
+        public final List<Card> playerCards;
+        public final List<Card> dealerCards = new ArrayList<>();
+        public BestHand playerBest;
+        public BestHand dealerBest;
+        public boolean revealed;
+        public boolean lost;
+        public boolean powerUsed;
+        public boolean upgradeDue;
+        public String outcome = "";
+
+        public Round(List<Card> playerCards, Deck deck) {
+            this.playerCards = List.copyOf(playerCards);
+            for (int i = 0; i < 8; i++) dealerCards.add(deck.drawTop());
+            playerBest = bestFive(this.playerCards);
+            dealerBest = bestFive(dealerCards);
+        }
+    }
+
     public enum Winner { PLAYER, DEALER, PUSH }
 
     /** The house's reply to a player action on a street. */

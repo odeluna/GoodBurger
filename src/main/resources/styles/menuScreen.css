@@ -1,0 +1,9 @@
+/* Menu screen styles (module: menu, author: Fabricio Ocampo).
+   Early development: placeholder so the menu screen boots while the team
+   finalizes the look. Every menu panel inherits the .menu-screen class.
+   Follows the team theme: White #FFFFFF  Teal #45A0AB  Orange #E0733A
+   Fuchsia #B52D5E  Grey #C4CED4. Same conventions as rewardsScreen.css. */
+
+.menu-screen {
+    -fx-background-color: #ffffff;
+}
