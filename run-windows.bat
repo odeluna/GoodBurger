@@ -1,63 +1,48 @@
 @echo off
-setlocal EnableExtensions
-cd /d "%~dp0"
+setlocal EnableExtensions DisableDelayedExpansion
+title GoodBurger
+pushd "%~dp0"
+if errorlevel 1 goto location_error
 
-REM =========================================================================
-REM  GoodBurger (Rewards) JavaFX -- Windows runner
-REM  Downloads the Windows JavaFX runtime jars (if missing), compiles the
-REM  sources, builds the app jar, and launches it. Needs a JDK 21+ on PATH
-REM  (javac + java). No other dependencies.
-REM =========================================================================
+set "GOODBURGER_JAVA=java.exe"
+if exist "%JAVA_HOME%\bin\java.exe" set "GOODBURGER_JAVA=%JAVA_HOME%\bin\java.exe"
+if exist "windows-runtime\java\bin\java.exe" set "GOODBURGER_JAVA=%CD%\windows-runtime\java\bin\java.exe"
 
-echo [run-windows] Checking for a Java compiler...
-where javac >nul 2>nul
-if errorlevel 1 (
-    echo [run-windows] ERROR: javac was not found on PATH.
-    echo             Install a JDK 21 or newer ^(e.g. Temurin 21^) and put it on PATH,
-    echo             then run this batch again.
-    exit /b 1
-)
-where java >nul 2>nul
-if errorlevel 1 (
-    echo [run-windows] ERROR: java was not found on PATH. Install a JDK, then retry.
-    exit /b 1
-)
+if not exist "windows-runtime\goodburger.jar" goto missing_files
+if not exist "windows-runtime\javafx\javafx-fxml-21.0.6-win.jar" goto missing_files
+if not exist "data\menu_items.csv" goto missing_files
 
-echo [run-windows] Ensuring the Windows JavaFX runtime jars are present...
-if not exist "lib-win" mkdir "lib-win"
-set "BASE=https://repo1.maven.org/maven2/org/openjfx"
-set "JARS=base graphics controls fxml"
-for %%A in (%JARS%) do (
-    if not exist "lib-win\javafx-%%A-26-win.jar" (
-        echo [run-windows]   fetching javafx-%%A-26-win.jar ...
-        powershell -NoProfile -Command "Invoke-WebRequest -UseBasicParsing -Uri '%BASE%/javafx-%%A/26/javafx-%%A-26-win.jar' -OutFile 'lib-win\javafx-%%A-26-win.jar'"
-        if errorlevel 1 (
-            echo [run-windows] ERROR: could not download javafx-%%A-26-win.jar
-            echo             (check your internet connection / firewall).
-            exit /b 1
-        )
-    )
-)
+"%GOODBURGER_JAVA%" -version >nul 2>&1
+if errorlevel 1 goto missing_java
 
-echo [run-windows] Compiling sources...
-if not exist "build\classes" mkdir "build\classes"
-javac --module-path "lib-win" --add-modules javafx.controls -encoding UTF-8 ^
-  -d "build\classes" "src\main\java\rewards\*.java"
-if errorlevel 1 (
-    echo [run-windows] ERROR: compilation failed. See messages above.
-    exit /b 1
-)
+echo Starting GoodBurger...
+"%GOODBURGER_JAVA%" --module-path "windows-runtime\javafx" --add-modules javafx.controls,javafx.fxml -cp "windows-runtime\goodburger.jar" edu.utsa.cs3443.goodburger.GoodBurgerApplication
+set "APP_EXIT=%ERRORLEVEL%"
+if "%APP_EXIT%"=="0" goto finished
+echo.
+echo GoodBurger stopped with exit code %APP_EXIT%.
+echo Check the error above. GoodBurger requires 64-bit Java 21 or newer.
+pause
+goto finished
 
-echo [run-windows] Building rewards-javafx.jar...
-jar --create --file "build\rewards-javafx.jar" --main-class rewards.RewardsApp ^
-  -C "build\classes" . -C "src\main\resources" .
-if errorlevel 1 (
-    echo [run-windows] ERROR: jar creation failed.
-    exit /b 1
-)
+:missing_files
+echo Extract the entire ZIP, then run this file from the extracted GoodBurger folder.
+set "APP_EXIT=1"
+pause
+goto finished
 
-echo [run-windows] Launching the GoodBurger Rewards app...
-java --module-path "lib-win" --add-modules javafx.controls ^
-  --enable-native-access=javafx.graphics ^
-  -jar "build\rewards-javafx.jar" %*
-exit /b %errorlevel%
+:missing_java
+echo Java was not found. Use 64-bit Java 21 or newer.
+echo Set JAVA_HOME to your Java installation or put its bin folder on PATH.
+set "APP_EXIT=1"
+pause
+goto finished
+
+:location_error
+echo Unable to open the GoodBurger folder. Extract the ZIP before running this file.
+pause
+exit /b 1
+
+:finished
+popd
+exit /b %APP_EXIT%
