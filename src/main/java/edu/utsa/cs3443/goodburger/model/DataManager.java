@@ -9,23 +9,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The one class that reads and writes the files in the data folder
- * (menu.csv, modifiers.csv, users.csv and orders.csv).
- *
+ * The only class that reads  and writes the files in the data folder:
+ * <ul><li>menu.csv</li><li>modifiers.csv</li><li>orders.csv</li><li>users.csv</li> </ul>
  * <p>Other classes ask DataManager for data instead of opening files themselves, so a change
  * to a file's location or format only has to be made here.</p>
- *
- * <p>The paths are relative, so they are looked up from the folder the app runs in. IntelliJ and
- * {@code mvn javafx:run} both run from the project folder, which is where {@code data} is.</p>
  */
-public class DataManager {
 
+public class DataManager {
+    //TODO: Update order to reflect nutrition format
     public static final String ORDERS_HEADER =
             "orderId,customerId,orderType,pickupTime,subtotal,tax,total,calories,items";
 
     private static final int MENU_COLUMNS = 10;
-    private static final int MENU_COLUMNS_SHORT = 6;
-    private static final int MODIFIER_COLUMNS = 4;
+    private static final int MODIFIER_COLUMNS = 8;
 
     private final Path dataFolder;
 
@@ -43,7 +39,7 @@ public class DataManager {
     public Path getUsersFile()     { return dataFolder.resolve("users.csv"); }
     public Path getOrdersFile()    { return dataFolder.resolve("orders.csv"); }
 
-    // ---------------------------------------------------------------- general file helpers
+    // --------------------- FILE HELPERS -------------------------- //
 
     public boolean exists(Path file) {
         return Files.exists(file);
@@ -63,7 +59,8 @@ public class DataManager {
         Files.writeString(file, contents, StandardCharsets.UTF_8);
     }
 
-    // ---------------------------------------------------------------- menu
+    // ----------------------------- MENU ---------------------------------- //
+
 
     /**
      * Reads menu.csv, then attaches each line of modifiers.csv to the item it names.
@@ -107,10 +104,8 @@ public class DataManager {
 
     // menu.csv, either:
     //   id,name,category,price,calories,protein,carbs,fat,sodium,cateringOnly   (full nutrition)
-    //   id,name,category,price,nutritionId,cateringOnly                           (what data/menu.csv has now)
-    // The nutritionId format has no nutrition table yet, so those items get zero nutrition.
     MenuItem parseItem(String line) {
-        String[] f = split(line, MENU_COLUMNS, MENU_COLUMNS_SHORT);
+        String[] f = split(line, MENU_COLUMNS);
         Nutrition nutrition = Nutrition.ZERO;
         boolean catering;
         if (f.length == MENU_COLUMNS) {
@@ -129,16 +124,24 @@ public class DataManager {
                 catering);
     }
 
-    // modifiers.csv: itemId,name,extraPrice,extraCalories (or a nutritionId, which counts as 0 calories)
+    // modifiers.csv: itemId,name,extraPrice,extraCalories, extraProtein, extraCarbs, extraFat, extraSodium
     Modifier parseModifier(String line) {
         String[] f = split(line, MODIFIER_COLUMNS);
-        int calories;
+        int calories, protein, carbs, fat, sodium;
         try {
             calories = Integer.parseInt(f[3]);
+            protein = Integer.parseInt(f[4]);
+            carbs = Integer.parseInt(f[5]);
+            fat = Integer.parseInt(f[6]);
+            sodium = Integer.parseInt(f[7]);
         } catch (NumberFormatException e) {
             calories = 0;
+            protein = 0;
+            carbs = 0;
+            fat = 0;
+            sodium = 0;
         }
-        return new Modifier(f[1], Double.parseDouble(f[2]), calories);
+        return new Modifier(f[1], Double.parseDouble(f[2]), calories, protein, carbs, fat, sodium);
     }
 
     private static String[] split(String line, int... allowedColumns) {
@@ -157,7 +160,7 @@ public class DataManager {
         return fields;
     }
 
-    // ---------------------------------------------------------------- orders
+    // ----------------------------- order --------------------------------- //
 
     /** The next free id, e.g. O1001, O1002, ... based on what orders.csv already holds. */
     public String nextOrderId() throws IOException {

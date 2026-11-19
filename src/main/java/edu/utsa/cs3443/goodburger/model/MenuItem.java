@@ -1,10 +1,8 @@
 package edu.utsa.cs3443.goodburger.model;
 
-import edu.utsa.cs3443.goodburger.model.MenuManager;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 /**
  * One food option on the menu, such as "Classic Burger". One line of menu.csv becomes one MenuItem.
  *
@@ -13,7 +11,7 @@ import java.util.List;
  *   <li>has exactly one {@link Category}, which decides which category button shows it;</li>
  *   <li>owns one {@link Nutrition} (composition: the facts make no sense without the item);</li>
  *   <li>owns zero or more {@link Modifier}s, the add-ons offered for this item only;</li>
- *   <li>is collected by {@link Menu} and referred to by {@link OrderItem} when a customer picks it.</li>
+ *   <li>is collected by {@link MenuManager} and referred to by {@link OrderItem} when a customer picks it.</li>
  * </ul>
  *
  * <p><b>Why no setters?</b> The menu is read from the file once and then only read, never edited,
@@ -31,7 +29,7 @@ public class MenuItem {
     private final boolean cateringOnly; // true = only shown on the catering menu, hidden from the normal one
 
     /**
-     * Creates an item with no add-ons yet. {@link MenuFileReader} attaches
+     * Creates an item with no add-ons yet. {@link DataManager} attaches
      * add-ons afterwards with {@link #addModifier}.
      */
     public MenuItem(String id, String name, Category category, double price,

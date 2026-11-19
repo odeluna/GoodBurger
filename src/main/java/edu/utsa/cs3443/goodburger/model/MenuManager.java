@@ -1,6 +1,6 @@
 package edu.utsa.cs3443.goodburger.model;
 
-import edu.utsa.cs3443.goodburger.model.DataManager;
+import edu.utsa.cs3443.goodburger.view.menuPanels.MenuScreen;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -12,9 +12,9 @@ import java.util.List;
  * need "the entrees", "item B01" or "the catering items". Putting those questions here means the
  * filtering rules live in one place, and the UI never loops over the raw list itself.</p>
  *
- * <p><b>How it is created and shared:</b> {@link DataManager#load} builds
+ * <p><b>How it is created and shared:</b> {@link DataManager} builds
  * one Menu from the CSV files when the app starts, and that single object is passed to
- * {@link com.goodburger.ui.menu.MenuScreen}. Nothing else reads the files.</p>
+ * {@link MenuScreen}. Nothing else reads the files.</p>
  */
 public class MenuManager {
 
@@ -59,10 +59,8 @@ public class MenuManager {
         }
         return null;
     }
-
     /**
-     * The catering menu. The proposal describes it as "a modified version of the menu", so it is
-     * the same data filtered by a flag rather than a second class or file.
+     * The catering menu.
      *
      * @return every item marked cateringOnly, in file order
      */

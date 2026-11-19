@@ -4,7 +4,6 @@ import edu.utsa.cs3443.goodburger.view.menuPanels.MenuScreen;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 /**
  * One line of a customer's order: a {@link MenuItem}, the {@link Modifier}s they chose, and how many.
  *
@@ -38,7 +37,6 @@ public class OrderItem {
 
     /**
      * Adds the add-on if it isn't chosen yet, or removes it if it is: the same behavior as a checkbox.
-     *
      * @param m one of {@link MenuItem#getModifiers()} for this item
      * @throws IllegalArgumentException if {@code m} isn't offered for this item, which would mean a
      *         screen is showing the wrong checkboxes

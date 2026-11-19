@@ -36,9 +36,6 @@ public final class Session {
     public void loadMenu() throws IOException {
         menuManager = dataManager.loadMenu();
     }
-
-    public DataManager getDataManager()       { return dataManager; }
-    public AccountManager getAccountManager() { return accountManager; }
     public OrderManager getOrderManager()     { return orderManager; }
     public MenuManager getMenuManager()       { return menuManager; }
 

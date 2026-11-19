@@ -1,5 +1,6 @@
 package edu.utsa.cs3443.goodburger.view.menuPanels;
 
+import edu.utsa.cs3443.goodburger.controller.MenuScreenController;
 import edu.utsa.cs3443.goodburger.model.Category;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;

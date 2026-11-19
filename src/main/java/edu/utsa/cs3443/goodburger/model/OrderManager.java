@@ -14,7 +14,7 @@ import java.io.IOException;
  */
 public class OrderManager {
 
-    /** San Antonio sales tax, 8.25%. */
+    /** Sales tax: 8.25%. */
     public static final double TAX_RATE = 0.0825;
 
     private final DataManager dataManager;
@@ -22,9 +22,7 @@ public class OrderManager {
     private final ObservableList<OrderItem> readOnlyItems =
             FXCollections.unmodifiableObservableList(currentOrder.getItems());
 
-    public OrderManager(DataManager dataManager) {
-        this.dataManager = dataManager;
-    }
+    public OrderManager(DataManager dataManager) {this.dataManager = dataManager;}
 
     public void addItem(OrderItem item) {
         currentOrder.addItem(item);
@@ -48,12 +46,7 @@ public class OrderManager {
         }
     }
 
-    public void removeItem(OrderItem item) {
-        currentOrder.removeItem(item);
-    }
-
     public ObservableList<OrderItem> getItems() { return readOnlyItems; }
-    public Order getCurrentOrder()              { return currentOrder; }
     public boolean isEmpty()                    { return currentOrder.getItems().isEmpty(); }
 
     public double getSubtotal() { return currentOrder.getSubtotal(); }
@@ -67,6 +60,7 @@ public class OrderManager {
      * @param pickupTime what the customer picked on the checkout page
      * @return the order id that was saved
      */
+
     public String checkout(User user, OrderType type, String pickupTime) throws IOException {
         if (isEmpty()) {
             throw new IllegalStateException("The cart is empty");

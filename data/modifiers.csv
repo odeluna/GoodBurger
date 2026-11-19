@@ -1,119 +1,119 @@
-itemId,name,extraPrice,extraCalories
-B01,Add Extra Cheese,0.50,90
-B01,Add Bacon,0.99,120
-B01,Add Chipotle May Sauce,0.25,140
-B01,Add Sweet BBQ Sauce,0.25,150
-B01,No Cheese,0,-90
-B01,No Lettuce,0,-5
-B01,No Onions,0,-10
-B01,No Tomatoes,0,15
-B02,Add Extra Cheese,0.50,90
-B02,Add Extra Bacon,.99,120
-B02,Add Jalapenos,.50,30
-B02,Add Chipotle Mayo Sauce,0.25,140
-B02,Add Sweet BBQ Sauce,0.25,150
-B02,Add Mango Habanero Sauce,0.25,130
-B02,Add Jalapenos,.50,30
-B02,No Bacon,0,-120
-B02,No Cheese,0,-90
-B02,No Lettuce,0,-5
-B02,No Onions,0,-10
-B02,No Tomatoes,0,-15
-B02,No Pickles,0,-30
-B03,Add Extra Cheese,0.50,90
-B03,Add Extra Bacon,.99,120
-B03,Add Chipotle Mayo Sauce,0.25,140
-B03,Add Sweet BBQ Sauce,0.25,150
-B03,Add Mango Habanero Sauce,0.25,130
-B03,No Mushrooms,0,-40
-B03,No Garlic Aioli,0,-10
-B03,No Cheese,0,-90
-B03,No Lettuce,0,-5
-B03,No Onions,0,-10
-B04,Add Extra Cheese,0.50,90
-B04,Add Extra Bacon,0.99,120
-B04,Add Pickles,.50,30
-B04,Add Jalapenos,.50,30
-B04,Add Extra Onion Rings,0.99,120
-B04,Add Chipotle Mayo Sauce,0.25,140
-B04,Add Mango Habanero Sauce,0.25,130
-B04,No Cheese,0,-90
-B04,No Lettuce,0,-5
-B04,No Onions,0,-10
-B04,No Tomatoes,0,15
-B05,Add Extra Cheese,0.50,90
-B05,Add Extra Bacon,0.99,120
-B05,Add Sweet BBQ Sauce,0.25,150
-B05,Add Mango Habanero Sauce,0.25,130
-B05,No Cheese,0,-90
-B05,No Lettuce,0,-5
-B05,No Onions,0,-10
-B05,No Jalapenos,0,-30
-B06,Add Extra Cheese,0.50,90
-B06,Add Bacon,0.99,120
-B06,Add Jalapenos,.50,30
-B06,Add Chipotle Mayo Sauce,0.25,140
-B06,Add Sweet BBQ Sauce,0.25,150
-B06,Add Mango Habanero Sauce,0.25,130
-B06,No Cheese,0,-90
-B06,No Lettuce,0,-5
-B06,No Onions,0,-10
-B06,No Tomatoes,0,-15
-B06,No Pickles,0,-30
-B07,Add Extra Cheese,0.50,90
-B07,Add Bacon,0.99,120
-B07,Add Jalapenos,.50,30
-B07,Add Chipotle Mayo Sauce,0.25,140
-B07,Add Sweet BBQ Sauce,0.25,150
-B07,No Cheese,0,-90
-B07,No Lettuce,0,-5
-B07,No Onions,0,-10
-B07,No Tomatoes,0,-15
-B07,No Pickles,0,-30
-B08,Add Extra Cheese,0.50,90
-B08,Add Bacon,0.99,120
-B08,Add Jalapenos,.50,30
-B08,Add Onions,.10,10
-B08,Add Chipotle Mayo Sauce,0.25,140
-B08,Add Sweet BBQ Sauce,0.25,150
-B08,Add Mango Habanero Sauce,0.25,130
-B08,No Cheese,0,-90
-B08,No Lettuce,0,-5
-B08,No Tomatoes,0,-15
-B08,No Avocados,0,-30
-B09,Add Extra Cheese,0.50,90
-B09,Add Jalapenos,.50,30
-B09,Add Chipotle Mayo Sauce,0.25,140
-B09,Add Mango Habanero Sauce,0.25,130
-B09,No Cheese,0,-90
-B09,No Cream Cheese,0,-120
-B09,No Avocados,0,-30
-B10,Add Extra Vegan Cheese,0.50,90
-B10,Add Jalapenos,.50,30
-B10,Add Avocado,0.99,50
-B10,Add Mango Habanero Sauce,0.25,130
-B10,No Vegan Cheese,0,-90
-B10,No Onions,0,-10
-B10,No Pickles,0,-30
-S01,Add Cheese Sauce,0.99,90
-S01,Add Ranch Dip,0.50,110
-S01,Add Bacon,0.99,120
-S01,Add Jalapenos,.50,30
-S02,Add Cheese Sauce,0.99,90
-S02,Add Ranch Dip,0.50,110
-S02,Add Bacon,0.99,120
-S02,Add Jalapenos,.50,30
-S04,Add Cheese Sauce,0.99,90
-S04,Add Ranch Dip,0.50,110
-S04,Add Bacon,0.99,120
-S04,Add Jalapenos,.50,30
-D03,Add Chocolate,0,40
-D03,Add Strawberry,0,15
-D03,Add Caramel,0,20
-D03,Add Banana, 0,25
-D03,Add Peanut Butter,0,50
-DD04,Add Chocolate,0,40
-DD04,Add Strawberry,0,15
-DD04,Add Caramel,0,20
-DD04,Add Banana, 0,25
-DD04,Add Peanut Butter,0,50
+itemId,name,extraPrice,extraCalories, extraProtein, extraCarbs, extraFat, extraSodium
+B01,Add Extra Cheese,0.50,90,5,20,15,10
+B01,Add Bacon,0.99,120,30,60,80,50
+B01,Add Chipotle May Sauce,0.25,140,0,20,10,60
+B01,Add Sweet BBQ Sauce,0.25,150,0,20,10,60
+B01,No Cheese,0,-90,-10,-10,-10,-10
+B01,No Lettuce,0,-5,0,0,0,0
+B01,No Onions,0,-10,0,5,0,0
+B01,No Tomatoes,0,15,0,0,0,0
+B02,Add Extra Cheese,0.50,90,5,20,15,10
+B02,Add Extra Bacon,.99,120,30,60,80,50
+B02,Add Jalapenos,.50,30,0,2,0,10
+B02,Add Chipotle Mayo Sauce,0.25,140,0,20,10,60
+B02,Add Sweet BBQ Sauce,0.25,150,0,20,10,60
+B02,Add Mango Habanero Sauce,0.25,130,0,20,10,60
+B02,Add Jalapenos,.50,30,0,2,0,10
+B02,No Bacon,0,-120,-30,-60,-80,-50
+B02,No Cheese,0,-90,-10,-10,-10,-10
+B02,No Lettuce,0,-5,0,0,0,0
+B02,No Onions,0,-10,0,0,0,0
+B02,No Tomatoes,0,-15,0,0,0,0
+B02,No Pickles,0,-30,0,-2,0,-10
+B03,Add Extra Cheese,0.50,90,5,20,15,10
+B03,Add Extra Bacon,.99,120,30,60,80,50
+B03,Add Chipotle Mayo Sauce,0.25,140,0,20,10,60
+B03,Add Sweet BBQ Sauce,0.25,150,0,20,10,60
+B03,Add Mango Habanero Sauce,0.25,130,0,20,10,60
+B03,No Mushrooms,0,-40,0,0,0,-10
+B03,No Garlic Aioli,0,-10,0,0,0,-30
+B03,No Cheese,0,-90,-10,-10,-10,-10
+B03,No Lettuce,0,-5,0,0,0,0
+B03,No Onions,0,-10,0,0,0,0
+B04,Add Extra Cheese,0.50,90,5,20,15,10
+B04,Add Extra Bacon,0.99,120,30,60,80,50
+B04,Add Pickles,.50,30,0,2,0,30
+B04,Add Jalapenos,.50,30,0,2,0,10
+B04,Add Extra Onion Rings,0.99,120,2,50,60,50
+B04,Add Chipotle Mayo Sauce,0.25,140,0,20,10,60
+B04,Add Mango Habanero Sauce,0.25,130,0,20,10,60
+B04,No Cheese,0,-90,-10,-10,-10,-10
+B04,No Lettuce,0,-5,0,0,0,0
+B04,No Onions,0,-10,0,0,0,0
+B04,No Tomatoes,0,15,0,0,0,0
+B05,Add Extra Cheese,0.50,90,5,20,15,10
+B05,Add Extra Bacon,0.99,120,30,60,80,50
+B05,Add Sweet BBQ Sauce,0.25,150,0,20,10,60
+B05,Add Mango Habanero Sauce,0.25,130,0,20,10,60
+B05,No Cheese,0,-90,-10,-10,-10,-10
+B05,No Lettuce,0,-5,0,0,0,0
+B05,No Onions,0,-10,0,0,0,0
+B05,No Jalapenos,0,-30,0,0,0,-5
+B06,Add Extra Cheese,0.50,90,5,20,15,10
+B06,Add Bacon,0.99,120,30,60,80,50
+B06,Add Jalapenos,.50,30,0,2,0,10
+B06,Add Chipotle Mayo Sauce,0.25,140,0,20,10,60
+B06,Add Sweet BBQ Sauce,0.25,150,0,20,10,60
+B06,Add Mango Habanero Sauce,0.25,130,0,20,10,60
+B06,No Cheese,0,-90,-10,-10,-10,-10
+B06,No Lettuce,0,-5,0,0,0,0
+B06,No Onions,0,-10,0,0,0,0
+B06,No Tomatoes,0,-15,0,0,0,0
+B06,No Pickles,0,-30,0,0,0,0
+B07,Add Extra Cheese,0.50,90,5,20,15,10
+B07,Add Bacon,0.99,120,30,60,80,50
+B07,Add Jalapenos,.50,30,0,20,10,60
+B07,Add Chipotle Mayo Sauce,0.25,140,0,20,10,60
+B07,Add Sweet BBQ Sauce,0.25,150,0,20,10,60
+B07,No Cheese,0,-90,-10,-10,-10,-10
+B07,No Lettuce,0,-5,0,0,0,0
+B07,No Onions,0,-10,0,0,0,0
+B07,No Tomatoes,0,-15,0,0,0,0
+B07,No Pickles,0,-30,0,0,0,0
+B08,Add Extra Cheese,0.50,90,5,20,15,10
+B08,Add Bacon,0.99,120,30,60,80,50
+B08,Add Jalapenos,.50,30,0,2,0,10
+B08,Add Onions,.10,10,0,0,0,0
+B08,Add Chipotle Mayo Sauce,0.25,140,0,20,10,60
+B08,Add Sweet BBQ Sauce,0.25,150,0,20,10,60
+B08,Add Mango Habanero Sauce,0.25,130,0,20,10,60
+B08,No Cheese,0,-90,-10,-10,-10,-10
+B08,No Lettuce,0,-5,0,0,0,0
+B08,No Tomatoes,0,-15,0,0,0,0
+B08,No Avocados,0,-30,0,0,0,0
+B09,Add Extra Cheese,0.50,90,5,20,15,10
+B09,Add Jalapenos,.50,30,0,2,0,10
+B09,Add Chipotle Mayo Sauce,0.25,140,0,20,10,60
+B09,Add Mango Habanero Sauce,0.25,130,0,20,10,60
+B09,No Cheese,0,-90,-10,-10,-10,-10
+B09,No Cream Cheese,0,-120,0,0,-30,0
+B09,No Avocados,0,-30,0,0,0,0
+B10,Add Extra Vegan Cheese,0.50,90,0,0,0,0
+B10,Add Jalapenos,.50,30,0,2,0,10
+B10,Add Avocado,0.99,50,20,30,10,10
+B10,Add Mango Habanero Sauce,0.25,130,0,20,10,60
+B10,No Vegan Cheese,0,-90,-10,-10,-10,-10
+B10,No Onions,0,-10,0,0,0,0
+B10,No Pickles,0,-30,0,0,0,0
+S01,Add Cheese Sauce,0.99,90,5,20,15,10
+S01,Add Ranch Dip,0.50,110,0,20,10,100
+S01,Add Bacon,0.99,120,30,60,80,50
+S01,Add Jalapenos,.50,30,0,2,0,10
+S02,Add Cheese Sauce,0.99,90,5,20,15,10
+S02,Add Ranch Dip,0.50,110,5,20,15,10
+S02,Add Bacon,0.99,120,30,60,80,50
+S02,Add Jalapenos,.50,30,0,2,0,10
+S04,Add Cheese Sauce,0.99,9,05,20,15,10
+S04,Add Ranch Dip,0.50,110,5,20,15,10
+S04,Add Bacon,0.99,120,30,60,80,50
+S04,Add Jalapenos,.50,30,0,2,0,10
+D03,Add Chocolate,0,40,0,0,0,0
+D03,Add Strawberry,0,15,0,0,0,0
+D03,Add Caramel,0,20,0,0,0,0
+D03,Add Banana, 0,25,0,0,0,0
+D03,Add Peanut Butter,0,50,0,0,0,0
+DD04,Add Chocolate,0,40,0,0,0,0
+DD04,Add Strawberry,0,15,0,0,0,0
+DD04,Add Caramel,0,20,0,0,0,0
+DD04,Add Banana, 0,25,0,0,0,0
+DD04,Add Peanut Butter,0,50,0,0,0,0

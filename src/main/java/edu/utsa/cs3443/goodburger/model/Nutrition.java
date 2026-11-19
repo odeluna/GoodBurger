@@ -1,5 +1,4 @@
 package edu.utsa.cs3443.goodburger.model;
-
 /**
  * Nutrition facts for one menu item, or a total of several items.
  *
@@ -33,6 +32,7 @@ public class Nutrition {
      * @param fat      grams of fat
      * @param sodium   milligrams of sodium
      */
+
     public Nutrition(int calories, int protein, int carbs, int fat, int sodium) {
         this.calories = calories;
         this.protein = protein;
@@ -47,6 +47,7 @@ public class Nutrition {
      * @param other the values to add to this one
      * @return a new Nutrition holding the sum; neither this object nor {@code other} is changed
      */
+
     public Nutrition add(Nutrition other) {
         return new Nutrition(
                 calories + other.calories,
@@ -62,7 +63,8 @@ public class Nutrition {
     public int getFat()      { return fat; }
     public int getSodium()   { return sodium; }
 
-    /** One-line summary used by the UI, for example "650 cal | 32g protein | 45g carbs | 35g fat | 980mg sodium". */
+    /** One-line summary used by the UI
+     *  Format: "650 cal | 32g protein | 45g carbs | 35g fat | 980mg sodium". */
     @Override
     public String toString() {
         return calories + " cal | " + protein + "g protein | " + carbs + "g carbs | "

@@ -18,9 +18,7 @@ public class Order {
     private OrderType orderType = OrderType.ASAP;
     private String pickupTime = "ASAP";
 
-    public Order() {
-    }
-
+    public Order() {}
     public Order(String orderId, String customerId) {
         this.orderId = orderId;
         this.customerId = customerId;
@@ -29,7 +27,6 @@ public class Order {
     public void addItem(OrderItem item) {
         items.add(item);
     }
-
     public void removeItem(OrderItem item) {
         items.remove(item);
     }

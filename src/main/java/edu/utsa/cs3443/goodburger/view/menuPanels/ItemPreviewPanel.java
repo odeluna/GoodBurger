@@ -29,7 +29,7 @@ public class ItemPreviewPanel extends VBox {
 
     private final Label nameLabel = new Label();
     private final VBox addOnLines = new VBox(4);
-    private final Label caloriesLabel = new Label();
+    private final Label nutritionLabel = new Label();
     private final Label totalLabel = new Label();
 
     /**
@@ -53,12 +53,11 @@ public class ItemPreviewPanel extends VBox {
 
         Region spacer = new Region();                // pushes the totals and buttons to the bottom
         VBox.setVgrow(spacer, Priority.ALWAYS);
-        getChildren().addAll(nameLabel, addOnLines, spacer, caloriesLabel, totalLabel, buttons);
+        getChildren().addAll(nameLabel, addOnLines, spacer, nutritionLabel, totalLabel, buttons);
     }
 
     /**
      * Redraws the preview for the draft item.
-     *
      * @param draft the item being customized
      */
     public void show(OrderItem draft) {
@@ -67,7 +66,12 @@ public class ItemPreviewPanel extends VBox {
         for (Modifier m : draft.getChosen()) {
             addOnLines.getChildren().add(new Label(String.format("  + %s  $%.2f", m.getName(), m.getExtraPrice())));
         }
-        caloriesLabel.setText(draft.getNutrition().getCalories() + " cal");
+        nutritionLabel.setText(
+                "Calories:\t"+draft.getNutrition().getCalories() + " cal\n" +
+                "Protein:\t"+draft.getNutrition().getProtein() +" g\n" +
+                "Carbs:\t"+draft.getNutrition().getCarbs()+ " g\n" +
+                "Fat:\t"+draft.getNutrition().getFat()+ " g\n" +
+                "Sodium:\t"+draft.getNutrition().getSodium()+" g");
         totalLabel.setText(String.format("Item total (x%d): $%.2f", draft.getQuantity(), draft.getLinePrice()));
     }
 }
