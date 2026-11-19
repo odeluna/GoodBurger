@@ -11,9 +11,11 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 
 import rewards.EconomyRules;
 import rewards.PipeFlightGame;
+import rewards.PokerWindow;
 import rewards.ProgressStore;
 import rewards.RewardGameDriver;
 import rewards.SpriteAtlas;
@@ -46,6 +48,7 @@ public class RewardsPageController {
     @FXML private Button redeem2Button;
     @FXML private Button redeem3Button;
     @FXML private Button miniGameButton;
+    @FXML private Button pokerButton;
     @FXML private Label miniGameStatsLabel;
 
     private ProgressStore progress;
@@ -81,6 +84,9 @@ public class RewardsPageController {
             } catch (IOException error) {
                 // The game reports the missing sprites if it is started.
             }
+            pokerButton.setTooltip(new Tooltip(
+                    "Play seven-card stud against the dealer. 50-point ante; the best five of your "
+                            + "seven cards wins the pot. Shown ranks that match the dealer's push it."));
         }
         refreshData();
     }
@@ -181,6 +187,17 @@ public class RewardsPageController {
             activeDriver = null;
         }
         Platform.runLater(this::refreshData);
+    }
+
+    // Opens seven-card stud in its own window; it shares this page's save file.
+    @FXML
+    private void pokerClicked(ActionEvent event) {
+        if (progress == null) return;
+        Window owner = pointsLabel.getScene() == null
+                ? null : pointsLabel.getScene().getWindow();
+        PokerWindow.open(owner, progress,
+                () -> Platform.runLater(this::refreshData),
+                error -> showError("Could not save your poker result", error));
     }
 
     // Small themed notification at the top of the page (auto-fades).

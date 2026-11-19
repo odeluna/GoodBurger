@@ -20,7 +20,8 @@ public class DataManager {
     public static final String ORDERS_HEADER =
             "orderId,customerId,orderType,pickupTime,subtotal,tax,total,calories,items";
 
-    private static final int MENU_COLUMNS = 10;
+    private static final int MENU_COLUMNS_LEGACY = 10;   // id..cateringOnly, no photo/description
+    private static final int MENU_COLUMNS = 12;          // id..cateringOnly,photo,description
     private static final int MODIFIER_COLUMNS = 8;
 
     private final Path dataFolder;
@@ -103,16 +104,20 @@ public class DataManager {
     }
 
     // menu.csv, either:
-    //   id,name,category,price,calories,protein,carbs,fat,sodium,cateringOnly   (full nutrition)
+    //   id,name,category,price,calories,protein,carbs,fat,sodium,cateringOnly,photo,description  (current)
+    //   id,name,category,price,calories,protein,carbs,fat,sodium,cateringOnly                   (legacy, no photo/description)
     MenuItem parseItem(String line) {
-        String[] f = split(line, MENU_COLUMNS);
+        String[] f = split(line, MENU_COLUMNS, MENU_COLUMNS_LEGACY);
         Nutrition nutrition = Nutrition.ZERO;
         boolean catering;
+        String photo = "", description = "";
         if (f.length == MENU_COLUMNS) {
             nutrition = new Nutrition(
                     Integer.parseInt(f[4]), Integer.parseInt(f[5]), Integer.parseInt(f[6]),
                     Integer.parseInt(f[7]), Integer.parseInt(f[8]));
             catering = Boolean.parseBoolean(f[9]);
+            photo = f[10];
+            description = f[11];
         } else {
             catering = Boolean.parseBoolean(f[5]);
         }
@@ -121,6 +126,8 @@ public class DataManager {
                 Category.valueOf(f[2].toUpperCase()),
                 Double.parseDouble(f[3]),
                 nutrition,
+                photo,
+                description,
                 catering);
     }
 
@@ -144,20 +151,56 @@ public class DataManager {
         return new Modifier(f[1], Double.parseDouble(f[2]), calories, protein, carbs, fat, sodium);
     }
 
+    /**
+     * Splits a CSV line into trimmed fields. A field may be wrapped in double quotes so it can
+     * contain commas; inside a quoted field a doubled quote ("" ) is a literal quote. Unquoted
+     * lines split exactly like before, so the legacy files keep working.
+     */
     private static String[] split(String line, int... allowedColumns) {
-        String[] fields = line.split(",", -1);   // -1 keeps empty trailing fields so the count is honest
+        String[] fields = splitCsv(line);
         boolean ok = false;
         for (int n : allowedColumns) {
             ok |= fields.length == n;
         }
         if (!ok) {
             throw new IllegalArgumentException("expected " + allowedColumns[0] + " columns but found "
-                    + fields.length + " (names can't contain commas)");
+                    + fields.length + " (long fields must be wrapped in double quotes)");
         }
         for (int i = 0; i < fields.length; i++) {
             fields[i] = fields[i].trim();
         }
         return fields;
+    }
+
+    /** One pass over the line: commas inside double quotes do not end the field. */
+    private static String[] splitCsv(String line) {
+        List<String> fields = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        boolean inQuotes = false;
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (inQuotes) {
+                if (c == '"') {
+                    if (i + 1 < line.length() && line.charAt(i + 1) == '"') {
+                        current.append('"');
+                        i++;
+                    } else {
+                        inQuotes = false;
+                    }
+                } else {
+                    current.append(c);
+                }
+            } else if (c == '"') {
+                inQuotes = true;
+            } else if (c == ',') {
+                fields.add(current.toString());
+                current.setLength(0);
+            } else {
+                current.append(c);
+            }
+        }
+        fields.add(current.toString());   // -1-equivalent: a trailing comma still yields the empty last field
+        return fields.toArray(new String[0]);
     }
 
     // ----------------------------- order --------------------------------- //

@@ -140,6 +140,21 @@ public final class ProgressStore {
         return bonus;
     }
 
+    /**
+     * Adds or removes points directly, e.g. when a poker showdown settles the
+     * pot against the balance. The balance never drops below zero.
+     */
+    public synchronized void adjustPoints(int delta) throws IOException {
+        int original = points;
+        points = Math.max(0, points + delta);
+        try {
+            save();
+        } catch (IOException error) {
+            points = original;
+            throw error;
+        }
+    }
+
     /** Resets the per-pipe counter and the one-per-day gamble when the local day changes. */
     public synchronized void rollDay() throws IOException {
         LocalDate live = liveDay();
