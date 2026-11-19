@@ -9,6 +9,7 @@ import edu.utsa.cs3443.goodburger.model.OrderManager;
 import edu.utsa.cs3443.goodburger.view.CartView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
+import java.util.Objects;
 
 /**
  * The food menu screen: one screen with three areas whose contents swap as the customer clicks.
@@ -63,6 +64,9 @@ public class MenuScreen extends BorderPane {
     public MenuScreen(MenuManager menu, OrderManager orders) {
         this.menu = menu;
         this.orders = orders;
+        getStyleClass().add("menu-screen");   // see styles/menuScreen.css; every panel below inherits it
+        getStylesheets().add(Objects.requireNonNull(
+                getClass().getResource("/styles/menuScreen.css")).toExternalForm());
         this.cartPanel = new CartView(orders, "Item Cart", true);
         cartPanel.setPrefWidth(280);
 
@@ -79,6 +83,7 @@ public class MenuScreen extends BorderPane {
     /** A category button was pressed: show that category's items and drop any half-finished item. */
     public void onCategoryClicked(Category c) {
         selectedCategory = c;
+        categoryPanel.setSelected(c);   // fuchsia highlight on the chosen category
         draftItem = null;   // switching category acts like Cancel, matching the "left column is a back button" design
         itemGridPanel.show(menu.getByCategory(c));
         refreshPanels();

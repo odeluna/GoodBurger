@@ -6,6 +6,8 @@ import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.layout.VBox;
 
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -22,6 +24,7 @@ import java.util.function.Consumer;
 public class CategoryPanel extends VBox {
 
     private final Consumer<Category> onCategoryClicked;
+    private final Map<Category, Button> buttons = new EnumMap<>(Category.class);
 
     /** @param onCategoryClicked called with the category whenever one of its buttons is pressed */
     public CategoryPanel(Consumer<Category> onCategoryClicked) {
@@ -39,12 +42,30 @@ public class CategoryPanel extends VBox {
      */
     public void show(Category[] categories) {
         getChildren().clear();
+        buttons.clear();
         for (Category c : categories) {
             Button b = new Button(c.getDisplayName());
+            b.getStyleClass().add("category-button");   // see menuScreen.css
+            buttons.put(c, b);
             b.setMaxWidth(Double.MAX_VALUE);         // stretch to the column width so all buttons line up
             b.setPrefHeight(60);
             b.setOnAction(e -> onCategoryClicked.accept(c));
             getChildren().add(b);
         }
+    }
+
+    /**
+     * Highlights one category button (the "category-selected" style class, fuchsia in menuScreen.css)
+     * and clears the highlight from the others.
+     *
+     * @param selected the category whose items are showing
+     */
+    public void setSelected(Category selected) {
+        buttons.forEach((c, b) -> {
+            b.getStyleClass().remove("category-selected");
+            if (c == selected) {
+                b.getStyleClass().add("category-selected");
+            }
+        });
     }
 }

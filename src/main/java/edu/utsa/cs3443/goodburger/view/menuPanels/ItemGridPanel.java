@@ -44,6 +44,7 @@ public class ItemGridPanel extends ScrollPane {
             Button b = new Button(String.format("%s%n$%.2f", item.getName(), item.getPrice()));
             b.setPrefSize(150, 70);
             b.setWrapText(true);
+            b.getStyleClass().add("item-button");   // see menuScreen.css
             b.setOnAction(e -> onItemClicked.accept(item));
             grid.getChildren().add(b);
         }
