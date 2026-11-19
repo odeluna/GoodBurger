@@ -1,5 +1,8 @@
 package rewards;
 
+import edu.utsa.cs3443.goodburger.model.MenuManager;
+import edu.utsa.cs3443.goodburger.model.MenuItem;
+import edu.utsa.cs3443.goodburger.model.DataManager;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
@@ -159,10 +162,39 @@ public final class LogicTest {
         check(reloaded.points() == 0, "balance floors at zero");
     }
 
+    /**
+     * menu.csv round trip: a quoted description containing commas must survive the parse, the photo
+     * column must land on the item, and a legacy 10-column row must still load with empty photo and
+     * description (old files must keep working).
+     */
+    private static void menuCsv() throws Exception {
+        Path dir = Files.createTempDirectory("goodburger-menu");
+        Files.writeString(dir.resolve("menu.csv"), String.join("\n",
+                "id,name,category,price,calories,protein,carbs,fat,sodium,cateringOnly,photo,description",
+                "B01,Rowdy Burger,ENTREE,6.99,650,32,45,35,980,false,01B_RowdyBurger.png,\"A classic, with commas, inside quotes.\"",
+                "S01,Tater Tots,SIDE,2.49,320,4,41,15,230,false",
+                ""));
+        Files.writeString(dir.resolve("modifiers.csv"),
+                "itemId,name,extraPrice,extraCalories,extraProtein,extraCarbs,extraFat,extraSodium\n"
+                + "B01,Extra Cheese,1.00,100,4,2,9,200\n");
+        MenuManager menu = new DataManager(dir).loadMenu();
+        MenuItem rowdy = menu.findById("B01");
+        check(rowdy != null, "item B01 loaded");
+        check(rowdy.getPhoto().equals("01B_RowdyBurger.png"), "photo column parsed: " + rowdy.getPhoto());
+        check(rowdy.getDescription().equals("A classic, with commas, inside quotes."),
+                "quoted description with commas parsed: " + rowdy.getDescription());
+        check(rowdy.getPrice() == 6.99 && rowdy.getNutrition().getCalories() == 650
+                && !rowdy.isCateringOnly(), "price, nutrition and catering flag still parsed");
+        MenuItem tots = menu.findById("S01");
+        check(tots != null && tots.getPhoto().isEmpty() && tots.getDescription().isEmpty(),
+                "legacy 10-column row loads with empty photo/description");
+    }
+
     public static void main(String[] args) throws Exception {
         poker();
         stud();
         progress();
+        menuCsv();
         System.out.println("All poker and rewards logic checks passed.");
     }
 }

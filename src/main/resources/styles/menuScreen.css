@@ -7,3 +7,9 @@
 .menu-screen {
     -fx-background-color: #ffffff;
 }
+
+/* Item photo box in ItemDetailPanel: placeholder background behind the cropped photo.
+   The rounded corners come from the clip in code (a Rectangle clip), not from CSS. */
+.item-photo {
+    -fx-background-color: #e8e8e8;
+}

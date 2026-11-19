@@ -25,6 +25,8 @@ public class MenuItem {
     private final Category category;
     private final double price;       // base price in dollars, before add-ons
     private final Nutrition nutrition;
+    private final String photo;       // file name in the images resource folder, e.g. "01B_RowdyBurger.png"; empty = no photo
+    private final String description; // marketing blurb shown under the name; empty = nothing to show
     private final List<Modifier> modifiers = new ArrayList<>();
     private final boolean cateringOnly; // true = only shown on the catering menu, hidden from the normal one
 
@@ -34,11 +36,25 @@ public class MenuItem {
      */
     public MenuItem(String id, String name, Category category, double price,
                     Nutrition nutrition, boolean cateringOnly) {
+        this(id, name, category, price, nutrition, "", "", cateringOnly);
+    }
+
+    /**
+     * Full constructor with photo and description.
+     *
+     * @param photo         the item's photo file name in {@code images/}, or empty for none
+     * @param description   the item's description text, or empty for none
+     */
+    public MenuItem(String id, String name, Category category, double price,
+                    Nutrition nutrition, String photo, String description,
+                    boolean cateringOnly) {
         this.id = id;
         this.name = name;
         this.category = category;
         this.price = price;
         this.nutrition = nutrition;
+        this.photo = photo;
+        this.description = description;
         this.cateringOnly = cateringOnly;
     }
 
@@ -56,6 +72,10 @@ public class MenuItem {
     public Category getCategory()    { return category; }
     public double getPrice()         { return price; }
     public Nutrition getNutrition()  { return nutrition; }
+    /** @return the item's photo file name in the images resource folder, or "" when the item has no photo */
+    public String getPhoto()         { return photo; }
+    /** @return the item's description text, or "" when the item has none */
+    public String getDescription()  { return description; }
     public boolean isCateringOnly()  { return cateringOnly; }
 
     /**
