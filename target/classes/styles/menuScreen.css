@@ -1,0 +1,123 @@
+/* ==========================================================================
+   menuScreen.css  -  style template for MenuScreen and everything inside it
+   (CategoryPanel, ItemGridPanel, ItemDetailPanel, ItemPreviewPanel, CartView).
+
+   HOW TO USE: change the values in the "TEMPLATE VALUES" block below. Every
+   rule further down reads from those names, so you rarely need to edit the rules.
+
+   Attached in MenuScreen's constructor, which also adds the style class "menu-screen".
+   JavaFX CSS: properties start with -fx-, and these "-gb-*" names are looked-up colors
+   (custom variables) that only work on a node and its children.
+   ========================================================================== */
+
+/* ---------- TEMPLATE VALUES (edit these) ---------- */
+.menu-screen {
+    /* Background: the screen itself and the panels on top of it */
+    -gb-bg:            #4A4F55;   /* medium-dark gray background for the whole menu screen */
+    -gb-panel-bg:      #595F66;   /* scroll panes / cart list, a step lighter than -gb-bg */
+
+    /* Fonts */
+    -gb-font-family:   "Verdana";  /* e.g. "Arial", "Verdana", "Segoe UI" */
+    -gb-label-size:    14px;
+    -gb-label-weight:  normal;    /* normal | bold */
+    -gb-button-size:   14px;
+    -gb-button-weight: bold;
+
+    /* Text colors */
+    -gb-label-color:   #F2F2F2;
+    -gb-button-color:  #FFFFFF;
+    -gb-muted-color:   #A9B2B8;   /* secondary text (see .muted below) */
+
+    /* Alignment: LEFT | CENTER | RIGHT   (text inside the control) */
+    -gb-label-align:   CENTER-LEFT;   /* CENTER-LEFT | CENTER | CENTER-RIGHT */
+    -gb-button-align:  CENTER;
+    -gb-button-align-center-left: CENTER-LEFT;   /* used by the general .button rule below */
+
+    /* Item grid buttons (the food tiles in the middle) */
+    -gb-item-font-family: "Georgia";   /* different from the rest; try "Georgia", "Verdana" */
+    -gb-item-weight:      bold;
+    -gb-item-align:       CENTER;
+
+    /* Highlight for the chosen category button */
+    -gb-selected-bg:      #B52D5E;          /* fuchsia */
+
+    /* Buttons */
+    -gb-button-bg:         #45A0AB;   /* teal from style.css */
+    -gb-button-hover-bg:   #E0733A;   /* orange highlight on hover */
+    -gb-button-pressed-bg: #B52D5E;   /* fuchsia while the mouse is down */
+    -gb-button-radius:     8px;
+    -gb-button-padding:    8 14 8 14; /* top right bottom left */
+
+    /* ---------- Screen background ---------- */
+    -fx-background-color: -gb-bg;
+}
+
+/* ---------- Panels (the BorderPane areas and their containers) ---------- */
+.menu-screen .scroll-pane,
+.menu-screen .scroll-pane > .viewport,
+.menu-screen .list-view {
+    -fx-background-color: -gb-panel-bg;
+    -fx-background-insets: 0;
+}
+
+.menu-screen .list-cell {
+    -fx-background-color: transparent;   /* so cart rows show the panel color */
+}
+
+/* ---------- Labels ---------- */
+.menu-screen .label {
+    -fx-font-family: -gb-font-family;
+    -fx-font-size: -gb-label-size;
+    -fx-font-weight: -gb-label-weight;
+    -fx-text-fill: -gb-label-color;
+    -fx-alignment: -gb-label-align;
+}
+
+/* Add the style class "muted" to a label for secondary text, e.g. label.getStyleClass().add("muted") */
+.menu-screen .label.muted {
+    -fx-text-fill: -gb-muted-color;
+}
+
+/* ---------- Checkboxes and spinners (add-ons, quantity) use the label look too ---------- */
+.menu-screen .check-box {
+    -fx-font-family: -gb-font-family;
+    -fx-font-size: -gb-label-size;
+    -fx-text-fill: -gb-label-color;
+}
+
+/* ---------- Buttons ---------- */
+.menu-screen .button {
+    -fx-font-family: -gb-font-family;
+    -fx-font-size: -gb-button-size;
+    -fx-font-weight: -gb-button-weight;
+    -fx-text-fill: -gb-button-color;
+    -fx-alignment: -gb-button-align-center-left;
+    -fx-background-color: -gb-button-bg;
+    -fx-background-radius: -gb-button-radius;
+    -fx-padding: -gb-button-padding;
+    -fx-cursor: hand;
+}
+
+/* Hover highlight */
+.menu-screen .button:hover {
+    -fx-background-color: -gb-button-hover-bg;
+}
+
+/* Item grid buttons: own font, bold, centered (both the name/price lines and the button itself).
+   Must stay below the general .button rule so it wins. */
+.menu-screen .item-button {
+    -fx-font-family: -gb-item-font-family;
+    -fx-font-weight: -gb-item-weight;
+    -fx-alignment: -gb-item-align;
+    -fx-text-alignment: center;
+}
+
+/* Chosen category: stays fuchsia, even while hovered. Keep below the hover rule. */
+.menu-screen .category-button.category-selected,
+.menu-screen .category-button.category-selected:hover {
+    -fx-background-color: -gb-selected-bg;
+}
+
+.menu-screen .button:disabled {
+    -fx-opacity: 0.5;
+}
