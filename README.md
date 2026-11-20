@@ -5,7 +5,28 @@ GoodBurger is a restaurant ordering app (sign-in, menu, checkout, profile) with 
 - **Pipe Flight** — a JavaFX Canvas game with noir-city, ocean, and underwater stages (hazards and health, Power/Armor/Recovery upgrades, audio, the final drowning scene).
 - **Poker** — a seven-card stud game played against the dealer.
 
-This branch (`poker`) is the **FirstEdition_V2** codebase plus the seven-card stud layer and the menu item view: every menu item now shows a **photo and a description** in the detail panel, with the data extended in `data/menu.csv`.
+This branch is the **FirstEdition_V2** codebase plus the seven-card stud layer and the menu item view: every menu item now shows a **photo and a description** in the detail panel, with the data extended in `data/menu.csv`.
+
+## Where things live
+
+There are two entry points and a shared data layer:
+
+| Entry point | Class | What it runs |
+|---|---|---|
+| `edu.utsa.cs3443.goodburger.Launcher` | the app | the full GoodBurger app (sign-in → menu → checkout → profile → rewards page) |
+| `rewards.RewardsApp` | the games | a standalone launcher for the mini-games only (used during development, supports `--preview`/`--smoke`) |
+
+The two sides talk to each other in one place only: `RewardsPageController` (app side) hosts the games, and both sides share player progress through `rewards.ProgressStore`, which persists to a file in `data/`.
+
+The app packages (`edu.utsa.cs3443.goodburger.*`) each carry a `package-info.java` that explains what belongs there and why:
+
+- `…goodburger` — app shell: `Launcher`, `GoodBurgerApplication` (owns the window + `switchScreen`)
+- `…goodburger.controller` — one FXML controller per page (UI wiring only)
+- `…goodburger.model` — domain + data: `Session`, `AccountManager`, `MenuManager`, `Order*`, `DataManager`
+- `…goodburger.view` / `…view.menuPanels` — shared components and the menu-screen panels
+- `rewards` — the mini-games, shared progress, and scoring
+
+For the full class-level picture (what calls what, and how data flows), see the architecture diagram in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). The UML design diagram submitted for this project is `goodburgeruml-1.jpg`.
 
 ## Run
 
