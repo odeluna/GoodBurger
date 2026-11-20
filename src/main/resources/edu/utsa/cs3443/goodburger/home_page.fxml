@@ -39,7 +39,7 @@
       <NavBar current="home" layoutY="500.0" />
       <ImageView fitHeight="366.0" fitWidth="624.0" layoutX="72.0" layoutY="102.0">
          <image>
-            <Image url="@../../../../images/welcome.png" />
+            <Image url="@../../../../images/welcome.jpg" />
          </image>
       </ImageView>
    </children>

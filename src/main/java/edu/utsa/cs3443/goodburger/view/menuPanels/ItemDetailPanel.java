@@ -114,7 +114,7 @@ public class ItemDetailPanel extends ScrollPane {
      * Puts the item's photo into the fixed photo box, scaled to cover it and cropped to the box.
      * A missing or empty photo leaves the placeholder background showing instead.
      *
-     * @param fileName the photo file name from {@link MenuItem#getPhoto()}, e.g. "01B_RowdyBurger.png"
+     * @param fileName the photo file name from {@link MenuItem#getPhoto()}, e.g. "01B_RowdyBurger.jpg"
      */
     private void showPhoto(String fileName) {
         photoBox.setClip(null);

@@ -1,27 +1,27 @@
 id,name,category,price,calories,protein,carbs,fat,sodium,cateringOnly,photo,description
-B01,Rowdy Burger,ENTREE,6.99,650,32,45,35,980,false,01B_RowdyBurger.png,"A student classic guaranteed to satisfy your hunger! Delicately crafted with a juicy, seasoned beef patty topped with melted American Cheese, fresh iceberg lettuce, onions, tomatoes, and pickles, all packed in a delicious, toasted sesame bun. A favorite for its flavorful simplicity!"
-B02,Meep Meep!,ENTREE,7.49,740,37,46,42,1180,false,02B_MeepBurger.png,"Double beef patties, double bacon, and double the flavor! Made with two juicy beef patties layered with crispy bacon, melted American Cheese, fresh lettuce, onions, tomatoes, and pickles, all on a toasted sesame bun. Escape hunger with this roadrunner fan-favorite!"
-B03,Pioneer,ENTREE,8.49,820,42,46,49,1350,false,03B_PioneerBurger.png,"This burger is specially made for our most adventurous students! Ambitiously crafted with a juicy beef patty, savory sauteed mushrooms, melted Swiss Cheese, fresh lettuce and rich garlic aioli. Reward yourself with this one-of-a-kind burger!"
-B04,Texas Grad,ENTREE,9.99,1020,58,47,62,1420,false,04B_TexasBurger.png,"Our boldest burger straight from the grill! Enjoy a deliciously crafted BBQ burger made with a juicy beef patty, sharp melted cheddar cheese, crunchy bacon, crispy golden onion rings, softly brushed with sweet BBQ sauce. Our Texas Grad is sure to satisfy your hankering for BBQ!"
-B05,JPL Burger,ENTREE,8.29,780,39,48,44,1100,false,05B_JPLBurger.png,"Need a pick-me-up for a long study sesh in the JPL? Be sure to grab our spicy Jalipeno Bacon Burger - The JPL burger! Crafted with a juicy beef patty topped with tangy blue cheese, crispy bacon, spicy jalepenos, sweet caramelized onions, and softly brushed with our very own Chipotle Mayo sauce! The librarians are sure to be jealous!"
-B06,Bird's Up!,ENTREE,7.99,710,34,47,39,1240,false,06B_BirdBurger.png,"Birds up everyone! Bite into a tender, crispy chicken patty topped with creamy melted Muenster Cheese, fresh lettuce, onion, tomatoes, and pickles. This juicy bird is irresistible!"
-B07,Spicy Bird,ENTREE,7.29,590,36,52,24,1310,false,07B_SpicyBirdBurger.png,"If you love some heat, then you'll love our spicy bird! This savory sandwich is packed with a crispy chicken patty, pepper jack cheese, fresh lettuce, onions, tomatoes, pickles, and our very own, specially made Mango Habenero sauce! One bite and your mouth will be salivating for more!"
-B08,Sombria Sunshine,ENTREE,7.49,520,21,58,22,890,false,08B_SombriaBurger.png,"Kick your feet back, lie in the grass, soak in the sun, and enjoy our freshest BLT on the block! Named after our favorite plaza, the Sombria Sunshine is freshly crafted with savory crispy bacon, fresh iceberg lettuce, avocado, tomatoes, and melted cheddar cheese. Enjoy the warmth of our little bite of sunshine!"
-B09,Morning Fiesta,ENTREE,7.49,520,21,58,22,890,false,09B_FiestaBurger.png,"Wakey, Wakey, eggs and . . . Chorizo? Start your day off right with our delicious breakfast sandwich - the Morning Fiesta! Humbly made with fluffy scrambled eggs, savory, seasoned chorizo, cream cheese, melted American cheese, salsa, and avocado, all in buttery, toasted white bread. You wont want to stop the party once it starts!"
-B10,Paseo Veggie,ENTREE,7.49,520,21,58,22,890,false,10B_PaseoBurger.png,"Plant-based burger ready to steal the spotlight! A healthy black bean patty topped with creamy vegan cheddar, fresh lettuce, onions, tomatoes, and tangy pickles. A delicious and healthy way to enjoy your lunch!"
-S01,Tater Tots,SIDE,2.49,320,4,41,15,230,false,01S_Tots.png,
-S02,French Fries,SIDE,3.29,410,5,48,22,560,false,02S_Fries.png,
-S03,Onion Rings,SIDE,2.79,350,3,38,21,620,false,03S_OnionRings.png,
-S04,Sweet Potato Fries,SIDE,3.49,150,4,12,9,240,false,04S_SweetPotatoFries.png,
-S05,Fruit Cup,SIDE,3.49,150,4,12,9,240,false,05S_FruitCup.png,
-S06,Side Salad,SIDE,3.49,150,4,12,9,240,false,06S_Salad.png,
-D01,Soft Drink,DRINK,1.99,210,0,56,0,45,false,01D_SoftDrink.png,
-D02,Agua Fresca,DRINK,2.49,220,0,58,0,15,false,04D_AguaFresca.png,
-D03,Milkshake,DRINK,6.99,90,0,23,0,10,false,05D_Shakes.png,
-D04,Lemonade,DRINK,4.49,640,14,92,23,390,false,02D_Lemonade.png,
-D05,Iced Tea,DRINK,4.49,590,13,85,22,360,false,03D_IcedTea.png,
-D06,Bottled Water,DRINK,1.49,0,0,0,0,0,false,06D_Water.png,
-DD01,Chocolate Chip Cookie,DESSERT,1.79,220,2,30,11,160,false,01DD_Cookie.png,
-DD02,Brownie,DESSERT,2.49,380,4,50,19,190,false,04DD_Brownie.png,
-DD03,Apple Pie,DESSERT,2.29,300,3,40,14,240,false,02DD_Pie.png,
+B01,Rowdy Burger,ENTREE,6.99,650,32,45,35,980,false,01B_RowdyBurger.jpg,"A student classic guaranteed to satisfy your hunger! Delicately crafted with a juicy, seasoned beef patty topped with melted American Cheese, fresh iceberg lettuce, onions, tomatoes, and pickles, all packed in a delicious, toasted sesame bun. A favorite for its flavorful simplicity!"
+B02,Meep Meep!,ENTREE,7.49,740,37,46,42,1180,false,02B_MeepBurger.jpg,"Double beef patties, double bacon, and double the flavor! Made with two juicy beef patties layered with crispy bacon, melted American Cheese, fresh lettuce, onions, tomatoes, and pickles, all on a toasted sesame bun. Escape hunger with this roadrunner fan-favorite!"
+B03,Pioneer,ENTREE,8.49,820,42,46,49,1350,false,03B_PioneerBurger.jpg,"This burger is specially made for our most adventurous students! Ambitiously crafted with a juicy beef patty, savory sauteed mushrooms, melted Swiss Cheese, fresh lettuce and rich garlic aioli. Reward yourself with this one-of-a-kind burger!"
+B04,Texas Grad,ENTREE,9.99,1020,58,47,62,1420,false,04B_TexasBurger.jpg,"Our boldest burger straight from the grill! Enjoy a deliciously crafted BBQ burger made with a juicy beef patty, sharp melted cheddar cheese, crunchy bacon, crispy golden onion rings, softly brushed with sweet BBQ sauce. Our Texas Grad is sure to satisfy your hankering for BBQ!"
+B05,JPL Burger,ENTREE,8.29,780,39,48,44,1100,false,05B_JPLBurger.jpg,"Need a pick-me-up for a long study sesh in the JPL? Be sure to grab our spicy Jalipeno Bacon Burger - The JPL burger! Crafted with a juicy beef patty topped with tangy blue cheese, crispy bacon, spicy jalepenos, sweet caramelized onions, and softly brushed with our very own Chipotle Mayo sauce! The librarians are sure to be jealous!"
+B06,Bird's Up!,ENTREE,7.99,710,34,47,39,1240,false,06B_BirdBurger.jpg,"Birds up everyone! Bite into a tender, crispy chicken patty topped with creamy melted Muenster Cheese, fresh lettuce, onion, tomatoes, and pickles. This juicy bird is irresistible!"
+B07,Spicy Bird,ENTREE,7.29,590,36,52,24,1310,false,07B_SpicyBirdBurger.jpg,"If you love some heat, then you'll love our spicy bird! This savory sandwich is packed with a crispy chicken patty, pepper jack cheese, fresh lettuce, onions, tomatoes, pickles, and our very own, specially made Mango Habenero sauce! One bite and your mouth will be salivating for more!"
+B08,Sombria Sunshine,ENTREE,7.49,520,21,58,22,890,false,08B_SombriaBurger.jpg,"Kick your feet back, lie in the grass, soak in the sun, and enjoy our freshest BLT on the block! Named after our favorite plaza, the Sombria Sunshine is freshly crafted with savory crispy bacon, fresh iceberg lettuce, avocado, tomatoes, and melted cheddar cheese. Enjoy the warmth of our little bite of sunshine!"
+B09,Morning Fiesta,ENTREE,7.49,520,21,58,22,890,false,09B_FiestaBurger.jpg,"Wakey, Wakey, eggs and . . . Chorizo? Start your day off right with our delicious breakfast sandwich - the Morning Fiesta! Humbly made with fluffy scrambled eggs, savory, seasoned chorizo, cream cheese, melted American cheese, salsa, and avocado, all in buttery, toasted white bread. You wont want to stop the party once it starts!"
+B10,Paseo Veggie,ENTREE,7.49,520,21,58,22,890,false,10B_PaseoBurger.jpg,"Plant-based burger ready to steal the spotlight! A healthy black bean patty topped with creamy vegan cheddar, fresh lettuce, onions, tomatoes, and tangy pickles. A delicious and healthy way to enjoy your lunch!"
+S01,Tater Tots,SIDE,2.49,320,4,41,15,230,false,01S_Tots.jpg,
+S02,French Fries,SIDE,3.29,410,5,48,22,560,false,02S_Fries.jpg,
+S03,Onion Rings,SIDE,2.79,350,3,38,21,620,false,03S_OnionRings.jpg,
+S04,Sweet Potato Fries,SIDE,3.49,150,4,12,9,240,false,04S_SweetPotatoFries.jpg,
+S05,Fruit Cup,SIDE,3.49,150,4,12,9,240,false,05S_FruitCup.jpg,
+S06,Side Salad,SIDE,3.49,150,4,12,9,240,false,06S_Salad.jpg,
+D01,Soft Drink,DRINK,1.99,210,0,56,0,45,false,01D_SoftDrink.jpg,
+D02,Agua Fresca,DRINK,2.49,220,0,58,0,15,false,04D_AguaFresca.jpg,
+D03,Milkshake,DRINK,6.99,90,0,23,0,10,false,05D_Shakes.jpg,
+D04,Lemonade,DRINK,4.49,640,14,92,23,390,false,02D_Lemonade.jpg,
+D05,Iced Tea,DRINK,4.49,590,13,85,22,360,false,03D_IcedTea.jpg,
+D06,Bottled Water,DRINK,1.49,0,0,0,0,0,false,06D_Water.jpg,
+DD01,Chocolate Chip Cookie,DESSERT,1.79,220,2,30,11,160,false,01DD_Cookie.jpg,
+DD02,Brownie,DESSERT,2.49,380,4,50,19,190,false,04DD_Brownie.jpg,
+DD03,Apple Pie,DESSERT,2.29,300,3,40,14,240,false,02DD_Pie.jpg,
 DD04,Ice Cream,DESSERT,5.59,520,10,80,15,12,false,,
