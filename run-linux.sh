@@ -55,7 +55,7 @@ if [[ -z "$MODULE_PATH" ]]; then
 fi
 
 echo "Starting GoodBurger (Linux)..."
-exec "$JAVA_BIN" --enable-preview \
+exec "$JAVA_BIN" \
   --module-path "$MODULE_PATH" \
   --add-modules javafx.controls,javafx.fxml \
   -cp "$JAR" \

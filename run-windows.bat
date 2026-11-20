@@ -16,7 +16,7 @@ if not exist "data\menu.csv" goto missing_files
 if errorlevel 1 goto missing_java
 
 echo Starting GoodBurger...
-"%GOODBURGER_JAVA%" --enable-preview --module-path "windows-runtime\javafx" --add-modules javafx.controls,javafx.fxml -cp "windows-runtime\goodburger.jar" edu.utsa.cs3443.goodburger.GoodBurgerApplication
+"%GOODBURGER_JAVA%" --module-path "windows-runtime\javafx" --add-modules javafx.controls,javafx.fxml -cp "windows-runtime\goodburger.jar" edu.utsa.cs3443.goodburger.GoodBurgerApplication
 set "APP_EXIT=%ERRORLEVEL%"
 if "%APP_EXIT%"=="0" goto finished
 echo.

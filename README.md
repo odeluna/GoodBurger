@@ -53,6 +53,8 @@ JDK 21 or newer:
 
 ## Menu data and the item view
 
+Column layout and the copy-paste recipe for adding a menu item: [docs/DATA.md](docs/DATA.md).
+
 Items come from `data/menu.csv`:
 
 ```
@@ -93,3 +95,15 @@ In poker, Enter or Space reveals and then continues. After a poker win, 1, 2, or
 ## Design
 
 The [Figma design](https://www.figma.com/design/4qoghK6Hi24ovxvCw7Nmnl/Rewards---Pipe-Flight---JavaFX-UI) contains the original editable vector rewards layout alongside screenshots of the JavaFX rewards screen, all three game stages, poker, upgrades, and the ending.
+
+## Tests
+
+`./test.sh` compiles the tests and runs two dependency-free suites (plain `main()`
+classes, no JUnit, first failed check throws):
+
+- `rewards.LogicTest` - poker hands, the points economy, achievements
+- `edu.utsa.cs3443.goodburger.ModelTest` - menu data integrity, account round
+  trips, order math and the order-id sequence
+
+ModelTest reads the real `data/` files but only writes into temp directories, so it
+never dirties the repo.

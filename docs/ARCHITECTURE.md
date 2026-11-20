@@ -87,3 +87,20 @@ profile_page: ProfileController reads points back through Session/AccountManager
 - `data/` is the only place state is persisted; `DataManager` owns it.
 - Standalone `rewards.RewardsApp` never instantiates app controllers or FXML;
   the bridge is exactly `RewardsPageController` + `ProgressStore`.
+
+## UML diagram vs. the code
+
+`goodburgeruml-1.jpg` is the design-time diagram that was submitted. The core app
+(left half) matches the code 1:1. The rewards side ended up implemented under
+different names than the diagram shows:
+
+| diagram name | code name |
+|---|---|
+| RewardsController | RewardsPageController (the bridge, in the app) |
+| RewardsManager | ProgressStore (points, daily cap, redemptions; persisted to a file in data/) |
+| TaskService / Task | the task list in rewards.RewardsApp (start the game, earn points) |
+| RewardService / RewardItem | the reward rows in RewardsApp (ProgressStore.REWARD_NAMES / REWARD_COSTS: Soda 300, Fries 500, Salad 1000) |
+| PointTransaction | the rows ProgressStore writes to its file on every point change |
+
+The games themselves (seven-card stud poker, Pipe Flight) live under those names in
+the `rewards/` package.

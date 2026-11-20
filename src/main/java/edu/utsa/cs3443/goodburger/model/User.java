@@ -1,5 +1,12 @@
 package edu.utsa.cs3443.goodburger.model;
 
+/**
+ * A customer account, or the temporary guest when nobody signs in.
+ *
+ * <p>Profile fields, a plain-text password (see {@code docs/DATA.md}) and the reward
+ * points balance. Accounts are persisted to {@code data/users.csv} by
+ * {@link AccountManager}.</p>
+ */
 public class User {
 
     private String id;

@@ -30,6 +30,15 @@ import java.util.Random;
 import java.util.Set;
 
 /** JavaFX rewards interface with the translated Pipe Flight game as its mini-game. */
+/**
+ * Standalone entry point for the rewards window (own launcher, separate from
+ * {@code GoodBurgerApplication}): the Pipe Flight game with its embedded seven-card
+ * stud poker, the point economy behind it (ProgressStore) and the reward shop.
+ *
+ * <p>The main app reaches the same window through {@code RewardsPageController}.
+ * The {@code --*--preview} CLI flags render stills of the game screens for
+ * verification without a display. See the package-info for the two-codebase layout.</p>
+ */
 public final class RewardsApp extends Application {
     private static final String BLUE = "#CFE0F1", PEACH = "#FFD3A5", ORANGE = "#FFA100";
     private static final Color INK = Color.web("#30373D");
