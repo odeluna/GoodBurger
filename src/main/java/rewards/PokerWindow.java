@@ -24,23 +24,47 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 
-/** Seven-card stud table: two hidden cards, five shown, six betting streets. */
+/**
+ * Seven-card stud table: two hidden cards, five shown, six betting streets.
+ *
+ * <p>The table can be shown as a standalone modal window ({@link #open}) or
+ * embedded inside an app page ({@link #embed}): same cards, betting, and rules
+ * in both forms.</p>
+ */
 public final class PokerWindow {
     private PokerWindow() { }
 
+    /** Opens the table as a standalone modal window owned by {@code owner}. */
     public static void open(Window owner, ProgressStore progress, Runnable refresh,
                             Consumer<IOException> reportError) {
-        new Table(owner, progress, refresh, reportError).show();
+        Stage stage = new Stage();
+        stage.initOwner(owner);
+        new Table(stage, progress, refresh, reportError, stage::close).show();
     }
 
-    private static final class Table {
+    /**
+     * The table as an in-app panel for a page to host: {@link #content()} is
+     * the table area and {@link #actionBar()} is the betting button row, so a
+     * page can pin the buttons while the table scrolls. {@code onClose} fires
+     * when the "Back to rewards" button is pressed.
+     */
+    public static Table embed(ProgressStore progress, Runnable refresh,
+                              Consumer<IOException> reportError, Runnable onClose) {
+        return new Table(null, progress, refresh, reportError, onClose);
+    }
+
+    public static final class Table {
         private static final String WIN_COLOR = "#1e7d46";
         private static final String LOSE_COLOR = "#b3261e";
         private static final String PUSH_COLOR = "#7a6414";
         private static final int CARD_WIDTH = 70;
         private static final int CARD_HEIGHT = 84;
 
-        private final Stage stage = new Stage();
+        /** The standalone window; null when the table is embedded in a page. */
+        private final Stage stage;
+        private final VBox root;
+        private final HBox actionBar;
+        private final Runnable onClose;
         private final HBox dealerCards = new HBox(7);
         private final HBox playerCards = new HBox(7);
         private final Label roundLabel = new Label();
@@ -65,13 +89,17 @@ public final class PokerWindow {
         private Poker.Stud hand;
         private String settleText = "";
 
-        Table(Window owner, ProgressStore progress, Runnable refresh, Consumer<IOException> reportError) {
+        Table(Stage stage, ProgressStore progress, Runnable refresh, Consumer<IOException> reportError,
+              Runnable onClose) {
+            this.stage = stage;
             this.progress = progress;
             this.refresh = refresh;
             this.reportError = reportError;
-            stage.initOwner(owner);
-            stage.initModality(Modality.WINDOW_MODAL);
-            stage.setTitle("GoodBurger Poker - Seven-card Stud");
+            this.onClose = onClose;
+            if (stage != null) {
+                stage.initModality(Modality.WINDOW_MODAL);
+                stage.setTitle("GoodBurger Poker - Seven-card Stud");
+            }
 
             Label title = new Label("Seven-card stud");
             title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #17434a;");
@@ -107,23 +135,42 @@ public final class PokerWindow {
             again.setOnAction(event -> { hand = null; deal(); });
             again.setVisible(false);
             rules.setOnAction(event -> openRules());
-            close.setOnAction(event -> stage.close());
+            close.setOnAction(event -> onClose.run());
 
-            VBox root = new VBox(10, title, blurb,
+            Node[] body = { title, blurb,
                     sectionLabel("DEALER"), dealerCards,
                     sectionLabel("YOUR HAND"), playerCards,
-                    stats, matched, banner, detail,
-                    new HBox(12, mainAction, raise, fold, again, rules, close));
+                    stats, matched, banner, detail };
+            this.actionBar = new HBox(12, mainAction, raise, fold, again, rules, close);
+            this.root = new VBox(10);
+            for (Node node : body) {
+                root.getChildren().add(node);
+            }
+            if (stage != null) {
+                root.getChildren().add(actionBar);
+            }
             root.setPadding(new Insets(18));
             root.setStyle("-fx-background-color: #e6f1f3;");
-            Scene scene = new Scene(root, 720, 600);
-            scene.setOnKeyPressed(event -> {
-                if (event.getCode() == KeyCode.ESCAPE) stage.close();
-            });
-            stage.setScene(scene);
-            stage.setResizable(false);
-            stage.setOnHidden(event -> refresh.run());
+            if (stage != null) {
+                Scene scene = new Scene(root, 720, 600);
+                scene.setOnKeyPressed(event -> {
+                    if (event.getCode() == KeyCode.ESCAPE) onClose.run();
+                });
+                stage.setScene(scene);
+                stage.setResizable(false);
+                stage.setOnHidden(event -> refresh.run());
+            }
             deal();
+        }
+
+        /** The table area for an in-app page (without the betting bar). */
+        public Node content() {
+            return root;
+        }
+
+        /** The betting button row; a page pins it outside the scrolling area. */
+        public HBox actionBar() {
+            return actionBar;
         }
 
         void show() { stage.show(); }
@@ -337,8 +384,10 @@ public final class PokerWindow {
 
         private Stage buildRulesStage() {
             Stage rules = new Stage();
-            rules.initOwner(stage);
-            rules.initModality(Modality.WINDOW_MODAL);
+            if (stage != null) {
+                rules.initOwner(stage);
+                rules.initModality(Modality.WINDOW_MODAL);
+            }
             rules.setTitle("Poker rules");
             rules.setResizable(false);
 

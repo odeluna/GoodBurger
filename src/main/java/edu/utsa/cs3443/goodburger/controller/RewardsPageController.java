@@ -1,5 +1,6 @@
 package edu.utsa.cs3443.goodburger.controller;
 
+import edu.utsa.cs3443.goodburger.GoodBurgerApplication;
 import edu.utsa.cs3443.goodburger.model.Session;
 import edu.utsa.cs3443.goodburger.model.User;
 import javafx.animation.PauseTransition;
@@ -14,11 +15,9 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-import javafx.stage.Window;
 
 import rewards.EconomyRules;
 import rewards.PipeFlightGame;
-import rewards.PokerWindow;
 import rewards.ProgressStore;
 import rewards.RewardGameDriver;
 import rewards.SpriteAtlas;
@@ -202,15 +201,15 @@ public class RewardsPageController {
         Platform.runLater(this::refreshData);
     }
 
-    // Opens seven-card stud in its own window; it shares this page's save file.
+    // Opens seven-card stud as an in-app page: the table plays inside the app
+    // window (like the menu pages) instead of a separate window.
     @FXML
     private void pokerClicked(ActionEvent event) {
-        if (progress == null) return;
-        Window owner = pointsLabel.getScene() == null
-                ? null : pointsLabel.getScene().getWindow();
-        PokerWindow.open(owner, progress,
-                () -> Platform.runLater(this::refreshData),
-                error -> showError("Could not save your poker result", error));
+        try {
+            GoodBurgerApplication.switchScreen(pokerButton, "poker_page.fxml");
+        } catch (IOException error) {
+            showError("Could not open the poker table", error);
+        }
     }
 
     // Small themed notification at the top of the page (auto-fades).
