@@ -33,8 +33,11 @@ import java.io.IOException;
  * page; "Submit" calls {@link OrderManager#checkout}, which saves the order to orders.csv and empties the
  * cart. Page navigation is the shared {@code NavBar} in the FXML.</p>
  *
- * <p>The rewards block under the total shows the signed-in user's point balance and every item they
- * redeemed on the rewards page, with a "Trade in" button that returns half the item's cost in points
+ * <p>Redeemed rewards (soda, fries, salad) land in the shared order the same way a menu item
+ * does: a free line that shows under the current order here and on the menu page. Opening this
+ * page syncs the order from the per-user rewards store, so the lines agree no matter which
+ * screen the redemption happened on. The rewards block under the total shows the point balance
+ * and a "Trade in" button that returns half the item's cost in points and removes the line
  * (the same {@link UserRewardStore} the rewards page uses, so both screens always agree).</p>
  */
 public class CheckoutScreenController {
@@ -78,6 +81,12 @@ public class CheckoutScreenController {
         progress = UserRewardStore.open();
         if (progress != null) {
             UserRewardStore.attachToUser(progress);
+            // Every redeemed reward shows under the current order as a free line,
+            // the same way a menu item does.
+            for (int i = 0; i < ProgressStore.REWARD_NAMES.length; i++) {
+                UserRewardStore.syncRewardToCart(orderManager, session.getMenuManager(),
+                        i, progress.redeemedCount(i));
+            }
         }
         renderRewards();
     }
@@ -122,10 +131,12 @@ public class CheckoutScreenController {
         }
     }
 
-    // Trades a redeemed item back in for half its cost in points.
+    // Trades a redeemed item back in for half its cost in points and removes it from the order.
     private void tradeIn(int index) {
         try {
             int refund = progress.tradeIn(index);
+            UserRewardStore.syncRewardToCart(orderManager, session.getMenuManager(),
+                    index, progress.redeemedCount(index));
             renderRewards();
             new Alert(Alert.AlertType.INFORMATION,
                     "Traded in the " + ProgressStore.REWARD_NAMES[index].toLowerCase()

@@ -1,6 +1,10 @@
 package edu.utsa.cs3443.goodburger.controller;
 
 import edu.utsa.cs3443.goodburger.model.AccountManager;
+import edu.utsa.cs3443.goodburger.model.MenuManager;
+import edu.utsa.cs3443.goodburger.model.MenuItem;
+import edu.utsa.cs3443.goodburger.model.OrderItem;
+import edu.utsa.cs3443.goodburger.model.OrderManager;
 import edu.utsa.cs3443.goodburger.model.Session;
 import edu.utsa.cs3443.goodburger.model.User;
 
@@ -24,7 +28,57 @@ import java.util.List;
  */
 public final class UserRewardStore {
 
+    /**
+     * The menu item behind each reward, in the same order as
+     * {@link ProgressStore#REWARD_NAMES}: Soda is the Soft Drink (D01), Fries are the
+     * French Fries (S02), Salad is the Side Salad (S06). Redeeming one puts that menu
+     * item into the order as a free line.
+     */
+    private static final String[] REWARD_MENU_IDS = {"D01", "S02", "S06"};
+
     private UserRewardStore() { }
+
+    /** @return the menu id behind the reward at this index (same order as REWARD_NAMES) */
+    public static String rewardMenuItemId(int index) {
+        if (index < 0 || index >= REWARD_MENU_IDS.length) {
+            throw new IndexOutOfBoundsException(index);
+        }
+        return REWARD_MENU_IDS[index];
+    }
+
+    /**
+     * Keeps the shared order in step with the rewards store: after this call the cart holds
+     * exactly {@code count} free lines for the reward's menu item. Adds a line, grows or shrinks
+     * the existing one, or removes it. This is what makes a redeemed reward show up under the
+     * current order at checkout, the same way a menu item does.
+     *
+     * <p>Only lines marked {@link OrderItem#isRedeemed()} are touched, so a French Fries the
+     * customer bought from the menu and a French Fries they redeemed never mix up.</p>
+     */
+    public static void syncRewardToCart(OrderManager orders, MenuManager menu, int index, int count) {
+        if (orders == null || menu == null) return;
+        MenuItem menuItem = menu.findById(rewardMenuItemId(index));
+        if (menuItem == null) return;
+        OrderItem line = null;
+        for (OrderItem candidate : orders.getItems()) {
+            if (candidate.isRedeemed() && candidate.getItem().getId().equals(menuItem.getId())) {
+                line = candidate;
+                break;
+            }
+        }
+        if (count <= 0) {
+            if (line != null) orders.changeQuantity(line, -line.getQuantity());
+            return;
+        }
+        if (line == null) {
+            OrderItem fresh = new OrderItem(menuItem);
+            fresh.setQuantity(count);
+            fresh.setRedeemed(true);
+            orders.addItem(fresh);
+        } else if (line.getQuantity() != count) {
+            orders.changeQuantity(line, count - line.getQuantity());
+        }
+    }
 
     /**
      * Opens the per-account store for the current session user. Falls back to

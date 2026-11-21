@@ -126,13 +126,17 @@ public class RewardsPageController {
                 + " (day " + progress.streakDays() + ")");
     }
 
-    // Redeems one reward; the item then shows up in Checkout to trade in.
+    // Redeems one reward and puts the free item into the current order, so it shows
+    // up under the order at checkout the same way a menu item does.
     private void redeem(int index) {
         try {
             if (progress.redeem(index)) {
                 refreshData();
+                UserRewardStore.syncRewardToCart(Session.get().getOrderManager(),
+                        Session.get().getMenuManager(), index, progress.redeemedCount(index));
                 showInfo("Reward redeemed", ProgressStore.REWARD_NAMES[index]
-                        + " is now listed in Checkout. Trade it in there for half its points.");
+                        + " was added to your order. It shows up in Checkout under your "
+                        + "current order, and you can trade it in there for half its points.");
             } else {
                 showInfo("Not enough points", "You need "
                         + (ProgressStore.REWARD_COSTS[index] - progress.points())

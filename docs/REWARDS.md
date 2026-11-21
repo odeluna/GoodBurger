@@ -40,11 +40,14 @@ data/users.csv row for the signed-in account
 5. **Sign out, sign back in.** The new login reads `users.csv` again, so the
    points survived. Nothing is lost between sessions.
 6. **Redeem, then checkout.** Redeeming on the rewards page deducts points and
-   lists the item in the per-user progress file. The checkout page opens the
-   same per-user store (`UserRewardStore`), so the "Rewards:" block under the
-   total shows the current point balance and every redeemed item. "Trade in"
-   returns the item for half its cost in points, re-syncs `users.csv`, and
-   removes it from the list.
+   adds the item to the shared order as a free line (soda is the Soft Drink,
+   fries are the French Fries, salad is the Side Salad, all $0.00). It shows
+   under the Current Order at checkout and in the cart on the menu page, the
+   same way a menu item does. Opening checkout re-syncs the order from the
+   per-user store, so the lines agree even after an app restart. The "Rewards:"
+   block under the total shows the current point balance; "Trade in" returns
+   the item for half its cost in points, re-syncs `users.csv`, and removes the
+   line from the order.
 
 ## Where each piece of state lives
 
@@ -53,7 +56,7 @@ data/users.csv row for the signed-in account
 | Account points (the balance) | `data/users.csv`, last column | visible on profile + rewards; survives everything |
 | Per-user game state (daily cap, streak, achievements, redemptions) | `~/.local/share/rewards-javafx/progress-<userId>.properties` | one file per account, so two users on the same machine never mix state |
 | Guest state | `~/.local/share/rewards-javafx/progress.properties` (shared default) | guests have no user file row, so nothing is written to `users.csv` for them |
-| Redeemed food items | the same per-user progress file (`progress-<userId>.properties`) | listed in Checkout, which opens the same store the rewards page uses; trade-in refunds half the cost in points |
+| Redeemed food items | the same per-user progress file (`progress-<userId>.properties`) | each redemption also lands in the shared order as a $0.00 line (`UserRewardStore.syncRewardToCart`), so it shows under the Current Order at checkout; trade-in refunds half the cost in points and removes the line |
 
 `rewards.progress.path` (JVM property) still overrides the file location; the
 standalone `rewards.RewardsApp` keeps using the default file, which is why the
@@ -71,17 +74,20 @@ app-side and standalone-side stay in sync on a machine that runs both.
 5. Sign out, sign back in: the balance is still the new total, straight from
    the file.
 6. Redeem an item on the rewards page (e.g. the 300-point soda). Open the
-   checkout page: the "Rewards:" block shows the new lower point balance and
-   "Soda x1" with a Trade in button. Press it: +150 pts refund, the item is
-   gone, and the `users.csv` row tracks the whole way.
+   checkout page: the soda appears under the Current Order as a free $0.00
+   line, right where menu items go. The "Rewards:" block below the total shows
+   the new lower point balance. Press Trade in: +150 pts refund, the line is
+   gone from the order, and the `users.csv` row tracks the whole way.
 
 ## Verification
 
 - `./test.sh` covers the economy rules and the ProgressStore file format.
 - The points-sync path was driven end to end headlessly on 2026-11-21
-  (28 checks): sign in with the test account (5000 pts), load the page
+  (38 checks): sign in with the test account (5000 pts), load the page
   (label showed 5000), fold one poker hand, `users.csv` updated to 4950,
-  re-login reads 4950 back; then redeem the soda (4650), the checkout page
-  lists "Soda x1" with the 4650 balance, and trading it in at checkout
+  re-login reads 4950 back; then redeem the soda (4650), the free line
+  lands in the shared order, the checkout cart (the same list the order
+  uses) shows it under the Current Order with the 4650 balance, and trading
+  it in at checkout
   refunds 150 (4800) and removes the item, with `users.csv` mirroring each
   step.
