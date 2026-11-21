@@ -39,18 +39,21 @@ public final class PokerWindow {
                             Consumer<IOException> reportError) {
         Stage stage = new Stage();
         stage.initOwner(owner);
-        new Table(stage, progress, refresh, reportError, stage::close).show();
+        new Table(stage, progress, refresh, reportError, stage::close, null).show();
     }
 
     /**
      * The table as an in-app panel for a page to host: {@link #content()} is
      * the table area and {@link #actionBar()} is the betting button row, so a
      * page can pin the buttons while the table scrolls. {@code onClose} fires
-     * when the "Back to rewards" button is pressed.
+     * when the "Back to rewards" button is pressed; {@code onRules} fires when
+     * Rules is pressed, so a page can show {@link #rulesView()} in place of the
+     * table instead of opening a popup.
      */
     public static Table embed(ProgressStore progress, Runnable refresh,
-                              Consumer<IOException> reportError, Runnable onClose) {
-        return new Table(null, progress, refresh, reportError, onClose);
+                              Consumer<IOException> reportError, Runnable onClose,
+                              Runnable onRules) {
+        return new Table(null, progress, refresh, reportError, onClose, onRules);
     }
 
     public static final class Table {
@@ -65,6 +68,7 @@ public final class PokerWindow {
         private final VBox root;
         private final HBox actionBar;
         private final Runnable onClose;
+        private final Runnable onRules;
         private final HBox dealerCards = new HBox(7);
         private final HBox playerCards = new HBox(7);
         private final Label roundLabel = new Label();
@@ -86,16 +90,18 @@ public final class PokerWindow {
         private final Consumer<IOException> reportError;
         private final Random random = new Random();
         private Stage rulesStage;
+        private VBox rulesContent;
         private Poker.Stud hand;
         private String settleText = "";
 
         Table(Stage stage, ProgressStore progress, Runnable refresh, Consumer<IOException> reportError,
-              Runnable onClose) {
+              Runnable onClose, Runnable onRules) {
             this.stage = stage;
             this.progress = progress;
             this.refresh = refresh;
             this.reportError = reportError;
             this.onClose = onClose;
+            this.onRules = onRules;
             if (stage != null) {
                 stage.initModality(Modality.WINDOW_MODAL);
                 stage.setTitle("GoodBurger Poker - Seven-card Stud");
@@ -372,14 +378,26 @@ public final class PokerWindow {
             return label;
         }
 
-        /** Modal popup with the house rules and the full hand-ranking reference. */
+        /** House rules: a popup in the standalone window, in-page view when embedded. */
         private void openRules() {
+            if (stage == null && onRules != null) {
+                onRules.run();
+                return;
+            }
             if (rulesStage != null && rulesStage.isShowing()) {
                 rulesStage.toFront();
                 return;
             }
             rulesStage = buildRulesStage();
             rulesStage.show();
+        }
+
+        /** The rules as a page node, for an embedded table to show in-page. */
+        public Node rulesView() {
+            if (rulesContent == null) {
+                rulesContent = buildRulesContent();
+            }
+            return rulesContent;
         }
 
         private Stage buildRulesStage() {
@@ -391,6 +409,27 @@ public final class PokerWindow {
             rules.setTitle("Poker rules");
             rules.setResizable(false);
 
+            VBox content = buildRulesContent();
+
+            ScrollPane scroll = new ScrollPane(content);
+            scroll.setFitToWidth(true);
+            Button closeRules = new Button("Close");
+            closeRules.setOnAction(event -> rules.close());
+            HBox bar = new HBox(closeRules);
+            bar.setAlignment(Pos.CENTER_RIGHT);
+            bar.setPadding(new Insets(10));
+            VBox root = new VBox(scroll, bar);
+            root.setStyle("-fx-background-color: #e6f1f3;");
+            Scene scene = new Scene(root, 500, 560);
+            scene.setOnKeyPressed(event -> {
+                if (event.getCode() == KeyCode.ESCAPE) rules.close();
+            });
+            rules.setScene(scene);
+            return rules;
+        }
+
+        /** The house rules and hand rankings as page content, popup or in-page. */
+        private VBox buildRulesContent() {
             VBox content = new VBox(8);
             content.setPadding(new Insets(16));
             content.getChildren().add(heading("How to play"));
@@ -428,22 +467,7 @@ public final class PokerWindow {
             note.setWrapText(true);
             note.setStyle("-fx-font-size: 12px; -fx-text-fill: #5a6b74;");
             content.getChildren().add(note);
-
-            ScrollPane scroll = new ScrollPane(content);
-            scroll.setFitToWidth(true);
-            Button closeRules = new Button("Close");
-            closeRules.setOnAction(event -> rules.close());
-            HBox bar = new HBox(closeRules);
-            bar.setAlignment(Pos.CENTER_RIGHT);
-            bar.setPadding(new Insets(10));
-            VBox root = new VBox(scroll, bar);
-            root.setStyle("-fx-background-color: #e6f1f3;");
-            Scene scene = new Scene(root, 500, 560);
-            scene.setOnKeyPressed(event -> {
-                if (event.getCode() == KeyCode.ESCAPE) rules.close();
-            });
-            rules.setScene(scene);
-            return rules;
+            return content;
         }
 
         private static Label heading(String text) {

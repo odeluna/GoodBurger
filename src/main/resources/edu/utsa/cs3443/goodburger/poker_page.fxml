@@ -10,8 +10,9 @@
   Poker page (module: rewards, author: Fabricio Ocampo).
   The seven-card stud table embedded in the app window instead of a separate
   window: the table area scrolls if it needs room, the betting buttons stay
-  pinned above the nav bar, and "Back to rewards" (or the rewards nav button)
-  returns to the rewards page. Same table, look, and rules as the standalone
+  pinned above the nav bar, the rules view replaces the table in place
+  (no popup), and "Back to rewards" (or the rewards nav button) returns to
+  the rewards page. Same table, look, and rules as the standalone
   PokerWindow in the rewards package.
 -->
 <AnchorPane prefHeight="600.0" prefWidth="800.0" style="-fx-background-color: #FFFFFF;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.utsa.cs3443.goodburger.controller.PokerPageController">
