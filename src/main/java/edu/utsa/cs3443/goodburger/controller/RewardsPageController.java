@@ -135,8 +135,9 @@ public class RewardsPageController {
                 UserRewardStore.syncRewardToCart(Session.get().getOrderManager(),
                         Session.get().getMenuManager(), index, progress.redeemedCount(index));
                 showInfo("Reward redeemed", ProgressStore.REWARD_NAMES[index]
-                        + " was added to your order. It shows up in Checkout under your "
-                        + "current order, and you can trade it in there for half its points.");
+                        + " was added to your order. It shows up in Checkout under your current "
+                        + "order, and you can press the - button on that line any time before you "
+                        + "submit to take it back for your full points.");
             } else {
                 showInfo("Not enough points", "You need "
                         + (ProgressStore.REWARD_COSTS[index] - progress.points())

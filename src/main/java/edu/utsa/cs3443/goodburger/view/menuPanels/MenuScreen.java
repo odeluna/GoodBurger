@@ -1,5 +1,6 @@
 package edu.utsa.cs3443.goodburger.view.menuPanels;
 
+import edu.utsa.cs3443.goodburger.controller.UserRewardStore;
 import edu.utsa.cs3443.goodburger.model.Category;
 import edu.utsa.cs3443.goodburger.model.MenuItem;
 import edu.utsa.cs3443.goodburger.model.MenuManager;
@@ -69,6 +70,10 @@ public class MenuScreen extends BorderPane {
                 getClass().getResource("/styles/menuScreen.css")).toExternalForm());
         this.cartPanel = new CartView(orders, "Item Cart", true);
         cartPanel.setPrefWidth(280);
+        // Rewards lines behave the same here as at checkout: - takes the unit back (its full
+        // price returns to the points), + adds a unit at the full redemption price.
+        cartPanel.setOnRedeemedMinus(line -> UserRewardStore.refundRedemption(freshRewardStore(), line));
+        cartPanel.setOnRedeemedPlus(line -> UserRewardStore.chargeRedemption(freshRewardStore(), line));
 
         setLeft(categoryPanel);
         setCenter(new StackPane(itemGridPanel, itemDetailPanel));
@@ -76,6 +81,20 @@ public class MenuScreen extends BorderPane {
 
         categoryPanel.show(Category.values());
         onCategoryClicked(Category.values()[0]);   // start on Entrees so the grid isn't empty
+    }
+
+    /**
+     * A fresh rewards store for the signed-in user, opened per interaction so the menu screen
+     * never holds a stale balance or redemption count (redeemptions can happen on the rewards
+     * page while this screen is alive). @return null when no store can be opened, which leaves
+     * the cart line changes uncharged.
+     */
+    private rewards.ProgressStore freshRewardStore() {
+        rewards.ProgressStore store = UserRewardStore.open();
+        if (store != null) {
+            UserRewardStore.attachToUser(store);
+        }
+        return store;
     }
 
     // ---- Click handlers: change state, then refresh ----

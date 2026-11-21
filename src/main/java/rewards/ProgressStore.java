@@ -340,6 +340,27 @@ public final class ProgressStore {
         return refund;
     }
 
+    /**
+     * Taking a redeemed reward back for its full cost: the whole redemption price
+     * returns to the balance and the count drops by one. This is what the cart's
+     * minus button does when it removes a redeemed line.
+     */
+    public synchronized int tradeInFull(int index) throws IOException {
+        if (index < 0 || index >= REWARD_NAMES.length) throw new IndexOutOfBoundsException(index);
+        if (redeemed[index] == 0) return 0;
+        int refund = REWARD_COSTS[index];
+        points += refund;
+        redeemed[index]--;
+        try {
+            save();
+        } catch (IOException error) {
+            points -= refund;
+            redeemed[index]++;
+            throw error;
+        }
+        return refund;
+    }
+
     private enum DefinitionRef {
         FIRST_PLAY("first_play"), PIPES_10("pipes_10"), PIPES_25("pipes_25"),
         POKER_WIN("poker_win"), STREAK_3("streak_3"), REDEMPTIONS_5("redemptions_5");

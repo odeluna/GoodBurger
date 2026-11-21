@@ -10,14 +10,11 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.WeakListChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
@@ -37,8 +34,11 @@ import java.io.IOException;
  * does: a free line that shows under the current order here and on the menu page. Opening this
  * page syncs the order from the per-user rewards store, so the lines agree no matter which
  * screen the redemption happened on. The rewards block under the total shows the point balance
- * and a "Trade in" button that returns half the item's cost in points and removes the line
- * (the same {@link UserRewardStore} the rewards page uses, so both screens always agree).</p>
+ * and what has been redeemed. Pressing - on a redeemed line takes the unit back and gives its
+ * FULL redemption price straight back to the balance; pressing + adds another unit at its full
+ * price. When the order is submitted the redeemed lines stay in the saved order and earn no
+ * points, while the paid lines earn 10 points per dollar (the same {@link UserRewardStore} the
+ * rewards page uses, so all screens always agree).</p>
  */
 public class CheckoutScreenController {
 
@@ -65,6 +65,25 @@ public class CheckoutScreenController {
         CartView cart = new CartView(orderManager, null, false);   // this page shows its own totals
         cart.setMaxHeight(Double.MAX_VALUE);
         cartSlot.getChildren().add(cart);
+
+        // The cart's - on a redeemed line gives the full redemption price back; + charges it.
+        cart.setOnRedeemedMinus(line -> {
+            if (!UserRewardStore.refundRedemption(progress, line)) {
+                new Alert(Alert.AlertType.ERROR, "Could not save your points. The item stayed in your order.").show();
+                return false;
+            }
+            renderRewards();
+            return true;
+        });
+        cart.setOnRedeemedPlus(line -> {
+            if (!UserRewardStore.chargeRedemption(progress, line)) {
+                new Alert(Alert.AlertType.INFORMATION, "Not enough points for another "
+                        + line.getItem().getName().toLowerCase() + ".").show();
+                return false;
+            }
+            renderRewards();
+            return true;
+        });
 
         pickup_time.getItems().addAll(ASAP, "In 15 minutes", "In 30 minutes", "In 45 minutes", "In 1 hour");
         pickup_time.setValue(ASAP);
@@ -97,7 +116,9 @@ public class CheckoutScreenController {
         total.setText(String.format("$%.2f", orderManager.getTotal()));
     }
 
-    // Lists the point balance and every redeemed reward with a trade-in button.
+    // Lists the point balance and every redeemed reward. The lines are informational: the
+    // customer gets their points back by pressing - on the line in the cart (full price back),
+    // and the items stay in the saved order when the order is submitted.
     private void renderRewards() {
         if (progress == null) {
             rewardsPoints.setText("Points: --");
@@ -112,17 +133,11 @@ public class CheckoutScreenController {
             if (count == 0) continue;
             any = true;
             String name = ProgressStore.REWARD_NAMES[i];
-            Label item = new Label(name + " x" + count);
+            Label item = new Label(name + " x" + count + "  (press \u2212 in the cart to take it back)");
             item.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #213542;");
-            Button trade = new Button("Trade in");
-            trade.setTooltip(new Tooltip("Return the " + name.toLowerCase()
-                    + " for +" + Math.round(progress.tradeBackValue(i)) + " pts (half its cost)"));
-            trade.setStyle("-fx-font-size: 11.5px; -fx-padding: 3 10 3 10; -fx-background-radius: 6;");
-            final int itemIndex = i;
-            trade.setOnAction(event -> tradeIn(itemIndex));
-            HBox row = new HBox(8, item, trade);
-            row.setAlignment(Pos.CENTER_LEFT);
-            rewardsItems.getChildren().add(row);
+            item.setTooltip(new Tooltip("Press \u2212 on the " + name.toLowerCase() + " line in your order to remove it: "
+                    + "+" + ProgressStore.REWARD_COSTS[i] + " pts back (its full cost)"));
+            rewardsItems.getChildren().add(item);
         }
         if (!any) {
             Label none = new Label("Nothing redeemed yet");
@@ -131,20 +146,17 @@ public class CheckoutScreenController {
         }
     }
 
-    // Trades a redeemed item back in for half its cost in points and removes it from the order.
-    private void tradeIn(int index) {
-        try {
-            int refund = progress.tradeIn(index);
-            UserRewardStore.syncRewardToCart(orderManager, session.getMenuManager(),
-                    index, progress.redeemedCount(index));
-            renderRewards();
-            new Alert(Alert.AlertType.INFORMATION,
-                    "Traded in the " + ProgressStore.REWARD_NAMES[index].toLowerCase()
-                            + ": +" + refund + " pts added to your rewards balance.").show();
-        } catch (IOException error) {
-            new Alert(Alert.AlertType.ERROR,
-                    "Could not save the trade-in: " + error.getMessage()).show();
+    /**
+     * The points this order earns when it is submitted: 10 per dollar of item price,
+     * counted over the paid lines only. Redeemed lines cost $0.00, so they earn nothing.
+     */
+    private int orderEarnsPoints() {
+        int earned = 0;
+        for (OrderItem line : orderManager.getItems()) {
+            if (line.isRedeemed()) continue;
+            earned += Math.round(line.getLinePrice() * 10);
         }
+        return earned;
     }
 
     @FXML
@@ -156,11 +168,20 @@ public class CheckoutScreenController {
         String pickup = pickup_time.getValue() == null ? ASAP : pickup_time.getValue();
         OrderType type = ASAP.equals(pickup) ? OrderType.ASAP : OrderType.SCHEDULED;
         try {
+            // Redeemed items stay in the saved order (they earn no points); the paid lines
+            // earn 10 points per dollar of item price.
+            int earned = orderEarnsPoints();
             String orderId = orderManager.checkout(session.getCurrentUser(), type, pickup);
+            if (progress != null && earned > 0) {
+                progress.adjustPoints(earned);
+            }
+            String rewardNote = earned > 0
+                    ? " You earned " + earned + " pts (10 per $1 of item price)."
+                    : " Items you redeemed with points don't earn points.";
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Order Submitted");
             alert.setHeaderText("Your order has been submitted!");
-            alert.setContentText("Order " + orderId + ", pickup: " + pickup);
+            alert.setContentText("Order " + orderId + ", pickup: " + pickup + rewardNote);
             alert.showAndWait();
             goTo(event, "home_page.fxml");
         } catch (IOException e) {

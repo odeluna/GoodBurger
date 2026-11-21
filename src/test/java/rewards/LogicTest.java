@@ -156,8 +156,11 @@ public final class LogicTest {
         check(reloaded.points() == 1100 && reloaded.pokerWins() == 2, "wins persist and grant once");
         check(reloaded.hasUnlocked("poker_win"), "first-win achievement");
         check(reloaded.tradeIn(0) == 150 && reloaded.redeem(0), "food rewards still work");
+        check(reloaded.tradeInFull(0) == 300, "full trade-in refunds the whole cost");
+        check(reloaded.points() == 1250 && reloaded.redeemedCount(0) == 0, "full trade-in empties the count");
+        check(reloaded.tradeInFull(0) == 0, "full trade-in with nothing redeemed returns nothing");
         reloaded.adjustPoints(-100);
-        check(reloaded.points() == 850, "poker loss deducts points");
+        check(reloaded.points() == 1150, "poker loss deducts points");
         reloaded.adjustPoints(-9000);
         check(reloaded.points() == 0, "balance floors at zero");
     }

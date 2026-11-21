@@ -45,9 +45,13 @@ data/users.csv row for the signed-in account
    under the Current Order at checkout and in the cart on the menu page, the
    same way a menu item does. Opening checkout re-syncs the order from the
    per-user store, so the lines agree even after an app restart. The "Rewards:"
-   block under the total shows the current point balance; "Trade in" returns
-   the item for half its cost in points, re-syncs `users.csv`, and removes the
-   line from the order.
+   block under the total shows the current point balance and what was redeemed;
+   there is no separate "Trade in" button. Pressing - on a redeemed line takes
+   the unit back and gives its FULL redemption price straight back to the
+   balance (the + button adds another unit at its full price). When the order
+   is submitted the redeemed lines stay in the saved order and earn no points,
+   while the paid lines earn 10 points per dollar of item price, and
+   `users.csv` is re-synced.
 
 ## Where each piece of state lives
 
@@ -56,7 +60,7 @@ data/users.csv row for the signed-in account
 | Account points (the balance) | `data/users.csv`, last column | visible on profile + rewards; survives everything |
 | Per-user game state (daily cap, streak, achievements, redemptions) | `~/.local/share/rewards-javafx/progress-<userId>.properties` | one file per account, so two users on the same machine never mix state |
 | Guest state | `~/.local/share/rewards-javafx/progress.properties` (shared default) | guests have no user file row, so nothing is written to `users.csv` for them |
-| Redeemed food items | the same per-user progress file (`progress-<userId>.properties`) | each redemption also lands in the shared order as a $0.00 line (`UserRewardStore.syncRewardToCart`), so it shows under the Current Order at checkout; trade-in refunds half the cost in points and removes the line |
+| Redeemed food items | the same per-user progress file (`progress-<userId>.properties`) | each redemption also lands in the shared order as a $0.00 line (`UserRewardStore.syncRewardToCart`), so it shows under the Current Order at checkout; - on that line takes it back at full cost, and on submit the redeemed lines stay in the order while the paid lines earn 10 points per dollar of item price |
 
 `rewards.progress.path` (JVM property) still overrides the file location; the
 standalone `rewards.RewardsApp` keeps using the default file, which is why the
@@ -76,8 +80,14 @@ app-side and standalone-side stay in sync on a machine that runs both.
 6. Redeem an item on the rewards page (e.g. the 300-point soda). Open the
    checkout page: the soda appears under the Current Order as a free $0.00
    line, right where menu items go. The "Rewards:" block below the total shows
-   the new lower point balance. Press Trade in: +150 pts refund, the line is
-   gone from the order, and the `users.csv` row tracks the whole way.
+   the new lower point balance and the soda, with no "Trade in" button. Press
+   the - button on the soda line: the FULL 300 points come straight back to
+   the balance, the line leaves the order, and the file follows. (Press + for
+   another soda: it costs the full 300 points again.) Add a paid item from the
+   menu, then press SUBMIT: the order is saved with the redeemed line still in
+   it, the redeemed items earn no points, and the paid lines earn 10 points per
+   dollar of item price (a $1.99 soda earns 20) -- the dialog says how many
+   points were earned, and the `users.csv` row tracks the whole way.
 
 ## Verification
 
@@ -87,7 +97,6 @@ app-side and standalone-side stay in sync on a machine that runs both.
   (label showed 5000), fold one poker hand, `users.csv` updated to 4950,
   re-login reads 4950 back; then redeem the soda (4650), the free line
   lands in the shared order, the checkout cart (the same list the order
-  uses) shows it under the Current Order with the 4650 balance, and trading
-  it in at checkout
-  refunds 150 (4800) and removes the item, with `users.csv` mirroring each
-  step.
+  uses) shows it under the Current Order with the 4650 balance, and
+  submitting the order refunds the 150 automatically (4800) with the soda
+  line kept in the saved order, `users.csv` mirroring each step.

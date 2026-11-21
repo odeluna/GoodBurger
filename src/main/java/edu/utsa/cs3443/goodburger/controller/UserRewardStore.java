@@ -46,6 +46,48 @@ public final class UserRewardStore {
         return REWARD_MENU_IDS[index];
     }
 
+    /** @return the reward index behind a menu item id, or -1 when the menu item is not a reward item */
+    public static int rewardIndexFor(String menuItemId) {
+        for (int i = 0; i < REWARD_MENU_IDS.length; i++) {
+            if (REWARD_MENU_IDS[i].equals(menuItemId)) return i;
+        }
+        return -1;
+    }
+
+    /**
+     * The minus button pressed on a rewards line in the cart: the whole redemption
+     * cost for one unit comes back to the balance (full refund) and the reward count
+     * drops by one. @return false when the points could not be saved, in which case
+     * the line should stay in the order
+     */
+    public static boolean refundRedemption(ProgressStore store, OrderItem line) {
+        if (store == null) return true;
+        int index = rewardIndexFor(line.getItem().getId());
+        if (index < 0 || store.redeemedCount(index) == 0) return true;
+        try {
+            store.tradeInFull(index);
+            return true;
+        } catch (IOException error) {
+            return false;
+        }
+    }
+
+    /**
+     * The plus button pressed on a rewards line in the cart: the extra unit costs the
+     * full redemption price, exactly like redeeming it from the rewards page.
+     * @return false when the customer cannot afford it, in which case no unit is added
+     */
+    public static boolean chargeRedemption(ProgressStore store, OrderItem line) {
+        if (store == null) return true;
+        int index = rewardIndexFor(line.getItem().getId());
+        if (index < 0) return true;
+        try {
+            return store.redeem(index);
+        } catch (IOException error) {
+            return false;
+        }
+    }
+
     /**
      * Keeps the shared order in step with the rewards store: after this call the cart holds
      * exactly {@code count} free lines for the reward's menu item. Adds a line, grows or shrinks
