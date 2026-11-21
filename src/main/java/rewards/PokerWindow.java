@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.function.Consumer;
 
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -93,6 +94,7 @@ public final class PokerWindow {
         private VBox rulesContent;
         private Poker.Stud hand;
         private String settleText = "";
+        private boolean wasOver;
 
         Table(Stage stage, ProgressStore progress, Runnable refresh, Consumer<IOException> reportError,
               Runnable onClose, Runnable onRules) {
@@ -114,6 +116,11 @@ public final class PokerWindow {
                     + "Best five of seven wins the pot. Press Rules for the full rules and hand rankings.");
             blurb.setWrapText(true);
             blurb.setStyle("-fx-font-size: 12.5px; -fx-text-fill: #5a6b74;");
+            if (stage == null) {
+                // Embedded page: the pinned Rules button plus the one-line detail
+                // cover the basics, so drop the blurb to keep the table compact.
+                blurb.setVisible(false);
+            }
             for (Label stat : new Label[]{roundLabel, potLabel, stackLabel}) {
                 stat.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #213542;");
             }
@@ -127,7 +134,6 @@ public final class PokerWindow {
                     + " -fx-font-weight: bold; -fx-font-size: 12.5px;");
             matched.setVisible(false);
             banner.setVisible(false);
-            banner.setManaged(false);
             detail.setWrapText(true);
             detail.setStyle("-fx-font-size: 13.5px; -fx-text-fill: #5a6b74;");
             for (Button button : new Button[]{mainAction, raise, fold, again, rules, close}) {
@@ -138,7 +144,11 @@ public final class PokerWindow {
             mainAction.setOnAction(event -> onMainAction());
             raise.setOnAction(event -> onRaise());
             fold.setOnAction(event -> onFold());
-            again.setOnAction(event -> { hand = null; deal(); });
+            again.setOnAction(event -> {
+                hand = null;
+                deal();
+                scrollToTop();
+            });
             again.setVisible(false);
             rules.setOnAction(event -> openRules());
             close.setOnAction(event -> onClose.run());
@@ -268,6 +278,8 @@ public final class PokerWindow {
                 return;
             }
             boolean over = hand.isOver();
+            if (over && !wasOver) scrollToShowSettle();
+            wasOver = over;
             renderRow(dealerCards, hand.dealerHole(), !over,
                     hand.dealerUpRevealed(), 5 - hand.dealerUpRevealed().size(),
                     over ? bestFiveCards(hand.dealerCards()) : List.of());
@@ -317,6 +329,60 @@ public final class PokerWindow {
             }
             banner.setVisible(true);
             banner.setManaged(true);
+        }
+
+        /**
+         * When the table is embedded in a scrolling page, the settle banner lands
+         * at the bottom of the table: bring it into the viewport once the hand
+         * ends, and back to the top when a fresh hand is dealt.
+         */
+        private void scrollToShowSettle() { scrollBannerIntoView(0, -1); }
+
+        private void scrollToTop() { scrollToValue(0); }
+
+        private void scrollToValue(double value) {
+            Node node = root;
+            while (node != null) {
+                if (node instanceof ScrollPane pane) {
+                    // Defer a full pulse so the banner's layout change has been
+                    // applied before the scroll range is read.
+                    Platform.runLater(() -> Platform.runLater(() -> pane.setVvalue(value)));
+                    return;
+                }
+                node = node.getParent();
+            }
+        }
+
+        /**
+         * Scrolls so the banner's bottom edge sits just above the viewport
+         * bottom. ScrollPane preserves the pixel offset behind a vvalue, so
+         * the value may only be written once the content has reached its
+         * final height: the geometry is re-measured each pulse until the
+         * banner reports a real height AND the content height has stopped
+         * changing (max 64 pulses).
+         */
+        private void scrollBannerIntoView(int attempt, double lastContentH) {
+            Node node = root;
+            while (node != null && !(node instanceof ScrollPane)) {
+                node = node.getParent();
+            }
+            if (!(node instanceof ScrollPane pane)) return;
+            Platform.runLater(() -> {
+                double bannerH = banner.getLayoutBounds().getHeight();
+                double contentH = root.getLayoutBounds().getHeight();
+                if ((bannerH <= 1 || contentH != lastContentH) && attempt < 64) {
+                    Platform.runLater(() -> scrollBannerIntoView(attempt + 1, contentH));
+                    return;
+                }
+                double bottom = bannerH > 1
+                        ? banner.localToScene(0, bannerH).getY() - root.localToScene(0, 0).getY()
+                        : contentH;
+                double viewportH = pane.getViewportBounds().getHeight();
+                double range = contentH - viewportH;
+                if (range <= 1) return;
+                double target = (bottom - viewportH + 8) / range;
+                pane.setVvalue(Math.max(0, Math.min(1, target)));
+            });
         }
 
         private static List<Poker.Card> bestFiveCards(List<Poker.Card> cards) {

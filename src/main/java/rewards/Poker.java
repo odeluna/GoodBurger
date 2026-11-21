@@ -307,17 +307,20 @@ public final class Poker {
         }
 
         private void applyDealerResponse(DealerPlay play) {
-            if (play == DealerPlay.CALL) {
-                int add = playerStreetBet - dealerStreetBet;
-                dealerStreetBet += add;
-                pot += add;
-                advanceStreet();
-            } else { // RAISE: call the open bet, then add the raise
+            if (play == DealerPlay.RAISE) {
+                // RAISE: call the open bet, then add the raise.
                 int add = playerStreetBet - dealerStreetBet + BASE_BET;
                 dealerStreetBet += add;
                 pot += add;
                 facing = dealerStreetBet - playerStreetBet;
                 dealerActed = true;
+            } else {
+                // CHECK or CALL: the dealer matches any open street bet (zero for a
+                // check) and the street advances.
+                int add = playerStreetBet - dealerStreetBet;
+                dealerStreetBet += add;
+                pot += add;
+                advanceStreet();
             }
         }
 
