@@ -159,8 +159,14 @@ public final class LogicTest {
         check(reloaded.tradeInFull(0) == 300, "full trade-in refunds the whole cost");
         check(reloaded.points() == 1250 && reloaded.redeemedCount(0) == 0, "full trade-in empties the count");
         check(reloaded.tradeInFull(0) == 0, "full trade-in with nothing redeemed returns nothing");
+        check(reloaded.redeem(0), "redemption for the consume test");
+        check(reloaded.points() == 950 && reloaded.redeemedCount(0) == 1, "redemption charges the full cost");
+        reloaded.consumeRedemption(0);
+        check(reloaded.points() == 950 && reloaded.redeemedCount(0) == 0, "consume drops the count and moves no points");
+        ProgressStore afterConsume = new ProgressStore(file, clock);
+        check(afterConsume.points() == 950 && afterConsume.redeemedCount(0) == 0, "consume persists across reloads");
         reloaded.adjustPoints(-100);
-        check(reloaded.points() == 1150, "poker loss deducts points");
+        check(reloaded.points() == 850, "poker loss deducts points");
         reloaded.adjustPoints(-9000);
         check(reloaded.points() == 0, "balance floors at zero");
     }

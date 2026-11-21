@@ -361,6 +361,23 @@ public final class ProgressStore {
         return refund;
     }
 
+    /**
+     * Consumes a redeemed unit that was just submitted in an order: the count
+     * drops by one but no points move (the customer already paid at redemption).
+     * Call it after the order is saved, so a failed save leaves the unit pending.
+     */
+    public synchronized void consumeRedemption(int index) throws IOException {
+        if (index < 0 || index >= REWARD_NAMES.length) throw new IndexOutOfBoundsException(index);
+        if (redeemed[index] == 0) return;
+        redeemed[index]--;
+        try {
+            save();
+        } catch (IOException error) {
+            redeemed[index]++;
+            throw error;
+        }
+    }
+
     private enum DefinitionRef {
         FIRST_PLAY("first_play"), PIPES_10("pipes_10"), PIPES_25("pipes_25"),
         POKER_WIN("poker_win"), STREAK_3("streak_3"), REDEMPTIONS_5("redemptions_5");

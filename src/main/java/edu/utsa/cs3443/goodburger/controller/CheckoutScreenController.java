@@ -21,6 +21,8 @@ import javafx.scene.layout.VBox;
 import rewards.ProgressStore;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Controller for checkout_page.fxml.
@@ -38,7 +40,8 @@ import java.io.IOException;
  * FULL redemption price straight back to the balance; pressing + adds another unit at its full
  * price. When the order is submitted the redeemed lines stay in the saved order and earn no
  * points, while the paid lines earn 10 points per dollar (the same {@link UserRewardStore} the
- * rewards page uses, so all screens always agree).</p>
+ * rewards page uses, so all screens always agree). The submitted units are consumed, so the
+ * redeemed items are not in the order list after the submit.</p>
  */
 public class CheckoutScreenController {
 
@@ -171,9 +174,24 @@ public class CheckoutScreenController {
             // Redeemed items stay in the saved order (they earn no points); the paid lines
             // earn 10 points per dollar of item price.
             int earned = orderEarnsPoints();
+            // Redeemed lines are saved as-is; their pending units are consumed after the order
+            // is saved, so they do not reappear in the order the next time this page (or the
+            // rewards page) opens.
+            List<OrderItem> redeemedLines = new ArrayList<>();
+            for (OrderItem line : orderManager.getItems()) {
+                if (line.isRedeemed()) redeemedLines.add(line);
+            }
             String orderId = orderManager.checkout(session.getCurrentUser(), type, pickup);
-            if (progress != null && earned > 0) {
-                progress.adjustPoints(earned);
+            if (progress != null) {
+                for (OrderItem line : redeemedLines) {
+                    if (!UserRewardStore.consumeRedemption(progress, line)) {
+                        new Alert(Alert.AlertType.ERROR, "Could not save your points.").show();
+                        break;
+                    }
+                }
+                if (earned > 0) {
+                    progress.adjustPoints(earned);
+                }
             }
             String rewardNote = earned > 0
                     ? " You earned " + earned + " pts (10 per $1 of item price)."

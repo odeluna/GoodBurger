@@ -51,7 +51,8 @@ data/users.csv row for the signed-in account
    balance (the + button adds another unit at its full price). When the order
    is submitted the redeemed lines stay in the saved order and earn no points,
    while the paid lines earn 10 points per dollar of item price, and
-   `users.csv` is re-synced.
+   `users.csv` is re-synced. The submitted units are consumed, so the redeemed
+   items are not in the order list after the submit.
 
 ## Where each piece of state lives
 
@@ -60,7 +61,7 @@ data/users.csv row for the signed-in account
 | Account points (the balance) | `data/users.csv`, last column | visible on profile + rewards; survives everything |
 | Per-user game state (daily cap, streak, achievements, redemptions) | `~/.local/share/rewards-javafx/progress-<userId>.properties` | one file per account, so two users on the same machine never mix state |
 | Guest state | `~/.local/share/rewards-javafx/progress.properties` (shared default) | guests have no user file row, so nothing is written to `users.csv` for them |
-| Redeemed food items | the same per-user progress file (`progress-<userId>.properties`) | each redemption also lands in the shared order as a $0.00 line (`UserRewardStore.syncRewardToCart`), so it shows under the Current Order at checkout; - on that line takes it back at full cost, and on submit the redeemed lines stay in the order while the paid lines earn 10 points per dollar of item price |
+| Redeemed food items | the same per-user progress file (`progress-<userId>.properties`) | each redemption also lands in the shared order as a $0.00 line (`UserRewardStore.syncRewardToCart`), so it shows under the Current Order at checkout; - on that line takes it back at full cost, and on submit the redeemed lines stay in the saved order, the paid lines earn 10 points per dollar of item price, and the units are consumed so the items are not in the order after the submit |
 
 `rewards.progress.path` (JVM property) still overrides the file location; the
 standalone `rewards.RewardsApp` keeps using the default file, which is why the
@@ -87,16 +88,20 @@ app-side and standalone-side stay in sync on a machine that runs both.
    menu, then press SUBMIT: the order is saved with the redeemed line still in
    it, the redeemed items earn no points, and the paid lines earn 10 points per
    dollar of item price (a $1.99 soda earns 20) -- the dialog says how many
-   points were earned, and the `users.csv` row tracks the whole way.
+   points were earned, and the `users.csv` row tracks the whole way. The
+   redeemed units are consumed by the submit, so the soda is no longer in the
+   order: open the checkout page again and the order is empty.
 
 ## Verification
 
-- `./test.sh` covers the economy rules and the ProgressStore file format.
-- The points-sync path was driven end to end headlessly on 2026-11-21
-  (38 checks): sign in with the test account (5000 pts), load the page
-  (label showed 5000), fold one poker hand, `users.csv` updated to 4950,
-  re-login reads 4950 back; then redeem the soda (4650), the free line
-  lands in the shared order, the checkout cart (the same list the order
-  uses) shows it under the Current Order with the 4650 balance, and
-  submitting the order refunds the 150 automatically (4800) with the soda
-  line kept in the saved order, `users.csv` mirroring each step.
+- `./test.sh` covers the economy rules and the ProgressStore file format,
+  including `consumeRedemption` (the count drops on submit, no points move,
+  and it persists).
+- The v2 rewards path was driven end to end headlessly on 2026-11-21
+  (56 checks): sign in with the test account (5000 pts), fold one poker hand
+  (`users.csv` 4950), redeem the soda (4650), the free line lands in the
+  shared order and shows under the Current Order at checkout; - on the line
+  gives the FULL 300 back (4950, line gone), + costs the full 300, redeeming
+  again (4650) plus a paid $1.99 soda and SUBMIT saves both lines, earns 20
+  points for the paid line (4670), and consumes the redeemed unit: reopening
+  the checkout page finds an empty order.

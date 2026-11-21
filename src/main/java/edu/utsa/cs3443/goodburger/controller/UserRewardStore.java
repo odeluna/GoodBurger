@@ -123,6 +123,27 @@ public final class UserRewardStore {
     }
 
     /**
+     * Called after an order with redeemed lines is submitted: each saved unit stops being
+     * "pending", so the lines do not come back into the order the next time the checkout or
+     * rewards page opens. No points move: the customer already paid at redemption.
+     * @return false when the points file could not be saved, in which case the units stay
+     *         pending and can reappear until a later submit
+     */
+    public static boolean consumeRedemption(ProgressStore store, OrderItem line) {
+        if (store == null) return true;
+        int index = rewardIndexFor(line.getItem().getId());
+        if (index < 0) return true;
+        try {
+            for (int unit = 0; unit < line.getQuantity(); unit++) {
+                store.consumeRedemption(index);
+            }
+            return true;
+        } catch (IOException error) {
+            return false;
+        }
+    }
+
+    /**
      * Opens the per-account store for the current session user. Falls back to
      * a throwaway file if the main path cannot be read, so the pages stay
      * usable; returns null only if even the fallback fails.
