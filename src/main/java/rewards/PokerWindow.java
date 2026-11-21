@@ -76,8 +76,6 @@ public final class PokerWindow {
         private final Label potLabel = new Label();
         private final Label stackLabel = new Label();
         private final Label allInLabel = new Label("ALL-IN");
-        private final Label matched = new Label(
-                "MATCHED: a shown rank overlaps the dealer's. The pot pushes at showdown.");
         private final Label banner = new Label();
         private final Label detail = new Label();
         private final Button mainAction = new Button("Check");
@@ -128,11 +126,6 @@ public final class PokerWindow {
             allInLabel.setVisible(false);
             HBox stats = new HBox(18, roundLabel, potLabel, stackLabel, allInLabel);
 
-            matched.setStyle("-fx-background-color: #fff3d6; -fx-border-color: #d18b33;"
-                    + " -fx-border-width: 1; -fx-background-radius: 6; -fx-border-radius: 6;"
-                    + " -fx-padding: 5 10 5 10; -fx-text-fill: #8a5a10;"
-                    + " -fx-font-weight: bold; -fx-font-size: 12.5px;");
-            matched.setVisible(false);
             banner.setVisible(false);
             detail.setWrapText(true);
             detail.setStyle("-fx-font-size: 13.5px; -fx-text-fill: #5a6b74;");
@@ -156,7 +149,7 @@ public final class PokerWindow {
             Node[] body = { title, blurb,
                     sectionLabel("DEALER"), dealerCards,
                     sectionLabel("YOUR HAND"), playerCards,
-                    stats, matched, banner, detail };
+                    stats, banner, detail };
             this.actionBar = new HBox(12, mainAction, raise, fold, again, rules, close);
             this.root = new VBox(10);
             for (Node node : body) {
@@ -205,7 +198,6 @@ public final class PokerWindow {
         private void onMainAction() {
             if (hand == null || hand.isOver()) return;
             if (hand.canCheck()) hand.playerCheck();
-            else hand.playerCall();
             afterAction();
         }
 
@@ -248,13 +240,12 @@ public final class PokerWindow {
             if (hand.playerRank() == null) {
                 return hand.winner() == Poker.Winner.PLAYER
                         ? "Dealer folded before showdown."
-                        : "You folded; the dealer takes the pot.";
+                        : "You folded; you lose half the stake.";
             }
             String text = "Your hand: " + hand.playerRank().name()
                     + "   vs   Dealer's hand: " + hand.dealerRank().name() + ".";
             if (hand.winner() == Poker.Winner.PUSH) {
-                text += hand.isMatched() ? " A shown rank matched, so the pot pushes."
-                                         : " Tied hands push the pot.";
+                text += " Tied hands push the pot.";
             }
             return text;
         }
@@ -267,7 +258,6 @@ public final class PokerWindow {
                 potLabel.setText("");
                 stackLabel.setText("");
                 allInLabel.setVisible(false);
-                matched.setVisible(false);
                 banner.setVisible(false);
                 banner.setManaged(false);
                 detail.setText(settleText);
@@ -280,12 +270,14 @@ public final class PokerWindow {
             boolean over = hand.isOver();
             if (over && !wasOver) scrollToShowSettle();
             wasOver = over;
-            renderRow(dealerCards, hand.dealerHole(), !over,
+            renderRow(dealerCards, List.of(), hand.dealerHole(),
                     hand.dealerUpRevealed(), 5 - hand.dealerUpRevealed().size(),
                     over ? bestFiveCards(hand.dealerCards()) : List.of());
-            List<Poker.Card> playerVisible = new ArrayList<>(hand.playerHole());
+            List<Poker.Card> holeShown = hand.playerHoleRevealed();
+            List<Poker.Card> holeHidden = hand.playerHole().subList(holeShown.size(), Poker.Stud.HOLE_CARDS);
+            List<Poker.Card> playerVisible = new ArrayList<>(holeShown);
             playerVisible.addAll(hand.playerUpRevealed());
-            renderRow(playerCards, hand.playerHole(), false,
+            renderRow(playerCards, holeShown, List.copyOf(holeHidden),
                     hand.playerUpRevealed(), 5 - hand.playerUpRevealed().size(),
                     playerVisible.size() >= 5 ? bestFiveCards(playerVisible)
                             : over ? List.of() : List.of());
@@ -293,17 +285,18 @@ public final class PokerWindow {
             potLabel.setText("Pot: " + hand.pot());
             stackLabel.setText("Your stack: " + hand.bankroll());
             allInLabel.setVisible(hand.playerAllIn());
-            matched.setVisible(hand.isMatched());
             if (over) {
                 setBanner();
                 detail.setText(settleText);
             } else {
                 banner.setVisible(false);
                 banner.setManaged(false);
-                detail.setText("Check, raise, or fold. Your best five cards are outlined.");
+                detail.setText("You can check at most twice per hand. Check or raise reveals a hole card. "
+                        + "Your best five cards are outlined.");
             }
-            mainAction.setText(hand.canCheck() ? "Check" : "Call " + hand.callCost());
-            mainAction.setDisable(over);
+            mainAction.setText("Check (" + hand.checksLeft() + " left)");
+            mainAction.setDisable(over || !hand.canCheck());
+            raise.setText("Raise +" + (hand.canRaise() ? hand.raiseCost() : Poker.Stud.BASE_BET));
             raise.setDisable(over || !hand.canRaise());
             fold.setDisable(over);
             again.setVisible(over);
@@ -318,12 +311,11 @@ public final class PokerWindow {
                     banner.setStyle("-fx-font-size: 30px; -fx-font-weight: bold; -fx-text-fill: " + WIN_COLOR + ";");
                 }
                 case DEALER -> {
-                    banner.setText("YOU LOSE  " + hand.netDelta());
+                    banner.setText((hand.folded() ? "YOU FOLDED  " : "YOU LOSE  ") + hand.netDelta());
                     banner.setStyle("-fx-font-size: 30px; -fx-font-weight: bold; -fx-text-fill: " + LOSE_COLOR + ";");
                 }
                 case PUSH -> {
-                    banner.setText(hand.isMatched() ? "POT PUSHES  (matched shown cards)"
-                                                   : "POT PUSHES  (tied hands)");
+                    banner.setText("POT PUSHES  (tied hands)");
                     banner.setStyle("-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: " + PUSH_COLOR + ";");
                 }
             }
@@ -358,10 +350,10 @@ public final class PokerWindow {
          * bottom. ScrollPane preserves the pixel offset behind a vvalue, so
          * the value may only be written once the content has reached its
          * final height: the geometry is re-measured each pulse until the
-         * banner reports a real height AND the content height has stopped
-         * changing (max 64 pulses).
+         * banner reports a real height AND its bottom edge has stopped
+         * moving (max 64 pulses).
          */
-        private void scrollBannerIntoView(int attempt, double lastContentH) {
+        private void scrollBannerIntoView(int attempt, double lastBottom) {
             Node node = root;
             while (node != null && !(node instanceof ScrollPane)) {
                 node = node.getParent();
@@ -370,18 +362,32 @@ public final class PokerWindow {
             Platform.runLater(() -> {
                 double bannerH = banner.getLayoutBounds().getHeight();
                 double contentH = root.getLayoutBounds().getHeight();
-                if ((bannerH <= 1 || contentH != lastContentH) && attempt < 64) {
-                    Platform.runLater(() -> scrollBannerIntoView(attempt + 1, contentH));
-                    return;
-                }
+                double viewportH = pane.getViewportBounds().getHeight();
+                double range = contentH - viewportH;
                 double bottom = bannerH > 1
                         ? banner.localToScene(0, bannerH).getY() - root.localToScene(0, 0).getY()
                         : contentH;
-                double viewportH = pane.getViewportBounds().getHeight();
-                double range = contentH - viewportH;
-                if (range <= 1) return;
+                if (bannerH <= 1 || range <= 1) {
+                    if (attempt < 64) {
+                        final double b = bottom;
+                        Platform.runLater(() -> scrollBannerIntoView(attempt + 1, b));
+                    }
+                    return;
+                }
                 double target = (bottom - viewportH + 8) / range;
-                pane.setVvalue(Math.max(0, Math.min(1, target)));
+                double v = Math.max(0, Math.min(1, target));
+                double top = v * range;
+                boolean inView = bottom - 8 <= top + viewportH && bottom >= top;
+                if (inView && bottom == lastBottom) return;
+                // Rows above the banner (revealed dealer cards, best-five
+                // outlines) can still shift it for pulses after the settle, so
+                // re-aim on every pulse until the bottom edge is both in view
+                // and stopped moving.
+                pane.setVvalue(v);
+                if (attempt < 64) {
+                    final double b = bottom;
+                    Platform.runLater(() -> scrollBannerIntoView(attempt + 1, b));
+                }
             });
         }
 
@@ -390,10 +396,11 @@ public final class PokerWindow {
             return Poker.bestFive(cards).cards();
         }
 
-        private static void renderRow(HBox row, List<Poker.Card> hole, boolean holeHidden,
+        private static void renderRow(HBox row, List<Poker.Card> holeShown, List<Poker.Card> holeHidden,
                                       List<Poker.Card> upShown, int upHidden, List<Poker.Card> highlight) {
             row.getChildren().clear();
-            for (Poker.Card card : hole) row.getChildren().add(tile(card, holeHidden, highlight.contains(card)));
+            for (Poker.Card card : holeShown) row.getChildren().add(tile(card, false, highlight.contains(card)));
+            for (Poker.Card card : holeHidden) row.getChildren().add(tile(card, true, highlight.contains(card)));
             for (Poker.Card card : upShown) row.getChildren().add(tile(card, false, highlight.contains(card)));
             for (int i = 0; i < upHidden; i++) row.getChildren().add(tile(null, true, false));
         }
@@ -502,12 +509,14 @@ public final class PokerWindow {
             content.getChildren().addAll(rulesLine(
                     "You ante 50 points, and the dealer antes 50. Both go into the pot."),
                     rulesLine("Both sides get seven cards: two stay hidden, five are shown, one per round."),
-                    rulesLine("Each of the six rounds you can Check (pass), Call (match the bet), "
-                            + "Raise (+50), or Fold (give up the pot)."),
+                    rulesLine("Each of the six rounds you can Check, Raise (+50), or Fold. There is no Call: "
+                            + "when the dealer has bet, you must raise or fold."),
+                    rulesLine("Check can be used at most twice per hand. Every Check and Raise flips one "
+                            + "of your hidden hole cards face up."),
                     rulesLine("After the last round the best five of your seven cards is compared "
                             + "to the dealer's. The higher hand wins the pot."),
-                    rulesLine("If one of your shown ranks matches one of the dealer's shown ranks, "
-                            + "the pot pushes: nobody wins or loses."),
+                    rulesLine("Losing at showdown costs your full stake; folding costs only half of it."),
+                    rulesLine("If both best five-card hands tie exactly, the pot pushes: nobody wins or loses."),
                     rulesLine("Winning a hand also claims your daily bonus."));
             content.getChildren().add(heading("Hand rankings (best to worst)"));
             content.getChildren().addAll(rankingLine("Straight flush",

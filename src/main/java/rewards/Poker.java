@@ -152,9 +152,11 @@ public final class Poker {
      *
      * <p>Both sides are dealt seven cards: the first two stay hidden, the other five
      * are shown one per street. The player posts an ante, acts first on each of the
-     * six streets (check/call/raise/fold), and the house replies with a fixed
-     * strategy. At showdown the best five of the seven cards wins the pot; if the
-     * shown cards contain the same rank on both sides the pot is pushed back.
+     * six streets, and the house replies with a fixed strategy. There is no call:
+     * a bet left open can only be raised or folded. Check is usable at most twice
+     * per hand, and every check or raise flips one of the player's hole cards face
+     * up. Losing at showdown costs the full stake; folding costs only half of it.
+     * If the best five-card hands tie exactly the pot is pushed.
      */
     public static final class Stud {
         public static final int CARDS = 7;
@@ -162,6 +164,7 @@ public final class Poker {
         public static final int STREETS = 6;
         public static final int ANTE = 50;
         public static final int BASE_BET = 50;
+        public static final int MAX_CHECKS = 2;
 
         private final List<Card> player = new ArrayList<>();
         private final List<Card> dealer = new ArrayList<>();
@@ -179,6 +182,9 @@ public final class Poker {
         private HandRank playerRank;
         private HandRank dealerRank;
         private Winner winner;
+        private int checksUsed;
+        private int holeRevealed;
+        private boolean folded;
 
         private Stud() { }
 
@@ -238,25 +244,21 @@ public final class Poker {
         public List<Card> dealerHole() { return List.of(dealer.get(0), dealer.get(1)); }
         public List<Card> playerUpRevealed() { return List.copyOf(player.subList(HOLE_CARDS, HOLE_CARDS + revealedUp)); }
         public List<Card> dealerUpRevealed() { return List.copyOf(dealer.subList(HOLE_CARDS, HOLE_CARDS + revealedUp)); }
+        public int checksLeft() { return MAX_CHECKS - checksUsed; }
+        public List<Card> playerHoleRevealed() { return List.copyOf(player.subList(0, holeRevealed)); }
+        public boolean folded() { return folded; }
 
-        /** True once a shown rank appears on both sides: the pot pushes at showdown. */
-        public boolean isMatched() {
-            Set<Integer> ranks = new HashSet<>();
-            for (Card card : playerUpRevealed()) ranks.add(card.rank());
-            for (Card card : dealerUpRevealed()) if (ranks.contains(card.rank())) return true;
-            return false;
-        }
-
-        public boolean canCheck() { return !over && !playerAllIn && facing == 0; }
-        public boolean canCall() { return !over && facing > 0; }
-        public int callCost() { return Math.min(facing, bankroll); }
+        public boolean canCheck() { return !over && !playerAllIn && facing == 0 && checksUsed < MAX_CHECKS; }
         public boolean canRaise() { return !over && !playerAllIn && bankroll >= facing + BASE_BET; }
         public int raiseCost() { return Math.min(facing + BASE_BET, bankroll); }
 
-        /** Legal only while no one has bet this street. A strong house check-raises. */
+        /** Legal only while no one has bet this street and the two checks are not used. */
         public void playerCheck() {
             inProgress();
-            if (facing != 0) throw new IllegalStateException("must call " + facing + " before checking");
+            if (facing != 0) throw new IllegalStateException("must raise or fold before checking");
+            if (checksUsed >= MAX_CHECKS) throw new IllegalStateException("checks are used up for this hand");
+            checksUsed++;
+            revealHoleCard();
             DealerPlay play = dealerAct(street, 0);
             if (play == DealerPlay.RAISE) {
                 dealerStreetBet = BASE_BET;
@@ -268,27 +270,12 @@ public final class Poker {
             }
         }
 
-        /** Pays the current bet; pays the whole bankroll when it cannot cover. */
-        public void playerCall() {
-            inProgress();
-            if (facing == 0) throw new IllegalStateException("nothing to call; check instead");
-            int cost = callCost();
-            bankroll -= cost;
-            stake += cost;
-            pot += cost;
-            playerStreetBet += cost;
-            if (bankroll == 0) playerAllIn = true;
-            DealerPlay play = dealerAct(street, playerStreetBet - dealerStreetBet);
-            if (play == DealerPlay.FOLD) { finish(Winner.PLAYER); return; }
-            if (playerAllIn) { closeBettingToShowdown(); return; }
-            applyDealerResponse(play);
-        }
-
         /** Bets or raises by {@link #BASE_BET}. */
         public void playerRaise() {
             inProgress();
             if (!canRaise()) throw new IllegalStateException(
-                    "cannot raise; call " + callCost() + " or fold");
+                    "cannot raise; fold, or wait for a free street to check");
+            revealHoleCard();
             int cost = facing + BASE_BET;
             bankroll -= cost;
             stake += cost;
@@ -303,7 +290,13 @@ public final class Poker {
         /** Concedes the hand; the dealer takes the pot without a showdown. */
         public void playerFold() {
             inProgress();
+            folded = true;
             finish(Winner.DEALER);
+        }
+
+        /** Check and raise each flip one hole card face up, until both are shown. */
+        private void revealHoleCard() {
+            if (holeRevealed < HOLE_CARDS) holeRevealed++;
         }
 
         private void applyDealerResponse(DealerPlay play) {
@@ -355,11 +348,8 @@ public final class Poker {
             BestHand dealerBest = bestFive(dealer);
             playerRank = playerBest.rank();
             dealerRank = dealerBest.rank();
-            if (isMatched()) winner = Winner.PUSH;
-            else {
-                int compare = playerRank.compareTo(dealerRank);
-                winner = compare > 0 ? Winner.PLAYER : compare < 0 ? Winner.DEALER : Winner.PUSH;
-            }
+            int compare = playerRank.compareTo(dealerRank);
+            winner = compare > 0 ? Winner.PLAYER : compare < 0 ? Winner.DEALER : Winner.PUSH;
             over = true;
         }
 
@@ -372,12 +362,12 @@ public final class Poker {
             if (over) throw new IllegalStateException("hand is over");
         }
 
-        /** Net point change: the pot minus the stake on a win, the stake on a loss, zero on a push. */
+        /** Net point change: the pot minus the stake on a win, the full stake on a loss, half the stake on a fold, zero on a push. */
         public int netDelta() {
             if (!over) throw new IllegalStateException("hand is not over");
             return switch (winner) {
                 case PLAYER -> pot - stake;
-                case DEALER -> -stake;
+                case DEALER -> folded ? -stake / 2 : -stake;
                 case PUSH -> 0;
             };
         }
