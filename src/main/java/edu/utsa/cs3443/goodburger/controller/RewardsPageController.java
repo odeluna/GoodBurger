@@ -1,6 +1,5 @@
 package edu.utsa.cs3443.goodburger.controller;
 
-import edu.utsa.cs3443.goodburger.model.AccountManager;
 import edu.utsa.cs3443.goodburger.model.Session;
 import edu.utsa.cs3443.goodburger.model.User;
 import javafx.animation.PauseTransition;
@@ -25,8 +24,6 @@ import rewards.RewardGameDriver;
 import rewards.SpriteAtlas;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.time.Clock;
 import java.util.List;
 import java.util.Random;
 
@@ -69,36 +66,21 @@ public class RewardsPageController {
     @FXML
     private void initialize() {
         User user = Session.get().getCurrentUser();
-        String path = System.getProperty("rewards.progress.path");
-        try {
-            progress = new ProgressStore(resolveStorePath(user, path),
-                    Clock.systemDefaultZone());
+        progress = UserRewardStore.open();
+        if (progress == null) {
+            new Alert(Alert.AlertType.ERROR,
+                    "Could not open the rewards progress file").show();
+        } else {
             progress.setGambleDeadlineSupplier(java.time.LocalDate::now);
             progress.onAchievementAwarded(event -> Platform.runLater(() ->
                     toast("Achievement unlocked: " + event.definition().name()
                             + " (+" + event.grant() + " pts)")));
-        } catch (IOException error) {
-            // Keep the page usable even if the progress file cannot be read:
-            // fall back to a throwaway location so the controls still render.
-            try {
-                progress = new ProgressStore(
-                        java.nio.file.Files.createTempDirectory("rewards-page").resolve("progress.properties"),
-                        Clock.systemDefaultZone());
-            } catch (IOException fallback) {
-                new Alert(Alert.AlertType.ERROR,
-                        "Could not open the rewards progress file: " + error.getMessage()).show();
-            }
-        }
-        if (progress != null) {
             // Tie the balance to the signed-in account: start at the points from
             // users.csv and mirror every change back to that user's row.
-            if (user != null && !user.isGuest()) {
-                try {
-                    progress.setBalance(user.getPoints());
-                    progress.onBalanceChanged(this::syncUserPoints);
-                } catch (IOException syncError) {
-                    showError("Could not load your points", syncError);
-                }
+            if (user != null && !user.isGuest()
+                    && !UserRewardStore.attachToUser(progress)) {
+                showError("Could not load your points",
+                        new java.io.IOException("users.csv read failed"));
             }
             try {
                 sprites = new SpriteAtlas();
@@ -112,44 +94,7 @@ public class RewardsPageController {
         refreshData();
     }
 
-    /**
-     * One progress file per account, next to the default file and named after
-     * the user id, so each signed-in user keeps their own rewards state. The
-     * rewards.progress.path property still wins, and guests keep the default.
-     */
-    private static java.nio.file.Path resolveStorePath(User user, String propertyOverride) {
-        if (propertyOverride != null) return java.nio.file.Path.of(propertyOverride);
-        if (user != null && !user.isGuest() && !user.getId().isBlank()) {
-            return ProgressStore.defaultPath()
-                    .resolveSibling("progress-" + user.getId() + ".properties");
-        }
-        return ProgressStore.defaultPath();
-    }
-
-    /** Writes the rewards balance back to the signed-in user's row in users.csv. */
-    private void syncUserPoints(int points) {
-        User user = Session.get().getCurrentUser();
-        if (user == null || user.isGuest() || user.getPoints() == points) return;
-        user.setPoints(points);
-        try {
-            AccountManager manager = Session.get().getAccountManager();
-            List<User> users = manager.loadUserFromFile();
-            for (User stored : users) {
-                if (stored.getEmail().equalsIgnoreCase(user.getEmail())) {
-                    stored.setPoints(points);
-                    if (!manager.saveUserToFile(users)) {
-                        showError("Could not save your points",
-                                new java.io.IOException("users.csv write failed"));
-                    }
-                    return;
-                }
-            }
-        } catch (Exception error) {
-            showError("Could not save your points", error);
-        }
-    }
-
-    // Refreshes every label and button state from the progress store.
+    /** Refreshes the labels and button states from the shared rewards store. */
     private void refreshData() {
         if (progress == null) return;
         pointsLabel.setText("Current rewards points: " + progress.points());

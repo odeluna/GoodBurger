@@ -6,6 +6,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
@@ -64,6 +65,15 @@
             <Font name="Book Antiqua Bold" size="17.0" />
          </font>
       </Label>
+      <Label layoutX="435.0" layoutY="332.0" prefHeight="26.0" prefWidth="110.0" text="Rewards:" textFill="#17434a">
+         <font>
+            <Font name="Book Antiqua Bold" size="17.0" />
+         </font></Label>
+      <Label fx:id="rewardsPoints" layoutX="549.0" layoutY="335.0" prefHeight="22.0" prefWidth="180.0" text="-- pts" textFill="#30373D">
+         <font>
+            <Font size="14.0" />
+         </font></Label>
+      <VBox fx:id="rewardsItems" layoutX="439.0" layoutY="360.0" prefHeight="70.0" prefWidth="176.0" spacing="6.0" />
       <Label alignment="CENTER" layoutX="439.0" layoutY="443.0" prefHeight="17.0" prefWidth="328.0" text="This is the line for the nutrition information for this page" />
    </children>
 </AnchorPane>
