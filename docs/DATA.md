@@ -44,6 +44,12 @@ Passwords are stored **plain text** (class project, not a security boundary). Th
 seeded rows are demo accounts; registration appends a row with the next sequential id.
 `test.test@gmail.com` / `test1` is the low-friction demo login.
 
+The **points** column (last) is read on sign-in and also **written** by the
+rewards page: every time the signed-in user's balance changes (poker result,
+redemption, game earnings) their row is rewritten with the new total, so the
+file, the profile page and the rewards page always agree. Guests are never
+written here. See [`REWARDS.md`](REWARDS.md).
+
 ## orders.csv: write-only
 
 The app appends one row per checkout; nothing re-reads it into the UI. Appended rows

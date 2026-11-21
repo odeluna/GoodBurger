@@ -38,6 +38,7 @@ public final class Session {
     }
     public OrderManager getOrderManager()     { return orderManager; }
     public MenuManager getMenuManager()       { return menuManager; }
+    public AccountManager getAccountManager() { return accountManager; }
 
     public User getCurrentUser()              { return currentUser; }
     public void setCurrentUser(User user)     { this.currentUser = user; }

@@ -65,8 +65,9 @@ RewardsPageController (app)  <---->  rewards.*
    |                               +-- RewardGameDriver, EconomyRules (scoring)
    |                               +-- Achievements (unlockables)
    +----- shared progress ---------+
-              ProgressStore (persists points/achievements to a file in data/,
-              so app-side and standalone-side progress stay in sync)
+              ProgressStore (persists points/achievements to
+              ~/.local/share/rewards-javafx/progress[-<userId>].properties;
+              one file per signed-in user, shared default file for guests)
 ```
 
 ## Data flow, one order end to end
@@ -79,6 +80,20 @@ checkout_page: CheckoutScreenController
   -> DataManager.saveOrder() appends a row to data/orders.csv
 profile_page: ProfileController reads points back through Session/AccountManager
 ```
+
+## Data flow, points end to end
+
+```
+sign in:    users.csv points column -> Session -> RewardsPageController
+            -> ProgressStore.setBalance (page label shows the file's value)
+play:        poker / Pipe Flight settle against that same ProgressStore
+write-back:  onBalanceChanged -> syncUserPoints -> the user's row in
+            data/users.csv is rewritten with the new total
+result:      profile page, next sign-in, and the file all agree
+guests:      shared default progress file; nothing written to users.csv
+```
+
+Full plain-language explanation + demo script: [`REWARDS.md`](REWARDS.md).
 
 ## Conventions
 

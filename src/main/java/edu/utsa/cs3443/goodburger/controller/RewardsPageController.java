@@ -1,5 +1,8 @@
 package edu.utsa.cs3443.goodburger.controller;
 
+import edu.utsa.cs3443.goodburger.model.AccountManager;
+import edu.utsa.cs3443.goodburger.model.Session;
+import edu.utsa.cs3443.goodburger.model.User;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -32,8 +35,12 @@ import java.util.Random;
  * the redeemable food rewards, and the Pipe Flight mini game launcher.
  *
  * All point logic lives in the rewards package (ProgressStore and friends),
- * so the page and the mini game share the same economy and the same saved
- * progress file as the standalone RewardsApp.
+ * so the page and the mini game share the same economy. For a signed-in user
+ * the balance is the user's own: the page starts at the points stored for that
+ * account in data/users.csv, and every change (a poker result, a redemption)
+ * is written back to that user's row, so the profile and rewards pages always
+ * agree and the balance survives sign out / sign in. Guests use the shared
+ * default progress file and are never written to users.csv.
  *
  * author: Fabricio Ocampo
  * class: CS3443
@@ -58,9 +65,10 @@ public class RewardsPageController {
 
     @FXML
     private void initialize() {
+        User user = Session.get().getCurrentUser();
         String path = System.getProperty("rewards.progress.path");
         try {
-            progress = new ProgressStore(path == null ? ProgressStore.defaultPath() : Path.of(path),
+            progress = new ProgressStore(resolveStorePath(user, path),
                     Clock.systemDefaultZone());
             progress.setGambleDeadlineSupplier(java.time.LocalDate::now);
             progress.onAchievementAwarded(event -> Platform.runLater(() ->
@@ -79,6 +87,16 @@ public class RewardsPageController {
             }
         }
         if (progress != null) {
+            // Tie the balance to the signed-in account: start at the points from
+            // users.csv and mirror every change back to that user's row.
+            if (user != null && !user.isGuest()) {
+                try {
+                    progress.setBalance(user.getPoints());
+                    progress.onBalanceChanged(this::syncUserPoints);
+                } catch (IOException syncError) {
+                    showError("Could not load your points", syncError);
+                }
+            }
             try {
                 sprites = new SpriteAtlas();
             } catch (IOException error) {
@@ -89,6 +107,43 @@ public class RewardsPageController {
                             + "seven cards wins the pot. Shown ranks that match the dealer's push it."));
         }
         refreshData();
+    }
+
+    /**
+     * One progress file per account, next to the default file and named after
+     * the user id, so each signed-in user keeps their own rewards state. The
+     * rewards.progress.path property still wins, and guests keep the default.
+     */
+    private static java.nio.file.Path resolveStorePath(User user, String propertyOverride) {
+        if (propertyOverride != null) return java.nio.file.Path.of(propertyOverride);
+        if (user != null && !user.isGuest() && !user.getId().isBlank()) {
+            return ProgressStore.defaultPath()
+                    .resolveSibling("progress-" + user.getId() + ".properties");
+        }
+        return ProgressStore.defaultPath();
+    }
+
+    /** Writes the rewards balance back to the signed-in user's row in users.csv. */
+    private void syncUserPoints(int points) {
+        User user = Session.get().getCurrentUser();
+        if (user == null || user.isGuest() || user.getPoints() == points) return;
+        user.setPoints(points);
+        try {
+            AccountManager manager = Session.get().getAccountManager();
+            List<User> users = manager.loadUserFromFile();
+            for (User stored : users) {
+                if (stored.getEmail().equalsIgnoreCase(user.getEmail())) {
+                    stored.setPoints(points);
+                    if (!manager.saveUserToFile(users)) {
+                        showError("Could not save your points",
+                                new java.io.IOException("users.csv write failed"));
+                    }
+                    return;
+                }
+            }
+        } catch (Exception error) {
+            showError("Could not save your points", error);
+        }
     }
 
     // Refreshes every label and button state from the progress store.

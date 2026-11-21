@@ -16,7 +16,7 @@ There are two entry points and a shared data layer:
 | `edu.utsa.cs3443.goodburger.Launcher` | the app | the full GoodBurger app (sign-in → menu → checkout → profile → rewards page) |
 | `rewards.RewardsApp` | the games | a standalone launcher for the mini-games only (used during development, supports `--preview`/`--smoke`) |
 
-The two sides talk to each other in one place only: `RewardsPageController` (app side) hosts the games, and both sides share player progress through `rewards.ProgressStore`, which persists to a file in `data/`.
+The two sides talk to each other in one place only: `RewardsPageController` (app side) hosts the games, and both sides share player progress through `rewards.ProgressStore`, which persists to `~/.local/share/rewards-javafx/` (one file per signed-in user). For signed-in users the balance is seeded from, and written back to, `data/users.csv` — see [docs/REWARDS.md](docs/REWARDS.md).
 
 The app packages (`edu.utsa.cs3443.goodburger.*`) each carry a `package-info.java` that explains what belongs there and why:
 
