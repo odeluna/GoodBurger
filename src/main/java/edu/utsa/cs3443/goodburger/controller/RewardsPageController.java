@@ -10,6 +10,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -57,6 +58,8 @@ public class RewardsPageController {
     @FXML private Button miniGameButton;
     @FXML private Button pokerButton;
     @FXML private Label miniGameStatsLabel;
+    @FXML private ProgressBar dailyCapBar;
+    @FXML private Label dailyCapLabel;
 
     private ProgressStore progress;
     private SpriteAtlas sprites;
@@ -165,12 +168,17 @@ public class RewardsPageController {
         miniGameButton.setTooltip(new Tooltip(
                 "Spend " + EconomyRules.PLAY_COST + " points to play Pipe Flight; earn 1 point per pipe. "
                         + "Daily per-pipe earnings cap: " + EconomyRules.DAILY_EARNINGS_CAP + " points."));
+        int cap = EconomyRules.DAILY_EARNINGS_CAP;
+        int earned = progress.earnedToday();
+        dailyCapBar.setProgress(Math.min(1.0, earned / (double) cap));
+        dailyCapLabel.setText(earned >= cap
+                ? "Earned today: " + earned + " / " + cap + " pts (cap reached)"
+                : "Earned today: " + earned + " / " + cap + " pts");
         miniGameStatsLabel.setText("Daily bonus + "
                 + (progress.bonusClaimedToday()
                 ? (progress.streakDays() > 0 ? "claimed" : "0")
                 : progress.dailyBonusForToday())
-                + " (day " + progress.streakDays() + ")\nEarned today: "
-                + progress.earnedToday() + " / " + EconomyRules.DAILY_EARNINGS_CAP);
+                + " (day " + progress.streakDays() + ")");
     }
 
     // Redeems one reward; the item then shows up in Checkout to trade in.

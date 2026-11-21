@@ -21,3 +21,15 @@
     -fx-background-color: #c4ced4;
     -fx-text-fill: #ffffff;
 }
+
+.daily-cap-bar {
+    -fx-bar-fill: #45a0ab;
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 4;
+}
+
+.daily-cap-bar .track {
+    -fx-background-color: #e3ecef;
+    -fx-background-radius: 4;
+    -fx-background-insets: 0;
+}
