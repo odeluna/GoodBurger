@@ -34,12 +34,6 @@ public class AccountManager {
         this.file = dataManager.getUsersFile().toFile();
     }
 
-    // Allows a different file to be used when creating an AccountManager (used by tests)
-    public AccountManager(File file) {
-        this.dataManager = new DataManager();
-        this.file = file;
-    }
-
     // Returns the user who is currently signed in
     public User getCurrentUser() {
         return Session.get().getCurrentUser();

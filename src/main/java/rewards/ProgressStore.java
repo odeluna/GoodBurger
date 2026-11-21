@@ -38,6 +38,7 @@ public final class ProgressStore {
     private final Path file;
     private final Clock clock;
     private final LocalDate today;
+    private boolean loadedExisting;
     private int points = EconomyRules.STARTING_POINTS;
     private int earnedToday;
     private LocalDate earnedDate;
@@ -50,6 +51,7 @@ public final class ProgressStore {
     private boolean doubledToday;
     private final List<String> unlocked = new ArrayList<>();
     private Consumer<AchievementEvent> onAchievement;
+    private Consumer<Integer> onBalanceChanged;
     private Supplier<LocalDate> gambleDeadline;
 
     public ProgressStore(Path file, Clock clock) throws IOException {
@@ -116,6 +118,31 @@ public final class ProgressStore {
     /** UI hook: keep the gamble window tied to the app's own local date. */
     public synchronized void setGambleDeadlineSupplier(Supplier<LocalDate> deadline) {
         gambleDeadline = deadline;
+    }
+    /** True when the store file existed at construction, so callers can tell a fresh store apart. */
+    public synchronized boolean hasSavedFile() {
+        return loadedExisting;
+    }
+    /**
+     * Replaces the balance. The rewards page calls this at startup so the store
+     * starts at the signed-in user's points from users.csv.
+     */
+    public synchronized void setBalance(int newPoints) throws IOException {
+        int original = points;
+        points = Math.max(0, newPoints);
+        try {
+            save();
+        } catch (IOException error) {
+            points = original;
+            throw error;
+        }
+    }
+    /**
+     * UI hook: after every successful save, the new balance is passed to the
+     * listener so the caller can mirror it into users.csv for the signed-in user.
+     */
+    public synchronized void onBalanceChanged(Consumer<Integer> listener) {
+        onBalanceChanged = listener;
     }
 
     /**
@@ -341,6 +368,7 @@ public final class ProgressStore {
 
     private void load() throws IOException {
         if (!Files.exists(file)) return;
+        loadedExisting = true;
         Properties properties = new Properties();
         try (InputStream in = Files.newInputStream(file)) { properties.load(in); }
         int version = integer(properties.getProperty("version"), 1);
@@ -415,5 +443,6 @@ public final class ProgressStore {
         } finally {
             Files.deleteIfExists(temp);
         }
+        if (onBalanceChanged != null) onBalanceChanged.accept(points);
     }
 }
