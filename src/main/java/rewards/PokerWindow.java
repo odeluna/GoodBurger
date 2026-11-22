@@ -218,13 +218,12 @@ public final class PokerWindow {
             render();
         }
 
-        /** Applies the net points once, then records the win and daily bonus on a profit. */
+        /** Applies the net points once, then claims the daily login bonus on a profit. */
         private void settle() {
             int net = hand.netDelta();
             try {
                 progress.adjustPoints(net);
                 if (net > 0) {
-                    progress.recordPokerWin();
                     progress.claimDailyBonus();
                 }
             } catch (IOException error) {

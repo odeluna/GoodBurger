@@ -12,7 +12,7 @@
   Rewards page (module: rewards, author: Fabricio Ocampo).
   Modeled on the team theme already merged in home_page.fxml:
     Palette: White #FFFFFF  Teal #45A0AB  Orange #E0733A  Fuchsia #B52D5E  Grey #C4CED4
-  Data comes from the rewards package (ProgressStore, EconomyRules, Achievements),
+  Data comes from the rewards package (ProgressStore, EconomyRules),
   so the point economy is the same one the poker table uses.
   The bottom nav bar matches checkout_page.fxml (styles/rewardsScreen.css).
 -->

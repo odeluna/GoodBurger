@@ -3,8 +3,6 @@ package edu.utsa.cs3443.goodburger.controller;
 import edu.utsa.cs3443.goodburger.GoodBurgerApplication;
 import edu.utsa.cs3443.goodburger.model.Session;
 import edu.utsa.cs3443.goodburger.model.User;
-import javafx.animation.PauseTransition;
-import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -12,8 +10,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Tooltip;
-import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import rewards.EconomyRules;
@@ -61,9 +57,6 @@ public class RewardsPageController {
             new Alert(Alert.AlertType.ERROR,
                     "Could not open the rewards progress file").show();
         } else {
-            progress.onAchievementAwarded(event -> Platform.runLater(() ->
-                    toast("Achievement unlocked: " + event.definition().name()
-                            + " (+" + event.grant() + " pts)")));
             // Tie the balance to the signed-in account: start at the points from
             // users.csv and mirror every change back to that user's row.
             if (user != null && !user.isGuest()
@@ -140,22 +133,6 @@ public class RewardsPageController {
         } catch (IOException error) {
             showError("Could not open the poker table", error);
         }
-    }
-
-    // Small themed notification at the top of the page (auto-fades).
-    private void toast(String message) {
-        Label label = new Label(message);
-        label.setTextFill(Color.web("#30373D"));
-        label.setStyle("-fx-background-color: #FFD3A5; -fx-padding: 8; -fx-background-radius: 10; "
-                + "-fx-font-weight: bold; -fx-font-size: 13;");
-        label.setLayoutX(40);
-        label.setLayoutY(56);
-        Pane root = (Pane) pointsLabel.getScene().getRoot();
-        if (root == null) return;
-        root.getChildren().add(label);
-        PauseTransition fade = new PauseTransition(javafx.util.Duration.seconds(2.5));
-        fade.setOnFinished(event -> root.getChildren().remove(label));
-        fade.play();
     }
 
     private void showInfo(String title, String message) {

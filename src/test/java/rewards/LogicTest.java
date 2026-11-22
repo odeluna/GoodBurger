@@ -187,29 +187,26 @@ public final class LogicTest {
 
     private static void progress() throws Exception {
         Path file = Files.createTempDirectory("poker-progress").resolve("progress.properties");
-        Files.writeString(file, "version=2\npoints=800\nredeemed.0=1\npokerWins=0\n");
+        Files.writeString(file, "version=2\npoints=800\nredeemed.0=1\n");
         TestClock clock = new TestClock();
         ProgressStore store = new ProgressStore(file, clock);
         check(store.points() == 800 && store.redeemedCount(0) == 1, "existing rewards load");
-        store.recordPokerWin();
-        store.recordPokerWin();
         check(store.claimDailyBonus() == 100, "daily bonus");
         check(store.claimDailyBonus() == 0, "daily bonus once");
         ProgressStore reloaded = new ProgressStore(file, clock);
-        check(reloaded.points() == 1100 && reloaded.pokerWins() == 2, "wins persist and grant once");
-        check(reloaded.hasUnlocked("poker_win"), "first-win achievement");
+        check(reloaded.points() == 900, "bonus persists");
         check(reloaded.tradeIn(0) == 150 && reloaded.redeem(0), "food rewards still work");
         check(reloaded.tradeInFull(0) == 300, "full trade-in refunds the whole cost");
-        check(reloaded.points() == 1250 && reloaded.redeemedCount(0) == 0, "full trade-in empties the count");
+        check(reloaded.points() == 1050 && reloaded.redeemedCount(0) == 0, "full trade-in empties the count");
         check(reloaded.tradeInFull(0) == 0, "full trade-in with nothing redeemed returns nothing");
         check(reloaded.redeem(0), "redemption for the consume test");
-        check(reloaded.points() == 950 && reloaded.redeemedCount(0) == 1, "redemption charges the full cost");
+        check(reloaded.points() == 750 && reloaded.redeemedCount(0) == 1, "redemption charges the full cost");
         reloaded.consumeRedemption(0);
-        check(reloaded.points() == 950 && reloaded.redeemedCount(0) == 0, "consume drops the count and moves no points");
+        check(reloaded.points() == 750 && reloaded.redeemedCount(0) == 0, "consume drops the count and moves no points");
         ProgressStore afterConsume = new ProgressStore(file, clock);
-        check(afterConsume.points() == 950 && afterConsume.redeemedCount(0) == 0, "consume persists across reloads");
+        check(afterConsume.points() == 750 && afterConsume.redeemedCount(0) == 0, "consume persists across reloads");
         reloaded.adjustPoints(-100);
-        check(reloaded.points() == 850, "poker loss deducts points");
+        check(reloaded.points() == 650, "poker loss deducts points");
         reloaded.adjustPoints(-9000);
         check(reloaded.points() == 0, "balance floors at zero");
     }

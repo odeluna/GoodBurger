@@ -72,7 +72,7 @@ The detail panel (`ItemDetailPanel`) renders each item with a **normalized photo
 
 ## Seven-card stud (Poker button)
 
-Both sides are dealt seven cards: two stay hidden, five are shown one per street, and you bet, call, raise, or fold on each of six streets. The best five of the seven cards wins the pot at showdown. Shown ranks that match the dealer's push the pot. The hand runs on a 50-point ante against your rewards balance; the net win or loss is settled through `ProgressStore.adjustPoints`, and completing a winning showdown can claim the daily bonus. The first poker win earns the one-time Card Shark award of 200 points. The dealer follows a fixed strategy (check-raises strong hands, limps early junk, and folds junk by the third street) so every result is deterministic for a given deal.
+Both sides are dealt seven cards: two stay hidden, five are shown one per street, and you bet, call, raise, or fold on each of six streets. The best five of the seven cards wins the pot at showdown. Shown ranks that match the dealer's push the pot. The hand runs on a 50-point ante against your rewards balance; the net win or loss is settled through `ProgressStore.adjustPoints`, and completing a winning showdown can claim the daily bonus. The dealer follows a fixed strategy (check-raises strong hands, limps early junk, and folds junk by the third street) so every result is deterministic for a given deal.
 
 ## Rewards rules
 
@@ -101,7 +101,7 @@ The [Figma design](https://www.figma.com/design/4qoghK6Hi24ovxvCw7Nmnl/Rewards--
 `./test.sh` compiles the tests and runs two dependency-free suites (plain `main()`
 classes, no JUnit, first failed check throws):
 
-- `rewards.LogicTest` - poker hands, the points economy, achievements
+- `rewards.LogicTest` - poker hands, the points economy
 - `edu.utsa.cs3443.goodburger.ModelTest` - menu data integrity, account round
   trips, order math and the order-id sequence
 

@@ -9,20 +9,15 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Clock;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 import java.util.function.Consumer;
 
 /**
- * Persists the balance, redemptions, login streak, achievements, and the
+ * Persists the balance, redemptions, login streak, and the
  * local-calendar-day earnings cap. Legacy v1 files (balance/redemptions only) load
  * unchanged; new fields default to empty and the file is rewritten as v2 on save.
  */
 public final class ProgressStore {
-    /** Fired on the FX thread so the UI can show one-shot reward toasts. */
-    public record AchievementEvent(Achievements.Definition definition, int grant) { }
-
     public static final String[] REWARD_NAMES = {"Soda", "Fries", "Salad"};
     public static final int[] REWARD_COSTS = {300, 500, 1000};
     static final int TRADE_BACK_PERCENT = 50;
@@ -38,9 +33,6 @@ public final class ProgressStore {
     private final int[] redeemed = new int[REWARD_NAMES.length];
     private int streakDays;
     private LocalDate lastBonusDate;
-    private int pokerWins;
-    private final List<String> unlocked = new ArrayList<>();
-    private Consumer<AchievementEvent> onAchievement;
     private Consumer<Integer> onBalanceChanged;
 
     public ProgressStore(Path file, Clock clock) throws IOException {
@@ -59,19 +51,7 @@ public final class ProgressStore {
     public synchronized int points() { return points; }
     public synchronized int earnedToday() { return earnedToday; }
     public synchronized int redeemedCount(int index) { return redeemed[index]; }
-    public synchronized int totalRedemptions() {
-        int total = 0;
-        for (int count : redeemed) total += count;
-        return total;
-    }
     public synchronized boolean canRedeem(int index) { return points >= REWARD_COSTS[index]; }
-    public synchronized boolean hasUnlocked(String id) { return unlocked.contains(id); }
-    public synchronized List<Achievements.Definition> unlockedDefinitions() {
-        List<Achievements.Definition> granted = new ArrayList<>();
-        for (Achievements.Definition definition : Achievements.ALL)
-            if (unlocked.contains(definition.id())) granted.add(definition);
-        return List.copyOf(granted);
-    }
     public synchronized int streakDays() { return streakDays; }
     private LocalDate liveDay() { return LocalDate.now(clock); }
     /** Points granted for the first login of the current local day. */
@@ -80,7 +60,6 @@ public final class ProgressStore {
         return Math.min(EconomyRules.DAILY_BONUS_MAX,
                 EconomyRules.DAILY_BONUS_BASE + streakDays * EconomyRules.DAILY_BONUS_PER_STREAK_DAY);
     }
-    public synchronized int pokerWins() { return pokerWins; }
     /** True when the login bonus for the current local day has already been claimed. */
     public synchronized boolean bonusClaimedToday() {
         return lastBonusDate != null && lastBonusDate.equals(liveDay());
@@ -89,10 +68,6 @@ public final class ProgressStore {
         return REWARD_COSTS[index] * TRADE_BACK_PERCENT / 100.0;
     }
 
-    /** UI hook: show achievement toasts on the FX thread. */
-    public synchronized void onAchievementAwarded(Consumer<AchievementEvent> consumer) {
-        onAchievement = consumer;
-    }
     /** True when the store file existed at construction, so callers can tell a fresh store apart. */
     public synchronized boolean hasSavedFile() {
         return loadedExisting;
@@ -131,13 +106,8 @@ public final class ProgressStore {
                 EconomyRules.DAILY_BONUS_BASE + streakDays * EconomyRules.DAILY_BONUS_PER_STREAK_DAY);
         streakDays++;
         lastBonusDate = live;
-        List<AchievementEvent> fired = new ArrayList<>();
-        if (streakDays >= 3) grant(DefinitionRef.STREAK_3, fired);
-        int achievements = 0;
-        for (AchievementEvent event : fired) achievements += event.grant();
-        points += bonus + achievements;
+        points += bonus;
         save();
-        if (!fired.isEmpty()) fire(fired);
         return bonus;
     }
 
@@ -156,50 +126,17 @@ public final class ProgressStore {
         }
     }
 
-
-
-
-    /** First poker win of the account; one-time grant, exempt from the daily cap. */
-    public synchronized List<AchievementEvent> recordPokerWin() throws IOException {
-        pokerWins++;
-        List<AchievementEvent> fired = new ArrayList<>();
-        grant(DefinitionRef.POKER_WIN, fired);
-        int grantTotal = 0;
-        for (AchievementEvent event : fired) grantTotal += event.grant();
-        if (grantTotal > 0) {
-            points += grantTotal;
-            try {
-                save();
-            } catch (IOException error) {
-                points -= grantTotal;
-                pokerWins--;
-                throw error;
-            }
-            fire(fired);
-        }
-        return fired;
-    }
-
-
     public synchronized boolean redeem(int index) throws IOException {
         if (index < 0 || index >= REWARD_NAMES.length) throw new IndexOutOfBoundsException(index);
         if (!canRedeem(index)) return false;
         points -= REWARD_COSTS[index];
         redeemed[index]++;
-        List<AchievementEvent> fired = new ArrayList<>();
-        if (totalRedemptions() >= 5) grant(DefinitionRef.REDEMPTIONS_5, fired);
-        int grantTotal = 0;
-        for (AchievementEvent event : fired) grantTotal += event.grant();
-        int previousPoints = points;
-        points += grantTotal;
         try {
             save();
         } catch (IOException error) {
-            points = previousPoints;
             redeemed[index]--;
             throw error;
         }
-        if (grantTotal > 0) fire(fired);
         return true;
     }
 
@@ -258,31 +195,6 @@ public final class ProgressStore {
         }
     }
 
-    private enum DefinitionRef {
-        POKER_WIN("poker_win"), STREAK_3("streak_3"), REDEMPTIONS_5("redemptions_5");
-        final Achievements.Definition definition;
-        DefinitionRef(String id) {
-            for (Achievements.Definition candidate : Achievements.ALL) {
-                if (candidate.id().equals(id)) { definition = candidate; return; }
-            }
-            definition = null;
-        }
-    }
-
-    /** Records a newly unlocked achievement in {@code fired}; returns nothing to the caller. */
-    private int grant(DefinitionRef ref, List<AchievementEvent> fired) {
-        Achievements.Definition definition = ref.definition;
-        if (definition == null || unlocked.contains(definition.id())) return 0;
-        unlocked.add(definition.id());
-        fired.add(new AchievementEvent(definition, definition.grant()));
-        return definition.grant();
-    }
-
-    private void fire(List<AchievementEvent> events) {
-        if (onAchievement == null) return;
-        for (AchievementEvent event : events) onAchievement.accept(event);
-    }
-
     private void load() throws IOException {
         if (!Files.exists(file)) return;
         loadedExisting = true;
@@ -301,10 +213,6 @@ public final class ProgressStore {
                 streakDays = integer(properties.getProperty("streakDays"), 0);
                 lastBonusDate = properties.getProperty("lastBonusDate") == null
                         ? null : LocalDate.parse(properties.getProperty("lastBonusDate"));
-                pokerWins = integer(properties.getProperty("pokerWins"), 0);
-                for (String id : properties.getProperty("unlockedAchievements", "").split(",")) {
-                    if (!id.isBlank()) unlocked.add(id);
-                }
             }
         } catch (RuntimeException error) {
             throw new IOException("Progress file is invalid: " + file, error);
@@ -313,8 +221,7 @@ public final class ProgressStore {
             earnedDate = today;
             earnedToday = 0;
         }
-        // The per-pipe cap is enforced at write time, but today's achievements
-        // (at most ~1,600) add to earnedToday legally, so allow slack for those.
+        // Legacy slack for v1 files that recorded per-pipe earnings above the cap.
         if (earnedToday > EconomyRules.DAILY_EARNINGS_CAP + 2_000) {
             throw new IOException("Progress file exceeds daily cap: " + file);
         }
@@ -338,8 +245,6 @@ public final class ProgressStore {
         }
         properties.setProperty("streakDays", Integer.toString(streakDays));
         if (lastBonusDate != null) properties.setProperty("lastBonusDate", lastBonusDate.toString());
-        properties.setProperty("pokerWins", Integer.toString(pokerWins));
-        properties.setProperty("unlockedAchievements", String.join(",", unlocked));
         Path temp = Files.createTempFile(file.getParent(), "progress-", ".tmp");
         try {
             try (OutputStream out = Files.newOutputStream(temp)) {
