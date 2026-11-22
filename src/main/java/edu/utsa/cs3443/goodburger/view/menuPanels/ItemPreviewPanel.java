@@ -66,6 +66,7 @@ public class ItemPreviewPanel extends VBox {
         for (Modifier m : draft.getChosen()) {
             addOnLines.getChildren().add(new Label(String.format("  + %s  $%.2f", m.getName(), m.getExtraPrice())));
         }
+        nutritionLabel.setStyle("-fx-font-size: 10px; -fx-font-weight: normal;");
         nutritionLabel.setText(
                 "Calories:\t"+draft.getNutrition().getCalories() + " cal\n" +
                 "Protein:\t"+draft.getNutrition().getProtein() +" g\n" +

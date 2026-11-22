@@ -19,6 +19,9 @@ import java.util.function.Consumer;
  *
  * <p>Like every panel, it only draws and reports clicks; see {@link CategoryPanel} for why.</p>
  */
+
+
+
 public class ItemGridPanel extends ScrollPane {
 
     private final TilePane grid = new TilePane(10, 10);   // 10px gaps between tiles
@@ -42,6 +45,7 @@ public class ItemGridPanel extends ScrollPane {
         grid.getChildren().clear();
         for (MenuItem item : items) {
             Button b = new Button(String.format("%s%n$%.2f", item.getName(), item.getPrice()));
+            b.setStyle("-fx-text-fill: e5cfa8"); //Text color
             b.setPrefSize(150, 70);
             b.setWrapText(true);
             b.getStyleClass().add("item-button");   // see menuScreen.css

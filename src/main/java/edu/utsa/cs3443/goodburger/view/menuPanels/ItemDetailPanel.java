@@ -39,7 +39,7 @@ import java.util.function.IntConsumer;
 public class ItemDetailPanel extends ScrollPane {
 
     /** Side of the square photo box, in pixels. */
-    private static final double PHOTO_BOX = 220;
+    private static final double PHOTO_BOX = 320;
 
     private final ImageView photoView = new ImageView();
     private final StackPane photoBox;
