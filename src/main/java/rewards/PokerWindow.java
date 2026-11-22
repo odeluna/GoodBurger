@@ -235,17 +235,17 @@ public final class PokerWindow {
             settleText = settleText(net);
         }
 
-        /** The small line under the banner: what each side's best hand was. */
+        /** The small line under the banner: how the hand ended and each side's best hand. */
         private String settleText(int net) {
-            if (hand.playerRank() == null) {
-                return hand.winner() == Poker.Winner.PLAYER
-                        ? "Dealer folded before showdown."
-                        : "You folded; you lose half the stake.";
-            }
-            String text = "Your hand: " + hand.playerRank().name()
-                    + "   vs   Dealer's hand: " + hand.dealerRank().name() + ".";
-            if (hand.winner() == Poker.Winner.PUSH) {
-                text += " Tied hands push the pot.";
+            String text;
+            if (hand.folded()) {
+                text = "You folded; the hand was run out so every card is shown. You lose half the stake.";
+            } else {
+                text = "Your hand: " + hand.playerRank().name()
+                        + "   vs   Dealer's hand: " + hand.dealerRank().name() + ".";
+                if (hand.winner() == Poker.Winner.PUSH) {
+                    text += " Tied hands push the pot.";
+                }
             }
             return text;
         }
@@ -270,10 +270,12 @@ public final class PokerWindow {
             boolean over = hand.isOver();
             if (over && !wasOver) scrollToShowSettle();
             wasOver = over;
-            renderRow(dealerCards, List.of(), hand.dealerHole(),
+            renderRow(dealerCards,
+                    over ? List.copyOf(hand.dealerHole()) : List.of(),
+                    over ? List.of() : hand.dealerHole(),
                     hand.dealerUpRevealed(), 5 - hand.dealerUpRevealed().size(),
                     over ? bestFiveCards(hand.dealerCards()) : List.of());
-            List<Poker.Card> holeShown = hand.playerHoleRevealed();
+            List<Poker.Card> holeShown = over ? hand.playerHole() : hand.playerHoleRevealed();
             List<Poker.Card> holeHidden = hand.playerHole().subList(holeShown.size(), Poker.Stud.HOLE_CARDS);
             List<Poker.Card> playerVisible = new ArrayList<>(holeShown);
             playerVisible.addAll(hand.playerUpRevealed());
@@ -288,6 +290,8 @@ public final class PokerWindow {
             if (over) {
                 setBanner();
                 detail.setText(settleText);
+            } else if (!hand.canCheck()) {
+                detail.setText("Your two checks are used up for this hand: raise, or fold.");
             } else {
                 banner.setVisible(false);
                 banner.setManaged(false);
@@ -509,13 +513,19 @@ public final class PokerWindow {
             content.getChildren().addAll(rulesLine(
                     "You ante 50 points, and the dealer antes 50. Both go into the pot."),
                     rulesLine("Both sides get seven cards: two stay hidden, five are shown, one per round."),
-                    rulesLine("Each of the six rounds you can Check, Raise (+50), or Fold. There is no Call: "
-                            + "when the dealer has bet, you must raise or fold."),
-                    rulesLine("Check can be used at most twice per hand. Every Check and Raise flips one "
-                            + "of your hidden hole cards face up."),
+                    rulesLine("The dealer only deals the cards and posts the ante; it never bets, so every "
+                            + "decision is yours."),
+                    rulesLine("Each of the six rounds you can Check (free, at most twice per hand), "
+                            + "Raise (+50 to the pot and your stake), or Fold. After your action the "
+                            + "next card is dealt straight away. There is no Call."),
+                    rulesLine("Every Check and Raise flips one of your hidden hole cards face up."),
                     rulesLine("After the last round the best five of your seven cards is compared "
                             + "to the dealer's. The higher hand wins the pot."),
                     rulesLine("Losing at showdown costs your full stake; folding costs only half of it."),
+                    rulesLine("Folding stops the betting, but the hand is still run out: the remaining "
+                            + "cards are dealt and both hands are shown at the end."),
+                    rulesLine("A raise that empties your stack is all-in: the remaining cards are dealt "
+                            + "and the best five-card hands decide it."),
                     rulesLine("If both best five-card hands tie exactly, the pot pushes: nobody wins or loses."),
                     rulesLine("Winning a hand also claims your daily bonus."));
             content.getChildren().add(heading("Hand rankings (best to worst)"));

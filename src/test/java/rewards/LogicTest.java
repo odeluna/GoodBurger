@@ -72,29 +72,38 @@ public final class LogicTest {
                 && table.playerRank() != null && table.dealerRank() != null,
                 "check/raise runs all six streets to a showdown");
 
-        check(Poker.Stud.dealerPlay(1, 0, List.of(card("Hearts", 14), card("Spades", 14)))
-                == Poker.DealerPlay.RAISE, "strong hand check-raises");
-        check(Poker.Stud.dealerPlay(1, 100, List.of(card("Hearts", 14), card("Spades", 14)))
-                == Poker.DealerPlay.CALL, "strong hand calls an oversize bet");
-        check(Poker.Stud.dealerPlay(1, 50, List.of(card("Hearts", 2), card("Spades", 3)))
-                == Poker.DealerPlay.CALL, "junk limps early streets");
-        check(Poker.Stud.dealerPlay(3, 50, List.of(card("Hearts", 2), card("Spades", 3)))
-                == Poker.DealerPlay.FOLD, "junk folds a later street");
+        Poker.Stud oneSided = Poker.Stud.withCards(
+                List.of(card("Hearts", 14), card("Spades", 13), card("Hearts", 12), card("Spades", 11),
+                        card("Hearts", 10), card("Spades", 2), card("Hearts", 6)),
+                List.of(card("Clubs", 9), card("Diamonds", 8), card("Diamonds", 7), card("Spades", 5),
+                        card("Clubs", 4), card("Diamonds", 3), card("Diamonds", 14)),
+                500);
+        oneSided.playerCheck();
+        check(oneSided.street() == 2 && oneSided.pot() == 100 && !oneSided.isOver(),
+                "the dealer never acts: a check deals the next card at once and adds nothing to the pot");
+        oneSided.playerRaise();
+        check(oneSided.street() == 3 && oneSided.pot() == 150 && oneSided.stake() == 100,
+                "a raise adds to the pot and the stake, then the street advances");
 
         Poker.Stud allIn = Poker.Stud.withCards(
-                List.of(card("Hearts", 14), card("Spades", 13), card("Hearts", 5), card("Diamonds", 11),
-                        card("Clubs", 12), card("Spades", 7), card("Diamonds", 3)),
-                List.of(card("Hearts", 2), card("Clubs", 3), card("Diamonds", 9), card("Spades", 8),
-                        card("Hearts", 6), card("Clubs", 13), card("Spades", 4)),
-                450);
+                List.of(card("Hearts", 14), card("Spades", 13), card("Hearts", 12), card("Spades", 11),
+                        card("Hearts", 10), card("Spades", 2), card("Hearts", 6)),
+                List.of(card("Clubs", 9), card("Diamonds", 8), card("Diamonds", 7), card("Spades", 5),
+                        card("Clubs", 4), card("Diamonds", 3), card("Diamonds", 14)),
+                150);
+        check(allIn.bankroll() == 100, "the ante leaves a short stack to raise with");
         while (!allIn.isOver()) {
-            if (allIn.facing() == 0) allIn.playerRaise();
+            if (allIn.canRaise()) allIn.playerRaise();
+            else if (allIn.canCheck()) allIn.playerCheck();
             else allIn.playerFold();
         }
-        check(allIn.winner() == Poker.Winner.PLAYER && allIn.playerRank() == null,
-                "dealer folds a weak hand before showdown");
-        check(allIn.street() <= 3, "junk folds by street three");
-        check(allIn.netDelta() > 0 && allIn.pot() > allIn.stake(), "winning pot pays more than the stake");
+        check(allIn.playerAllIn() && allIn.winner() == Poker.Winner.PLAYER,
+                "a raise that empties the stack is all-in and the cards decide the run-out");
+        check(allIn.street() == Poker.Stud.STREETS
+                && allIn.playerUpRevealed().size() == 5 && allIn.dealerUpRevealed().size() == 5,
+                "all-in runs the remaining streets and reveals the remaining cards");
+        check(allIn.netDelta() == allIn.pot() - allIn.stake() && allIn.netDelta() == 50,
+                "a one-sided win pays the pot minus the stake, the dealer's ante");
 
         Poker.Stud overlap = Poker.Stud.withCards(
                 List.of(card("Clubs", 7), card("Diamonds", 2), card("Hearts", 13), card("Spades", 12),
@@ -126,7 +135,7 @@ public final class LogicTest {
         }
         check(win.winner() == Poker.Winner.PLAYER && win.playerRank().category() == 4,
                 "best five of seven decides the showdown");
-        check(win.netDelta() == 250, "the win pays the pot minus the stake");
+        check(win.netDelta() == 50, "a one-sided win pays the dealer's ante (pot minus the stake)");
 
         Poker.Stud first = runStud(new Random(11), 500);
         Poker.Stud second = runStud(new Random(11), 500);
@@ -170,6 +179,10 @@ public final class LogicTest {
         cap.playerFold();
         check(cap.winner() == Poker.Winner.DEALER && cap.folded(), "fold concedes to the dealer");
         check(cap.netDelta() == -cap.stake() / 2, "fold loses only half the stake");
+        check(cap.street() == Poker.Stud.STREETS && cap.playerUpRevealed().size() == 5
+                && cap.dealerUpRevealed().size() == 5,
+                "fold runs the hand out so the remaining cards are revealed");
+        check(cap.playerRank() != null && cap.dealerRank() != null, "run-out still evaluates both hands");
     }
 
     private static void progress() throws Exception {

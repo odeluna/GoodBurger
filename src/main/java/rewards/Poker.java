@@ -144,19 +144,21 @@ public final class Poker {
 
     public enum Winner { PLAYER, DEALER, PUSH }
 
-    /** The house's reply to a player action on a street. */
-    public enum DealerPlay { CHECK, CALL, FOLD, RAISE }
-
     /**
      * One hand of seven-card stud against the house.
      *
      * <p>Both sides are dealt seven cards: the first two stay hidden, the other five
-     * are shown one per street. The player posts an ante, acts first on each of the
-     * six streets, and the house replies with a fixed strategy. There is no call:
-     * a bet left open can only be raised or folded. Check is usable at most twice
+     * are shown one per street. The house only deals the cards and posts its ante;
+     * it never bets, so every decision is the player's. The player posts an ante
+     * and on each of the six streets may check, raise, or fold, and the next card
+     * is dealt straight away. There is no call: a check is usable at most twice
      * per hand, and every check or raise flips one of the player's hole cards face
-     * up. Losing at showdown costs the full stake; folding costs only half of it.
-     * If the best five-card hands tie exactly the pot is pushed.
+     * up. A raise adds {@link #BASE_BET} to the pot and to the player's stake.
+     * Losing at showdown costs the full stake; folding costs only half of it. A
+     * raise that empties the bankroll is all-in and runs the remaining streets to
+     * showdown. If the best five-card hands tie exactly the pot is pushed. A fold
+     * runs the hand out: the remaining streets are dealt and every card is revealed
+     * before the hand is over.
      */
     public static final class Stud {
         public static final int CARDS = 7;
@@ -173,10 +175,6 @@ public final class Poker {
         private int pot;
         private int stake;
         private int bankroll;
-        private int facing;
-        private int playerStreetBet;
-        private int dealerStreetBet;
-        private boolean dealerActed;
         private boolean playerAllIn;
         private boolean over;
         private HandRank playerRank;
@@ -229,7 +227,6 @@ public final class Poker {
         public int pot() { return pot; }
         public int stake() { return stake; }
         public int bankroll() { return bankroll; }
-        public int facing() { return facing; }
         public boolean playerAllIn() { return playerAllIn; }
         public boolean isOver() { return over; }
         public Winner winner() {
@@ -248,50 +245,40 @@ public final class Poker {
         public List<Card> playerHoleRevealed() { return List.copyOf(player.subList(0, holeRevealed)); }
         public boolean folded() { return folded; }
 
-        public boolean canCheck() { return !over && !playerAllIn && facing == 0 && checksUsed < MAX_CHECKS; }
-        public boolean canRaise() { return !over && !playerAllIn && bankroll >= facing + BASE_BET; }
-        public int raiseCost() { return Math.min(facing + BASE_BET, bankroll); }
+        public boolean canCheck() { return !over && !playerAllIn && checksUsed < MAX_CHECKS; }
+        public boolean canRaise() { return !over && !playerAllIn && bankroll >= BASE_BET; }
+        public int raiseCost() { return Math.min(BASE_BET, bankroll); }
 
-        /** Legal only while no one has bet this street and the two checks are not used. */
+        /** Checks the street for free; the next card is dealt straight away. Usable at most twice per hand. */
         public void playerCheck() {
             inProgress();
-            if (facing != 0) throw new IllegalStateException("must raise or fold before checking");
             if (checksUsed >= MAX_CHECKS) throw new IllegalStateException("checks are used up for this hand");
             checksUsed++;
             revealHoleCard();
-            DealerPlay play = dealerAct(street, 0);
-            if (play == DealerPlay.RAISE) {
-                dealerStreetBet = BASE_BET;
-                pot += BASE_BET;
-                facing = BASE_BET;
-                dealerActed = true;
-            } else {
-                advanceStreet();
-            }
+            advanceStreet();
         }
 
-        /** Bets or raises by {@link #BASE_BET}. */
+        /** Raises the street by {@link #BASE_BET}, adding it to the pot and the player's stake. */
         public void playerRaise() {
             inProgress();
-            if (!canRaise()) throw new IllegalStateException(
-                    "cannot raise; fold, or wait for a free street to check");
+            if (!canRaise()) throw new IllegalStateException("cannot raise; fold instead");
             revealHoleCard();
-            int cost = facing + BASE_BET;
-            bankroll -= cost;
-            stake += cost;
-            pot += cost;
-            playerStreetBet += cost;
-            DealerPlay play = dealerAct(street, playerStreetBet - dealerStreetBet);
-            if (play == DealerPlay.FOLD) { finish(Winner.PLAYER); return; }
-            if (playerAllIn) { closeBettingToShowdown(); return; }
-            applyDealerResponse(play);
+            bankroll -= BASE_BET;
+            stake += BASE_BET;
+            pot += BASE_BET;
+            if (bankroll == 0) {
+                playerAllIn = true;
+                closeBettingToShowdown();
+                return;
+            }
+            advanceStreet();
         }
 
-        /** Concedes the hand; the dealer takes the pot without a showdown. */
+        /** Concedes the betting; the hand is still run out so all cards are revealed. */
         public void playerFold() {
             inProgress();
             folded = true;
-            finish(Winner.DEALER);
+            runOut(Winner.DEALER);
         }
 
         /** Check and raise each flip one hole card face up, until both are shown. */
@@ -299,48 +286,30 @@ public final class Poker {
             if (holeRevealed < HOLE_CARDS) holeRevealed++;
         }
 
-        private void applyDealerResponse(DealerPlay play) {
-            if (play == DealerPlay.RAISE) {
-                // RAISE: call the open bet, then add the raise.
-                int add = playerStreetBet - dealerStreetBet + BASE_BET;
-                dealerStreetBet += add;
-                pot += add;
-                facing = dealerStreetBet - playerStreetBet;
-                dealerActed = true;
-            } else {
-                // CHECK or CALL: the dealer matches any open street bet (zero for a
-                // check) and the street advances.
-                int add = playerStreetBet - dealerStreetBet;
-                dealerStreetBet += add;
-                pot += add;
-                advanceStreet();
-            }
-        }
-
-        /** The house acts once per street. */
-        private DealerPlay dealerAct(int currentStreet, int dealerFacing) {
-            if (dealerFacing == 0 && dealerActed) return DealerPlay.CHECK;
-            return dealerPlay(currentStreet, dealerFacing, dealer);
-        }
-
         private void advanceStreet() {
-            if (playerAllIn) { closeBettingToShowdown(); return; }
             nextStreet();
         }
 
         private void nextStreet() {
             street++;
-            if (street > STREETS) { showdown(); return; }
+            if (street > STREETS) {
+                street = STREETS;
+                showdown();
+                return;
+            }
             revealedUp = street - 1;
-            facing = 0;
-            playerStreetBet = 0;
-            dealerStreetBet = 0;
-            dealerActed = false;
         }
 
         /** All-in: no more bets can be answered, so run the remaining streets to showdown. */
         private void closeBettingToShowdown() {
             while (!over) nextStreet();
+        }
+
+        /** Early stop of the betting: the remaining streets are still dealt so
+         *  every card is revealed, and the fixed outcome wins. */
+        private void runOut(Winner fixedWinner) {
+            while (!over) nextStreet();
+            winner = fixedWinner;
         }
 
         private void showdown() {
@@ -350,11 +319,6 @@ public final class Poker {
             dealerRank = dealerBest.rank();
             int compare = playerRank.compareTo(dealerRank);
             winner = compare > 0 ? Winner.PLAYER : compare < 0 ? Winner.DEALER : Winner.PUSH;
-            over = true;
-        }
-
-        private void finish(Winner outcome) {
-            winner = outcome;
             over = true;
         }
 
@@ -370,40 +334,6 @@ public final class Poker {
                 case DEALER -> folded ? -stake / 2 : -stake;
                 case PUSH -> 0;
             };
-        }
-
-        /**
-         * Fixed house strategy, derived only from the cards and the street so it is
-         * deterministic and testable. Aggressive with three of a kind or better or a
-         * high pair; calls small bets with any pair or ace high; limps early with
-         * junk and folds it later.
-         */
-        public static DealerPlay dealerPlay(int street, int facing, List<Card> cards) {
-            int strength = strengthOf(cards);
-            boolean strong = strength >= 3000 || strength >= 1013;
-            if (facing == 0) return strong ? DealerPlay.RAISE : DealerPlay.CHECK;
-            if (strong) return facing <= BASE_BET ? DealerPlay.RAISE : DealerPlay.CALL;
-            boolean medium = strength >= 1002 || strength == 14 || strength >= 26;
-            if (medium) return facing <= 2 * BASE_BET ? DealerPlay.CALL : DealerPlay.FOLD;
-            return facing == BASE_BET && street <= 2 ? DealerPlay.CALL : DealerPlay.FOLD;
-        }
-
-        private static int strengthOf(List<Card> cards) {
-            if (cards.size() >= 5) {
-                HandRank best = bestFive(cards).rank();
-                return best.category() * 1000 + best.tieBreak().get(0);
-            }
-            int[] counts = new int[15];
-            int pairRank = 0, top = 0, second = 0;
-            for (Card card : cards) {
-                counts[card.rank()]++;
-                if (counts[card.rank()] == 2) pairRank = card.rank();
-                top = Math.max(top, card.rank());
-            }
-            for (int rank = 14; rank >= 2; rank--) {
-                if (counts[rank] > 0 && rank != top) { second = rank; break; }
-            }
-            return pairRank != 0 ? 1000 + pairRank : top + second;
         }
     }
 }
