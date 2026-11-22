@@ -1,6 +1,6 @@
 package edu.utsa.cs3443.goodburger.controller;
 
-import edu.utsa.cs3443.goodburger.model.AccountManager;
+import edu.utsa.cs3443.goodburger.GoodBurgerApplication;
 import edu.utsa.cs3443.goodburger.model.Session;
 import edu.utsa.cs3443.goodburger.model.User;
 import javafx.animation.PauseTransition;
@@ -10,22 +10,19 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-import javafx.stage.Window;
 
 import rewards.EconomyRules;
 import rewards.PipeFlightGame;
-import rewards.PokerWindow;
 import rewards.ProgressStore;
 import rewards.RewardGameDriver;
 import rewards.SpriteAtlas;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.time.Clock;
 import java.util.List;
 import java.util.Random;
 
@@ -57,6 +54,8 @@ public class RewardsPageController {
     @FXML private Button miniGameButton;
     @FXML private Button pokerButton;
     @FXML private Label miniGameStatsLabel;
+    @FXML private ProgressBar dailyCapBar;
+    @FXML private Label dailyCapLabel;
 
     private ProgressStore progress;
     private SpriteAtlas sprites;
@@ -66,36 +65,21 @@ public class RewardsPageController {
     @FXML
     private void initialize() {
         User user = Session.get().getCurrentUser();
-        String path = System.getProperty("rewards.progress.path");
-        try {
-            progress = new ProgressStore(resolveStorePath(user, path),
-                    Clock.systemDefaultZone());
+        progress = UserRewardStore.open();
+        if (progress == null) {
+            new Alert(Alert.AlertType.ERROR,
+                    "Could not open the rewards progress file").show();
+        } else {
             progress.setGambleDeadlineSupplier(java.time.LocalDate::now);
             progress.onAchievementAwarded(event -> Platform.runLater(() ->
                     toast("Achievement unlocked: " + event.definition().name()
                             + " (+" + event.grant() + " pts)")));
-        } catch (IOException error) {
-            // Keep the page usable even if the progress file cannot be read:
-            // fall back to a throwaway location so the controls still render.
-            try {
-                progress = new ProgressStore(
-                        java.nio.file.Files.createTempDirectory("rewards-page").resolve("progress.properties"),
-                        Clock.systemDefaultZone());
-            } catch (IOException fallback) {
-                new Alert(Alert.AlertType.ERROR,
-                        "Could not open the rewards progress file: " + error.getMessage()).show();
-            }
-        }
-        if (progress != null) {
             // Tie the balance to the signed-in account: start at the points from
             // users.csv and mirror every change back to that user's row.
-            if (user != null && !user.isGuest()) {
-                try {
-                    progress.setBalance(user.getPoints());
-                    progress.onBalanceChanged(this::syncUserPoints);
-                } catch (IOException syncError) {
-                    showError("Could not load your points", syncError);
-                }
+            if (user != null && !user.isGuest()
+                    && !UserRewardStore.attachToUser(progress)) {
+                showError("Could not load your points",
+                        new java.io.IOException("users.csv read failed"));
             }
             try {
                 sprites = new SpriteAtlas();
@@ -109,44 +93,7 @@ public class RewardsPageController {
         refreshData();
     }
 
-    /**
-     * One progress file per account, next to the default file and named after
-     * the user id, so each signed-in user keeps their own rewards state. The
-     * rewards.progress.path property still wins, and guests keep the default.
-     */
-    private static java.nio.file.Path resolveStorePath(User user, String propertyOverride) {
-        if (propertyOverride != null) return java.nio.file.Path.of(propertyOverride);
-        if (user != null && !user.isGuest() && !user.getId().isBlank()) {
-            return ProgressStore.defaultPath()
-                    .resolveSibling("progress-" + user.getId() + ".properties");
-        }
-        return ProgressStore.defaultPath();
-    }
-
-    /** Writes the rewards balance back to the signed-in user's row in users.csv. */
-    private void syncUserPoints(int points) {
-        User user = Session.get().getCurrentUser();
-        if (user == null || user.isGuest() || user.getPoints() == points) return;
-        user.setPoints(points);
-        try {
-            AccountManager manager = Session.get().getAccountManager();
-            List<User> users = manager.loadUserFromFile();
-            for (User stored : users) {
-                if (stored.getEmail().equalsIgnoreCase(user.getEmail())) {
-                    stored.setPoints(points);
-                    if (!manager.saveUserToFile(users)) {
-                        showError("Could not save your points",
-                                new java.io.IOException("users.csv write failed"));
-                    }
-                    return;
-                }
-            }
-        } catch (Exception error) {
-            showError("Could not save your points", error);
-        }
-    }
-
-    // Refreshes every label and button state from the progress store.
+    /** Refreshes the labels and button states from the shared rewards store. */
     private void refreshData() {
         if (progress == null) return;
         pointsLabel.setText("Current rewards points: " + progress.points());
@@ -165,21 +112,31 @@ public class RewardsPageController {
         miniGameButton.setTooltip(new Tooltip(
                 "Spend " + EconomyRules.PLAY_COST + " points to play Pipe Flight; earn 1 point per pipe. "
                         + "Daily per-pipe earnings cap: " + EconomyRules.DAILY_EARNINGS_CAP + " points."));
+        int cap = EconomyRules.DAILY_EARNINGS_CAP;
+        int earned = progress.earnedToday();
+        dailyCapBar.setProgress(Math.min(1.0, earned / (double) cap));
+        dailyCapLabel.setText(earned >= cap
+                ? "Earned today: " + earned + " / " + cap + " pts (cap reached)"
+                : "Earned today: " + earned + " / " + cap + " pts");
         miniGameStatsLabel.setText("Daily bonus + "
                 + (progress.bonusClaimedToday()
                 ? (progress.streakDays() > 0 ? "claimed" : "0")
                 : progress.dailyBonusForToday())
-                + " (day " + progress.streakDays() + ")\nEarned today: "
-                + progress.earnedToday() + " / " + EconomyRules.DAILY_EARNINGS_CAP);
+                + " (day " + progress.streakDays() + ")");
     }
 
-    // Redeems one reward; the item then shows up in Checkout to trade in.
+    // Redeems one reward and puts the free item into the current order, so it shows
+    // up under the order at checkout the same way a menu item does.
     private void redeem(int index) {
         try {
             if (progress.redeem(index)) {
                 refreshData();
+                UserRewardStore.syncRewardToCart(Session.get().getOrderManager(),
+                        Session.get().getMenuManager(), index, progress.redeemedCount(index));
                 showInfo("Reward redeemed", ProgressStore.REWARD_NAMES[index]
-                        + " is now listed in Checkout. Trade it in there for half its points.");
+                        + " was added to your order. It shows up in Checkout under your current "
+                        + "order, and you can press the - button on that line any time before you "
+                        + "submit to take it back for your full points.");
             } else {
                 showInfo("Not enough points", "You need "
                         + (ProgressStore.REWARD_COSTS[index] - progress.points())
@@ -244,15 +201,15 @@ public class RewardsPageController {
         Platform.runLater(this::refreshData);
     }
 
-    // Opens seven-card stud in its own window; it shares this page's save file.
+    // Opens seven-card stud as an in-app page: the table plays inside the app
+    // window (like the menu pages) instead of a separate window.
     @FXML
     private void pokerClicked(ActionEvent event) {
-        if (progress == null) return;
-        Window owner = pointsLabel.getScene() == null
-                ? null : pointsLabel.getScene().getWindow();
-        PokerWindow.open(owner, progress,
-                () -> Platform.runLater(this::refreshData),
-                error -> showError("Could not save your poker result", error));
+        try {
+            GoodBurgerApplication.switchScreen(pokerButton, "poker_page.fxml");
+        } catch (IOException error) {
+            showError("Could not open the poker table", error);
+        }
     }
 
     // Small themed notification at the top of the page (auto-fades).

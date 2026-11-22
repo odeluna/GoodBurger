@@ -29,11 +29,19 @@ public class OrderItem {
     private final MenuItem item;
     private final List<Modifier> chosen = new ArrayList<>();
     private int quantity = 1;   // starts at 1: clicking an item means you want one
+    private boolean redeemed;   // true when earned with rewards points: it costs $0.00 in the order
 
     /** @param item the menu item being customized */
     public OrderItem(MenuItem item) {
         this.item = item;
     }
+
+    /**
+     * Marks this line as earned with rewards points instead of bought. A redeemed line is part of
+     * the order but adds $0.00, so it shows in the cart next to the menu items the customer paid for.
+     */
+    public void setRedeemed(boolean redeemed) { this.redeemed = redeemed; }
+    public boolean isRedeemed() { return redeemed; }
 
     /**
      * Adds the add-on if it isn't chosen yet, or removes it if it is: the same behavior as a checkbox.
@@ -62,8 +70,11 @@ public class OrderItem {
         quantity = q;
     }
 
-    /** @return (base price + every chosen add-on's price) x quantity */
+    /** @return 0.0 for a rewards-redemption line; otherwise (base price + every chosen add-on's price) x quantity */
     public double getLinePrice() {
+        if (redeemed) {
+            return 0.0;
+        }
         double each = item.getPrice();
         for (Modifier m : chosen) {
             each += m.getExtraPrice();
@@ -95,6 +106,9 @@ public class OrderItem {
     /** Label used in the cart list, for example "2 x Classic Burger [Add bacon]  $16.98". */
     @Override
     public String toString() {
+        if (redeemed) {
+            return String.format("%d x %s (Redeemed)  $0.00", quantity, item.getName());
+        }
         String extras = chosen.isEmpty() ? "" : " " + chosen.stream().map(Modifier::getName).toList();
         return String.format("%d x %s%s  $%.2f", quantity, item.getName(), extras, getLinePrice());
     }
