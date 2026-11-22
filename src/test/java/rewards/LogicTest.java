@@ -60,54 +60,66 @@ public final class LogicTest {
         check(table.pot() == 100 && table.stake() == 50 && table.bankroll() == 450, "ante posts both sides");
         check(table.street() == 1 && table.playerUpRevealed().isEmpty()
                 && table.dealerUpRevealed().isEmpty(), "nothing shown before street one");
-        check(table.canCheck() && !table.canCall() && table.canRaise(), "street one starts free to check or bet");
+        check(table.canCheck() && table.canRaise() && table.checksLeft() == 2,
+                "street one starts free to check or bet");
 
         while (!table.isOver()) {
             if (table.canCheck()) table.playerCheck();
-            else table.playerCall();
+            else if (table.canRaise()) table.playerRaise();
+            else table.playerFold();
         }
         check(table.playerUpRevealed().size() == 5 && table.dealerUpRevealed().size() == 5
                 && table.playerRank() != null && table.dealerRank() != null,
-                "check/call runs all six streets to a showdown");
+                "check/raise runs all six streets to a showdown");
 
-        check(Poker.Stud.dealerPlay(1, 0, List.of(card("Hearts", 14), card("Spades", 14)))
-                == Poker.DealerPlay.RAISE, "strong hand check-raises");
-        check(Poker.Stud.dealerPlay(1, 100, List.of(card("Hearts", 14), card("Spades", 14)))
-                == Poker.DealerPlay.CALL, "strong hand calls an oversize bet");
-        check(Poker.Stud.dealerPlay(1, 50, List.of(card("Hearts", 2), card("Spades", 3)))
-                == Poker.DealerPlay.CALL, "junk limps early streets");
-        check(Poker.Stud.dealerPlay(3, 50, List.of(card("Hearts", 2), card("Spades", 3)))
-                == Poker.DealerPlay.FOLD, "junk folds a later street");
+        Poker.Stud oneSided = Poker.Stud.withCards(
+                List.of(card("Hearts", 14), card("Spades", 13), card("Hearts", 12), card("Spades", 11),
+                        card("Hearts", 10), card("Spades", 2), card("Hearts", 6)),
+                List.of(card("Clubs", 9), card("Diamonds", 8), card("Diamonds", 7), card("Spades", 5),
+                        card("Clubs", 4), card("Diamonds", 3), card("Diamonds", 14)),
+                500);
+        oneSided.playerCheck();
+        check(oneSided.street() == 2 && oneSided.pot() == 100 && !oneSided.isOver(),
+                "the dealer never acts: a check deals the next card at once and adds nothing to the pot");
+        oneSided.playerRaise();
+        check(oneSided.street() == 3 && oneSided.pot() == 150 && oneSided.stake() == 100,
+                "a raise adds to the pot and the stake, then the street advances");
 
         Poker.Stud allIn = Poker.Stud.withCards(
-                List.of(card("Hearts", 14), card("Spades", 13), card("Hearts", 5), card("Diamonds", 11),
-                        card("Clubs", 12), card("Spades", 7), card("Diamonds", 3)),
-                List.of(card("Hearts", 2), card("Clubs", 3), card("Diamonds", 9), card("Spades", 8),
-                        card("Hearts", 6), card("Clubs", 13), card("Spades", 4)),
-                450);
+                List.of(card("Hearts", 14), card("Spades", 13), card("Hearts", 12), card("Spades", 11),
+                        card("Hearts", 10), card("Spades", 2), card("Hearts", 6)),
+                List.of(card("Clubs", 9), card("Diamonds", 8), card("Diamonds", 7), card("Spades", 5),
+                        card("Clubs", 4), card("Diamonds", 3), card("Diamonds", 14)),
+                150);
+        check(allIn.bankroll() == 100, "the ante leaves a short stack to raise with");
         while (!allIn.isOver()) {
-            if (allIn.facing() == 0) allIn.playerRaise();
-            else allIn.playerCall();
+            if (allIn.canRaise()) allIn.playerRaise();
+            else if (allIn.canCheck()) allIn.playerCheck();
+            else allIn.playerFold();
         }
-        check(allIn.winner() == Poker.Winner.PLAYER && allIn.playerRank() == null,
-                "dealer folds a weak hand before showdown");
-        check(allIn.street() <= 3, "junk folds by street three");
-        check(allIn.netDelta() > 0 && allIn.pot() > allIn.stake(), "winning pot pays more than the stake");
+        check(allIn.playerAllIn() && allIn.winner() == Poker.Winner.PLAYER,
+                "a raise that empties the stack is all-in and the cards decide the run-out");
+        check(allIn.street() == Poker.Stud.STREETS
+                && allIn.playerUpRevealed().size() == 5 && allIn.dealerUpRevealed().size() == 5,
+                "all-in runs the remaining streets and reveals the remaining cards");
+        check(allIn.netDelta() == allIn.pot() && allIn.netDelta() == 200,
+                "a one-sided win pays the full pot");
 
-        Poker.Stud matched = Poker.Stud.withCards(
+        Poker.Stud overlap = Poker.Stud.withCards(
                 List.of(card("Clubs", 7), card("Diamonds", 2), card("Hearts", 13), card("Spades", 12),
                         card("Hearts", 4), card("Clubs", 11), card("Diamonds", 9)),
                 List.of(card("Spades", 3), card("Hearts", 8), card("Diamonds", 13), card("Clubs", 5),
                         card("Spades", 10), card("Diamonds", 14), card("Spades", 2)),
                 500);
-        while (!matched.isOver()) {
-            if (matched.canCheck()) matched.playerCheck();
-            else matched.playerCall();
+        while (!overlap.isOver()) {
+            if (overlap.canCheck()) overlap.playerCheck();
+            else if (overlap.canRaise()) overlap.playerRaise();
+            else overlap.playerFold();
         }
-        check(matched.isMatched() && matched.winner() == Poker.Winner.PUSH,
-                "matched shown ranks push even against a better hand");
-        check(matched.netDelta() == 0, "push returns the stake");
-        check(matched.playerRank() != null && matched.dealerRank() != null,
+        check(overlap.winner() == Poker.Winner.DEALER,
+                "shown-rank overlap no longer pushes; the better best-five wins");
+        check(overlap.netDelta() < 0, "the loss costs the stake");
+        check(overlap.playerRank() != null && overlap.dealerRank() != null,
                 "showdown still evaluates both hands");
 
         Poker.Stud win = Poker.Stud.withCards(
@@ -118,11 +130,12 @@ public final class LogicTest {
                 500);
         while (!win.isOver()) {
             if (win.canCheck()) win.playerCheck();
-            else win.playerCall();
+            else if (win.canRaise()) win.playerRaise();
+            else win.playerFold();
         }
         check(win.winner() == Poker.Winner.PLAYER && win.playerRank().category() == 4,
                 "best five of seven decides the showdown");
-        check(win.netDelta() == 50, "untouched pot pays the winner the full pot");
+        check(win.netDelta() == win.pot(), "a one-sided win pays the full pot");
 
         Poker.Stud first = runStud(new Random(11), 500);
         Poker.Stud second = runStud(new Random(11), 500);
@@ -136,9 +149,40 @@ public final class LogicTest {
         Poker.Stud table = Poker.Stud.deal(random, points);
         while (!table.isOver()) {
             if (table.canCheck()) table.playerCheck();
-            else table.playerCall();
+            else if (table.canRaise()) table.playerRaise();
+            else table.playerFold();
         }
         return table;
+    }
+
+    /** The two-check limit, hole-card reveals, and the half-stake fold cost. */
+    private static void checkLimit() {
+        Poker.Stud cap = Poker.Stud.withCards(
+                List.of(card("Hearts", 14), card("Spades", 13), card("Hearts", 12), card("Spades", 11),
+                        card("Hearts", 10), card("Spades", 2), card("Hearts", 6)),
+                List.of(card("Clubs", 9), card("Diamonds", 8), card("Diamonds", 7), card("Spades", 5),
+                        card("Clubs", 4), card("Diamonds", 3), card("Diamonds", 14)),
+                500);
+        cap.playerCheck();
+        check(cap.checksLeft() == 1 && cap.playerHoleRevealed().size() == 1,
+                "first check spends a check and reveals a hole card");
+        cap.playerCheck();
+        check(cap.checksLeft() == 0 && cap.playerHoleRevealed().size() == 2 && !cap.canCheck(),
+                "second check spends the last check and reveals the second hole card");
+        boolean threw = false;
+        try {
+            cap.playerCheck();
+        } catch (IllegalStateException error) {
+            threw = true;
+        }
+        check(threw, "third check throws");
+        cap.playerFold();
+        check(cap.winner() == Poker.Winner.DEALER && cap.folded(), "fold concedes to the dealer");
+        check(cap.netDelta() == -cap.stake() / 2, "fold loses only half the stake");
+        check(cap.street() == Poker.Stud.STREETS && cap.playerUpRevealed().size() == 5
+                && cap.dealerUpRevealed().size() == 5,
+                "fold runs the hand out so the remaining cards are revealed");
+        check(cap.playerRank() != null && cap.dealerRank() != null, "run-out still evaluates both hands");
     }
 
     private static void progress() throws Exception {
@@ -156,6 +200,15 @@ public final class LogicTest {
         check(reloaded.points() == 1100 && reloaded.pokerWins() == 2, "wins persist and grant once");
         check(reloaded.hasUnlocked("poker_win"), "first-win achievement");
         check(reloaded.tradeIn(0) == 150 && reloaded.redeem(0), "food rewards still work");
+        check(reloaded.tradeInFull(0) == 300, "full trade-in refunds the whole cost");
+        check(reloaded.points() == 1250 && reloaded.redeemedCount(0) == 0, "full trade-in empties the count");
+        check(reloaded.tradeInFull(0) == 0, "full trade-in with nothing redeemed returns nothing");
+        check(reloaded.redeem(0), "redemption for the consume test");
+        check(reloaded.points() == 950 && reloaded.redeemedCount(0) == 1, "redemption charges the full cost");
+        reloaded.consumeRedemption(0);
+        check(reloaded.points() == 950 && reloaded.redeemedCount(0) == 0, "consume drops the count and moves no points");
+        ProgressStore afterConsume = new ProgressStore(file, clock);
+        check(afterConsume.points() == 950 && afterConsume.redeemedCount(0) == 0, "consume persists across reloads");
         reloaded.adjustPoints(-100);
         check(reloaded.points() == 850, "poker loss deducts points");
         reloaded.adjustPoints(-9000);
@@ -193,6 +246,7 @@ public final class LogicTest {
     public static void main(String[] args) throws Exception {
         poker();
         stud();
+        checkLimit();
         progress();
         menuCsv();
         System.out.println("All poker and rewards logic checks passed.");
