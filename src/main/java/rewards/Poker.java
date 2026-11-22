@@ -166,6 +166,8 @@ public final class Poker {
         public static final int HOLE_CARDS = 2;
         public static final int STREETS = 6;
         public static final int ANTE = 50;
+        /** Minimum account balance to sit down and play; the ante itself stays {@value #ANTE}. */
+        public static final int MIN_POINTS = 250;
         public static final int BASE_BET = 50;
         public static final int MAX_CHECKS = 2;
 
@@ -189,7 +191,7 @@ public final class Poker {
 
         /** Starts a hand from a fresh deck. {@code points} is the full balance; the ante is posted at once. */
         public static Stud deal(Random random, int points) {
-            if (points < ANTE) throw new IllegalArgumentException("need at least " + ANTE + " points to ante");
+            if (points < MIN_POINTS) throw new IllegalArgumentException("need at least " + MIN_POINTS + " points to play");
             Stud table = new Stud();
             List<Card> deck = new ArrayList<>();
             for (String suit : new String[]{"Hearts", "Diamonds", "Clubs", "Spades"})

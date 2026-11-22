@@ -189,7 +189,7 @@ public final class PokerWindow {
                 hand = Poker.Stud.deal(random, progress.points());
                 settleText = "";
             } catch (IllegalArgumentException error) {
-                settleText = "You need at least " + Poker.Stud.ANTE + " points to ante for a new hand.";
+                settleText = "You need at least " + Poker.Stud.MIN_POINTS + " points to play a new hand.";
                 hand = null;
             }
             render();
