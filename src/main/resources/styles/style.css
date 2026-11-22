@@ -1,11 +1,11 @@
 /* ---------- Palette and page background ---------- */
 .root-pane {
+    -fx-background-color: #4A4F55;
     -gb-teal: #45A0AB;
     -gb-orange: #E0733A;
     -gb-fuchsia: #B52D5E;
     -gb-grey: #C4CED4;
     -gb-text: #222222;
-    -fx-background-color: #FFFFFF;
 }
 
 /* ---------- Stripes at the top and bottom of every screen ---------- */

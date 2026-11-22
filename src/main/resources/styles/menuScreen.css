@@ -1,18 +1,5 @@
-/* ==========================================================================
-   menuScreen.css  -  style template for MenuScreen and everything inside it
-   (CategoryPanel, ItemGridPanel, ItemDetailPanel, ItemPreviewPanel, CartView).
 
-   HOW TO USE
-   - COLORS are variables in the "COLORS" block just below. Change them there.
-   - Everything else (font family/size/weight, alignment, padding, radius) is
-     written straight into the rules further down, next to an "EDIT:" comment.
-     JavaFX CSS only supports named variables (looked-up values) for COLORS;
-     using them for sizes, weights or padding causes parse errors.
-
-   Attached in MenuScreen's constructor, which also adds the style class "menu-screen".
-   ========================================================================== */
-
-/* ---------- COLORS (edit these) ---------- */
+/* ---------- COLORS ---------- */
 .menu-screen {
     -gb-bg:                #4A4F55;   /* screen background (medium-dark gray) */
     -gb-panel-bg:          #595F66;   /* scroll panes / cart list, a step lighter */
