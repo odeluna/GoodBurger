@@ -64,6 +64,6 @@
             <Font name="Book Antiqua Bold" size="17.0" />
          </font>
       </Label>
-      <Label alignment="CENTER" layoutX="439.0" layoutY="443.0" prefHeight="17.0" prefWidth="328.0" text="This is the line for the nutrition information for this page" />
+      <Label alignment="CENTER" layoutX="439.0" layoutY="443.0" prefHeight="17.0" prefWidth="328.0" text="This is the line for the nutrition information for this page" visible="false"/>
    </children>
 </AnchorPane>
