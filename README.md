@@ -79,7 +79,7 @@ Both sides are dealt seven cards: two stay hidden, five are shown one per street
 - The starting balance is **500 points**.
 - Each Pipe Flight play **spends 500 points**, including retries with R or Enter.
 - Each pipe passed awards **1 rewards point** immediately. Poker coins remain a separate in-game score.
-- Pipe Flight can award at most **2,000 rewards points per local calendar day**. The game button becomes unavailable after that cap is reached, and the cap resets on the next local day.
+- Pipe Flight can award at most **1,000 rewards points per local calendar day**. The game button becomes unavailable after that cap is reached, and the cap resets on the next local day.
 - Balance, daily earnings, and redemptions persist in `~/.local/share/rewards-javafx/progress.properties`. Game campaign progress and upgrades last only for the current app session, matching the Go game's restart behavior.
 
 ## Game controls

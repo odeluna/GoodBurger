@@ -13,7 +13,7 @@
   Modeled on the team theme already merged in home_page.fxml:
     Palette: White #FFFFFF  Teal #45A0AB  Orange #E0733A  Fuchsia #B52D5E  Grey #C4CED4
   Data comes from the rewards package (ProgressStore, EconomyRules, Achievements),
-  so the point economy is the same one the Pipe Flight minigame uses.
+  so the point economy is the same one the poker table uses.
   The bottom nav bar matches checkout_page.fxml (styles/rewardsScreen.css).
 -->
 
@@ -79,7 +79,6 @@
                 <Font name="System Bold" size="18.0" />
             </font>
         </Label>
-        <Button fx:id="miniGameButton" layoutX="520.0" layoutY="160.0" managed="false" mnemonicParsing="false" onAction="#miniGameClicked" prefHeight="120.0" prefWidth="100.0" styleClass="teal-button" text="Pipe Flight" visible="false" wrapText="true" />
         <Button fx:id="pokerButton" layoutX="638.0" layoutY="160.0" mnemonicParsing="false" onAction="#pokerClicked" prefHeight="120.0" prefWidth="100.0" styleClass="teal-button" text="Poker" wrapText="true" />
         <Label layoutX="504.0" layoutY="292.0" prefHeight="20.0" prefWidth="248.0" text="Daily earnings" textAlignment="CENTER" textFill="#17434a">
             <font>

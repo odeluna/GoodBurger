@@ -17,19 +17,14 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import rewards.EconomyRules;
-import rewards.PipeFlightGame;
 import rewards.ProgressStore;
-import rewards.RewardGameDriver;
-import rewards.SpriteAtlas;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Random;
 
 /**
  * RewardsPageController is the rewards screen of the app (the page the
  * home and checkout "rewards" buttons open). It shows the point balance,
- * the redeemable food rewards, and the Pipe Flight mini game launcher.
+ * the redeemable food rewards, and the poker table launcher.
  *
  * All point logic lives in the rewards package (ProgressStore and friends),
  * so the page and the mini game share the same economy. For a signed-in user
@@ -51,16 +46,12 @@ public class RewardsPageController {
     @FXML private Button redeem1Button;
     @FXML private Button redeem2Button;
     @FXML private Button redeem3Button;
-    @FXML private Button miniGameButton;
     @FXML private Button pokerButton;
     @FXML private Label miniGameStatsLabel;
     @FXML private ProgressBar dailyCapBar;
     @FXML private Label dailyCapLabel;
 
     private ProgressStore progress;
-    private SpriteAtlas sprites;
-    private PipeFlightGame previousGame;
-    private RewardGameDriver activeDriver;
 
     @FXML
     private void initialize() {
@@ -70,7 +61,6 @@ public class RewardsPageController {
             new Alert(Alert.AlertType.ERROR,
                     "Could not open the rewards progress file").show();
         } else {
-            progress.setGambleDeadlineSupplier(java.time.LocalDate::now);
             progress.onAchievementAwarded(event -> Platform.runLater(() ->
                     toast("Achievement unlocked: " + event.definition().name()
                             + " (+" + event.grant() + " pts)")));
@@ -80,11 +70,6 @@ public class RewardsPageController {
                     && !UserRewardStore.attachToUser(progress)) {
                 showError("Could not load your points",
                         new java.io.IOException("users.csv read failed"));
-            }
-            try {
-                sprites = new SpriteAtlas();
-            } catch (IOException error) {
-                // The game reports the missing sprites if it is started.
             }
             pokerButton.setTooltip(new Tooltip(
                     "Play seven-card stud against the dealer. 50-point ante; the best five of your "
@@ -107,11 +92,6 @@ public class RewardsPageController {
         reward1Name.setText(ProgressStore.REWARD_NAMES[0] + ": " + ProgressStore.REWARD_COSTS[0] + " pts");
         reward2Name.setText(ProgressStore.REWARD_NAMES[1] + ": " + ProgressStore.REWARD_COSTS[1] + " pts");
         reward3Name.setText(ProgressStore.REWARD_NAMES[2] + ": " + ProgressStore.REWARD_COSTS[2] + " pts");
-        boolean enough = progress.points() >= EconomyRules.PLAY_COST;
-        miniGameButton.setDisable(!enough);
-        miniGameButton.setTooltip(new Tooltip(
-                "Spend " + EconomyRules.PLAY_COST + " points to play Pipe Flight; earn 1 point per pipe. "
-                        + "Daily per-pipe earnings cap: " + EconomyRules.DAILY_EARNINGS_CAP + " points."));
         int cap = EconomyRules.DAILY_EARNINGS_CAP;
         int earned = progress.earnedToday();
         dailyCapBar.setProgress(Math.min(1.0, earned / (double) cap));
@@ -151,56 +131,6 @@ public class RewardsPageController {
     @FXML private void redeem2Clicked(ActionEvent event) { redeem(1); }
     @FXML private void redeem3Clicked(ActionEvent event) { redeem(2); }
 
-    // Starts Pipe Flight in its own window, like the standalone RewardsApp.
-    @FXML
-    private void miniGameClicked(ActionEvent event) {
-        if (activeDriver != null) return; // one game window at a time
-        try {
-            ProgressStore.StartResult result = progress.startPlay();
-            if (result == ProgressStore.StartResult.NOT_ENOUGH_POINTS) {
-                showInfo("More points needed",
-                        "Pipe Flight costs " + EconomyRules.PLAY_COST + " points to start.");
-                return;
-            }
-            if (result == ProgressStore.StartResult.DAILY_CAP_REACHED) {
-                showInfo("Daily cap reached", "You have earned "
-                        + EconomyRules.DAILY_EARNINGS_CAP + " Pipe Flight points today.");
-                return;
-            }
-            PipeFlightGame game = previousGame == null
-                    ? new PipeFlightGame(new Random(), sprites) : previousGame.restartCampaign();
-            previousGame = game;
-            game.onPokerWin = () -> {
-                try {
-                    return progress.recordPokerWin();
-                } catch (IOException error) {
-                    showError("Could not save the poker win", error);
-                    return List.of();
-                }
-            };
-            Stage gameStage = new Stage();
-            activeDriver = new RewardGameDriver(game, sprites, progress, this::afterGame);
-            activeDriver.open(gameStage);
-            gameStage.setOnCloseRequest(event2 -> endGame());
-            refreshData();
-        } catch (IOException error) {
-            showError("Could not start Pipe Flight", error);
-        }
-    }
-
-    // Called by the driver when the player leaves the game with Esc.
-    private void afterGame() {
-        endGame();
-    }
-
-    private void endGame() {
-        if (activeDriver != null) {
-            activeDriver.stop();
-            activeDriver = null;
-        }
-        Platform.runLater(this::refreshData);
-    }
-
     // Opens seven-card stud as an in-app page: the table plays inside the app
     // window (like the menu pages) instead of a separate window.
     @FXML
@@ -220,7 +150,7 @@ public class RewardsPageController {
                 + "-fx-font-weight: bold; -fx-font-size: 13;");
         label.setLayoutX(40);
         label.setLayoutY(56);
-        Pane root = (Pane) miniGameButton.getScene().getRoot();
+        Pane root = (Pane) pointsLabel.getScene().getRoot();
         if (root == null) return;
         root.getChildren().add(label);
         PauseTransition fade = new PauseTransition(javafx.util.Duration.seconds(2.5));

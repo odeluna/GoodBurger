@@ -187,8 +187,7 @@ public final class LogicTest {
 
     private static void progress() throws Exception {
         Path file = Files.createTempDirectory("poker-progress").resolve("progress.properties");
-        Files.writeString(file, "version=2\npoints=800\nredeemed.0=1\npokerWins=0\n"
-                + "bestRun=12\nunlockedAchievements=first_play,pipes_10\n");
+        Files.writeString(file, "version=2\npoints=800\nredeemed.0=1\npokerWins=0\n");
         TestClock clock = new TestClock();
         ProgressStore store = new ProgressStore(file, clock);
         check(store.points() == 800 && store.redeemedCount(0) == 1, "existing rewards load");

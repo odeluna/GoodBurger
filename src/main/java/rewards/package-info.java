@@ -1,15 +1,13 @@
 /**
- * The rewards mini-games (Pipe Flight, seven-card stud Poker) and their shared progress.
+ * The rewards economy: seven-card stud Poker and its shared progress.
  *
- * <p>This package has its own main() - RewardsApp - so the games can run standalone
- * during development (it understands the --preview and --smoke flags). The app-side
- * integration lives in edu.utsa.cs3443.goodburger.controller.RewardsPageController,
- * which hosts the games inside the rewards page. Player progress (points,
- * achievements) is shared across both entry points through ProgressStore, which
+ * <p>The app-side integration lives in
+ * edu.utsa.cs3443.goodburger.controller.RewardsPageController, which hosts the
+ * poker table inside the rewards page and shows the balance and redemptions.
+ * Player progress (points, achievements) is shared through ProgressStore, which
  * persists to a file in the data/ folder.
  *
- * <p>Game internals: PipeFlightGame / PipeFlightCanvas / SpriteAtlas / GameAudio
- * (the Canvas game), Poker / PokerWindow (seven-card stud), RewardGameDriver and
- * EconomyRules (scoring shared by both games), Achievements (unlockable rewards).
+ * <p>Internals: Poker / PokerWindow (seven-card stud), EconomyRules (scoring),
+ * Achievements (unlockable rewards).
  */
 package rewards;

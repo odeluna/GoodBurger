@@ -513,21 +513,10 @@ public final class PokerWindow {
             content.getChildren().addAll(rulesLine(
                     "You ante 50 points, and the dealer antes 50. Both go into the pot."),
                     rulesLine("Both sides get seven cards: two stay hidden, five are shown, one per round."),
-                    rulesLine("The dealer only deals the cards and posts the ante; it never bets, so every "
-                            + "decision is yours."),
                     rulesLine("Each of the six rounds you can Check (free, at most twice per hand), "
-                            + "Raise (+50 to the pot and your stake), or Fold. After your action the "
-                            + "next card is dealt straight away. There is no Call."),
-                    rulesLine("Every Check and Raise flips one of your hidden hole cards face up."),
+                            + "Raise (+50 to the pot and your stake), or Fold. There is no Call."),
                     rulesLine("After the last round the best five of your seven cards is compared "
-                            + "to the dealer's. The higher hand wins the pot."),
-                    rulesLine("Losing at showdown costs your full stake; folding costs only half of it."),
-                    rulesLine("Folding stops the betting, but the hand is still run out: the remaining "
-                            + "cards are dealt and both hands are shown at the end."),
-                    rulesLine("A raise that empties your stack is all-in: the remaining cards are dealt "
-                            + "and the best five-card hands decide it."),
-                    rulesLine("If both best five-card hands tie exactly, the pot pushes: nobody wins or loses."),
-                    rulesLine("Winning a hand also claims your daily bonus."));
+                            + "to the dealer's. The higher hand wins the pot."));
             content.getChildren().add(heading("Hand rankings (best to worst)"));
             content.getChildren().addAll(rankingLine("Straight flush",
                             "Five cards in sequence, all the same suit. Example: A♠ K♠ Q♠ J♠ 10♠"),
