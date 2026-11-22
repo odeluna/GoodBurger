@@ -154,7 +154,8 @@ public final class Poker {
      * is dealt straight away. There is no call: a check is usable at most twice
      * per hand, and every check or raise flips one of the player's hole cards face
      * up. A raise adds {@link #BASE_BET} to the pot and to the player's stake.
-     * Losing at showdown costs the full stake; folding costs only half of it. A
+     * Winning pays the full pot; losing at showdown costs the full stake; folding
+     * costs only half of it. A
      * raise that empties the bankroll is all-in and runs the remaining streets to
      * showdown. If the best five-card hands tie exactly the pot is pushed. A fold
      * runs the hand out: the remaining streets are dealt and every card is revealed
@@ -326,11 +327,11 @@ public final class Poker {
             if (over) throw new IllegalStateException("hand is over");
         }
 
-        /** Net point change: the pot minus the stake on a win, the full stake on a loss, half the stake on a fold, zero on a push. */
+        /** Net point change: the full pot on a win, the full stake on a loss, half the stake on a fold, zero on a push. */
         public int netDelta() {
             if (!over) throw new IllegalStateException("hand is not over");
             return switch (winner) {
-                case PLAYER -> pot - stake;
+                case PLAYER -> pot;
                 case DEALER -> folded ? -stake / 2 : -stake;
                 case PUSH -> 0;
             };

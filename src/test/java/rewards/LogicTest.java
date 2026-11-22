@@ -102,8 +102,8 @@ public final class LogicTest {
         check(allIn.street() == Poker.Stud.STREETS
                 && allIn.playerUpRevealed().size() == 5 && allIn.dealerUpRevealed().size() == 5,
                 "all-in runs the remaining streets and reveals the remaining cards");
-        check(allIn.netDelta() == allIn.pot() - allIn.stake() && allIn.netDelta() == 50,
-                "a one-sided win pays the pot minus the stake, the dealer's ante");
+        check(allIn.netDelta() == allIn.pot() && allIn.netDelta() == 200,
+                "a one-sided win pays the full pot");
 
         Poker.Stud overlap = Poker.Stud.withCards(
                 List.of(card("Clubs", 7), card("Diamonds", 2), card("Hearts", 13), card("Spades", 12),
@@ -135,7 +135,7 @@ public final class LogicTest {
         }
         check(win.winner() == Poker.Winner.PLAYER && win.playerRank().category() == 4,
                 "best five of seven decides the showdown");
-        check(win.netDelta() == 50, "a one-sided win pays the dealer's ante (pot minus the stake)");
+        check(win.netDelta() == win.pot(), "a one-sided win pays the full pot");
 
         Poker.Stud first = runStud(new Random(11), 500);
         Poker.Stud second = runStud(new Random(11), 500);
