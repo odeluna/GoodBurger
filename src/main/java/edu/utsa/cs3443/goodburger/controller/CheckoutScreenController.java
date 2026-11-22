@@ -1,6 +1,7 @@
 package edu.utsa.cs3443.goodburger.controller;
 
 import edu.utsa.cs3443.goodburger.GoodBurgerApplication;
+import edu.utsa.cs3443.goodburger.model.Nutrition;
 import edu.utsa.cs3443.goodburger.model.OrderItem;
 import edu.utsa.cs3443.goodburger.model.OrderManager;
 import edu.utsa.cs3443.goodburger.model.OrderType;
@@ -41,6 +42,7 @@ public class CheckoutScreenController {
     @FXML private Label subtotal;
     @FXML private Label tax;
     @FXML private Label total;
+    @FXML private Label nutritionLabel;
 
     @FXML
     void initialize() {
@@ -63,6 +65,13 @@ public class CheckoutScreenController {
         subtotal.setText(String.format("$%.2f", orderManager.getSubtotal()));
         tax.setText(String.format("$%.2f", orderManager.getTax()));
         total.setText(String.format("$%.2f", orderManager.getTotal()));
+
+        // Same format as the item detail pane: Nutrition.toString(), here summed over the whole order.
+        Nutrition sum = Nutrition.ZERO;
+        for (OrderItem line : orderManager.getItems()) {
+            sum = sum.add(line.getNutrition());
+        }
+        nutritionLabel.setText(sum.toString());
     }
 
     @FXML

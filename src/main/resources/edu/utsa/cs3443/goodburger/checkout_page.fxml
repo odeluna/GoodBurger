@@ -74,7 +74,10 @@
             <Font name="Bauhaus 93" size="53.0" />
          </font>
       </Label>
-      <Label alignment="CENTER" layoutX="432.0" layoutY="437.0" prefHeight="17.0" prefWidth="328.0" text="This is the line for the nutrition information for this page" textFill="WHITE" />
       <Rectangle arcHeight="15.0" arcWidth="15.0" fill="#ddffda" height="45.0" layoutX="418.0" layoutY="423.0" stroke="#3fc139" strokeType="INSIDE" strokeWidth="2.0" width="358.0" />
+      <Label fx:id="nutritionLabel" alignment="CENTER" layoutX="432.0" layoutY="437.0" prefHeight="17.0" prefWidth="328.0">
+         <font>
+            <Font name="System Bold" size="10.0" />
+         </font></Label>
    </children>
 </AnchorPane>
