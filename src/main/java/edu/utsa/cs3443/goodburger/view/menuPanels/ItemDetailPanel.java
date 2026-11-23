@@ -39,7 +39,7 @@ import java.util.function.IntConsumer;
 public class ItemDetailPanel extends ScrollPane {
 
     /** Side of the square photo box, in pixels. */
-    private static final double PHOTO_BOX = 320;
+    private static final double PHOTO_BOX = 220;
 
     private final ImageView photoView = new ImageView();
     private final StackPane photoBox;
@@ -58,15 +58,15 @@ public class ItemDetailPanel extends ScrollPane {
      */
     public ItemDetailPanel(Consumer<Modifier> onModifierToggled, IntConsumer onQuantityChanged) {
         this.onModifierToggled = onModifierToggled;
-        nameLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+        nameLabel.setStyle("-fx-font-size: 17px; -fx-font-weight: bold;");
         descriptionLabel.setWrapText(true);
         nutritionLabel.setWrapText(true);
 
         // The photo box is created once and reused: a fixed-size StackPane centered on the image.
         photoView.setPreserveRatio(true);
         photoBox = new StackPane(photoView);
-        photoBox.setPrefSize(PHOTO_BOX, PHOTO_BOX);
-        photoBox.setMaxSize(PHOTO_BOX, PHOTO_BOX);
+        photoBox.setPrefSize(PHOTO_BOX + (PHOTO_BOX/2), PHOTO_BOX);
+        photoBox.setMaxSize(PHOTO_BOX+ (PHOTO_BOX/2), PHOTO_BOX);
         photoBox.setAlignment(Pos.CENTER);
         photoBox.getStyleClass().add("item-photo");   // placeholder background, see styles/menuScreen.css
 
@@ -74,10 +74,9 @@ public class ItemDetailPanel extends ScrollPane {
         quantitySpinner.valueProperty().addListener((obs, oldQ, newQ) -> onQuantityChanged.accept(newQ));
 
         VBox content = new VBox(10,
-                photoBox, nameLabel, descriptionLabel, priceLabel, nutritionLabel,
+                nameLabel, photoBox, descriptionLabel, priceLabel, nutritionLabel,
                 new Label("Add-ons:"), addOnList,
                 new HBox(8, new Label("Quantity:"), quantitySpinner));
-        content.setPadding(new Insets(10));
         setContent(content);
         setFitToWidth(true);
     }
