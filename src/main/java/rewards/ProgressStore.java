@@ -31,12 +31,14 @@ public final class ProgressStore {
     public static final String[] REWARD_NAMES = {"Soda", "Fries", "Salad"};
     public static final int[] REWARD_COSTS = {300, 500, 1000};
     static final int TRADE_BACK_PERCENT = 50;
-    static final int GAMBLE_MIN_PIPES = 3;
+    /** Minimum pipes in a run before the double-or-nothing coin flip is offered. */
+    public static final int GAMBLE_MIN_PIPES = 3;
     private static final int FILE_VERSION = 2;
 
     private final Path file;
     private final Clock clock;
     private final LocalDate today;
+    private boolean loadedExisting;
     private int points = EconomyRules.STARTING_POINTS;
     private int earnedToday;
     private LocalDate earnedDate;
@@ -49,6 +51,7 @@ public final class ProgressStore {
     private boolean doubledToday;
     private final List<String> unlocked = new ArrayList<>();
     private Consumer<AchievementEvent> onAchievement;
+    private Consumer<Integer> onBalanceChanged;
     private Supplier<LocalDate> gambleDeadline;
 
     public ProgressStore(Path file, Clock clock) throws IOException {
@@ -116,6 +119,31 @@ public final class ProgressStore {
     public synchronized void setGambleDeadlineSupplier(Supplier<LocalDate> deadline) {
         gambleDeadline = deadline;
     }
+    /** True when the store file existed at construction, so callers can tell a fresh store apart. */
+    public synchronized boolean hasSavedFile() {
+        return loadedExisting;
+    }
+    /**
+     * Replaces the balance. The rewards page calls this at startup so the store
+     * starts at the signed-in user's points from users.csv.
+     */
+    public synchronized void setBalance(int newPoints) throws IOException {
+        int original = points;
+        points = Math.max(0, newPoints);
+        try {
+            save();
+        } catch (IOException error) {
+            points = original;
+            throw error;
+        }
+    }
+    /**
+     * UI hook: after every successful save, the new balance is passed to the
+     * listener so the caller can mirror it into users.csv for the signed-in user.
+     */
+    public synchronized void onBalanceChanged(Consumer<Integer> listener) {
+        onBalanceChanged = listener;
+    }
 
     /**
      * Daily login bonus: +100 base, +25 per consecutive day, capped at 300.
@@ -137,6 +165,21 @@ public final class ProgressStore {
         save();
         if (!fired.isEmpty()) fire(fired);
         return bonus;
+    }
+
+    /**
+     * Adds or removes points directly, e.g. when a poker showdown settles the
+     * pot against the balance. The balance never drops below zero.
+     */
+    public synchronized void adjustPoints(int delta) throws IOException {
+        int original = points;
+        points = Math.max(0, points + delta);
+        try {
+            save();
+        } catch (IOException error) {
+            points = original;
+            throw error;
+        }
     }
 
     /** Resets the per-pipe counter and the one-per-day gamble when the local day changes. */
@@ -297,6 +340,44 @@ public final class ProgressStore {
         return refund;
     }
 
+    /**
+     * Taking a redeemed reward back for its full cost: the whole redemption price
+     * returns to the balance and the count drops by one. This is what the cart's
+     * minus button does when it removes a redeemed line.
+     */
+    public synchronized int tradeInFull(int index) throws IOException {
+        if (index < 0 || index >= REWARD_NAMES.length) throw new IndexOutOfBoundsException(index);
+        if (redeemed[index] == 0) return 0;
+        int refund = REWARD_COSTS[index];
+        points += refund;
+        redeemed[index]--;
+        try {
+            save();
+        } catch (IOException error) {
+            points -= refund;
+            redeemed[index]++;
+            throw error;
+        }
+        return refund;
+    }
+
+    /**
+     * Consumes a redeemed unit that was just submitted in an order: the count
+     * drops by one but no points move (the customer already paid at redemption).
+     * Call it after the order is saved, so a failed save leaves the unit pending.
+     */
+    public synchronized void consumeRedemption(int index) throws IOException {
+        if (index < 0 || index >= REWARD_NAMES.length) throw new IndexOutOfBoundsException(index);
+        if (redeemed[index] == 0) return;
+        redeemed[index]--;
+        try {
+            save();
+        } catch (IOException error) {
+            redeemed[index]++;
+            throw error;
+        }
+    }
+
     private enum DefinitionRef {
         FIRST_PLAY("first_play"), PIPES_10("pipes_10"), PIPES_25("pipes_25"),
         POKER_WIN("poker_win"), STREAK_3("streak_3"), REDEMPTIONS_5("redemptions_5");
@@ -325,6 +406,7 @@ public final class ProgressStore {
 
     private void load() throws IOException {
         if (!Files.exists(file)) return;
+        loadedExisting = true;
         Properties properties = new Properties();
         try (InputStream in = Files.newInputStream(file)) { properties.load(in); }
         int version = integer(properties.getProperty("version"), 1);
@@ -399,5 +481,6 @@ public final class ProgressStore {
         } finally {
             Files.deleteIfExists(temp);
         }
+        if (onBalanceChanged != null) onBalanceChanged.accept(points);
     }
 }

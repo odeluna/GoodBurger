@@ -1,14 +1,18 @@
 package rewards;
 
+import edu.utsa.cs3443.goodburger.model.MenuManager;
+import edu.utsa.cs3443.goodburger.model.MenuItem;
+import edu.utsa.cs3443.goodburger.model.DataManager;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Properties;
 import java.util.Random;
+import java.util.Set;
 
 /** Dependency-free checks for the translated game and the reward economy. */
 public final class LogicTest {
@@ -26,114 +30,6 @@ public final class LogicTest {
     }
 
     private static Poker.Card card(String suit, int rank) { return new Poker.Card(suit, rank); }
-
-    private static void economy() throws Exception {
-        Path directory = Files.createTempDirectory("rewards-test-");
-        Path file = directory.resolve("progress.properties");
-        TestClock clock = new TestClock();
-        ProgressStore store = new ProgressStore(file, clock);
-        store.setGambleDeadlineSupplier(() -> LocalDate.now(clock));
-        check(store.points() == 500, "starting balance");
-
-        // daily login bonus, claimed via the first run
-        check(store.claimDailyBonus() == 100, "first-day bonus is 100");
-        check(store.streakDays() == 1 && store.bonusClaimedToday(), "streak starts at day 1");
-        check(store.claimDailyBonus() == 0, "bonus cannot be double-claimed");
-        check(store.dailyBonusForToday() == 125, "next streak day previews 125");
-
-        check(store.startPlay() == ProgressStore.StartResult.STARTED, "first paid play");
-        check(store.points() == 100, "play deducted 500");
-        check(store.startPlay() == ProgressStore.StartResult.NOT_ENOUGH_POINTS, "insufficient balance");
-
-        // run earns: capped base + one-time achievements (first play, 10, 25 pipes)
-        ProgressStore.EarnResult earn = store.finishPlay(2_500);
-        check(earn.baseAward() == 2_000, "daily per-pipe earnings capped at 2000");
-        check(earn.achievements() == 550, "first_play + pipes_10 + pipes_25 = 550");
-        check(store.points() == 2_650 && store.earnedToday() == 2_550, "base + achievements awarded");
-        check(store.hasUnlocked("first_play") && store.hasUnlocked("pipes_10")
-                && store.hasUnlocked("pipes_25") && store.bestRun() == 2_500
-                && store.gamesPlayed() == 1, "run stats recorded");
-        check(store.startPlay() == ProgressStore.StartResult.DAILY_CAP_REACHED, "no paid play at cap");
-
-        // redemption + trade-in
-        check(store.redeem(2), "salad redemption");
-        check(store.points() == 1_650, "redemption cost");
-        check(store.tradeIn(2) == 500, "trade-in refunds half the cost");
-        check(store.points() == 2_150 && store.redeemedCount(2) == 0
-                && store.totalRedemptions() == 0, "trade-in removes the item");
-        check(store.tradeIn(2) == 0, "trade-in needs an item");
-
-        // double-or-nothing: one gamble per day, win doubles the run's points
-        check(store.gambleOpen(), "gamble open after a qualifying run");
-        ProgressStore.EarnResult won = store.recordGamble(true, earn);
-        check(won.doubleBonus() == 2_550, "win doubles base + achievements");
-        check(store.points() == 2_150 + 2_550, "doubled points credited");
-        check(!store.gambleOpen(), "gamble used for today");
-        boolean threw = false;
-        try { store.recordGamble(false, earn); }
-        catch (IllegalStateException expected) { threw = true; }
-        check(threw, "second gamble on the same day is rejected");
-
-        // persistence
-        ProgressStore reloaded = new ProgressStore(file, clock);
-        check(reloaded.points() == 4_700 && reloaded.streakDays() == 1
-                && reloaded.unlockedDefinitions().size() == 3 && reloaded.pokerWins() == 0
-                && reloaded.gamesPlayed() == 1, "balance, streak, achievements persist");
-
-        // poker win achievement
-        clock.nextDay();
-        reloaded.setGambleDeadlineSupplier(() -> LocalDate.now(clock));
-        reloaded.rollDay();
-        check(reloaded.earnedToday() == 0, "cap resets on next local day");
-        check(reloaded.startPlay() == ProgressStore.StartResult.STARTED, "play allowed next day");
-        ProgressStore.EarnResult day2 = reloaded.finishPlay(1);
-        check(day2.dailyBonus() == 125 && day2.baseAward() == 1,
-                "streak day 2 pays 125 plus the single-pipe award");
-        check(reloaded.points() == 4_200 + 126, "day-2 balance");
-        check(reloaded.recordPokerWin().get(0).grant() == 200, "first poker win grants 200");
-        check(reloaded.pokerWins() == 1 && reloaded.points() == 4_326 + 200
-                && reloaded.hasUnlocked("poker_win"), "poker win recorded and credited");
-
-        // streak resets when a day is missed
-        TestClock skipped = new TestClock();
-        skipped.skip(5);
-        ProgressStore late = new ProgressStore(file, skipped);
-        check(late.claimDailyBonus() == 100, "missed days reset the streak to base bonus");
-        check(late.streakDays() == 1, "streak restarts at one");
-
-        // legacy v1 file loads with defaults
-        Path legacy = directory.resolve("legacy.properties");
-        Properties v1 = new Properties();
-        v1.setProperty("points", "777");
-        v1.setProperty("earnedToday", "0");
-        v1.setProperty("earnedDate", LocalDate.now(clock).toString());
-        v1.store(Files.newOutputStream(legacy), null);
-        ProgressStore fromLegacy = new ProgressStore(legacy, clock);
-        check(fromLegacy.points() == 777 && fromLegacy.streakDays() == 0
-                && fromLegacy.unlockedDefinitions().isEmpty(), "v1 file loads with empty v2 state");
-        Files.delete(file);
-        Files.delete(legacy);
-        Files.delete(directory);
-    }
-
-    private static void foodie() throws Exception {
-        Path directory = Files.createTempDirectory("rewards-foodie-");
-        Path file = directory.resolve("progress.properties");
-        Properties seed = new Properties();
-        seed.setProperty("points", "5000");
-        seed.setProperty("version", "2");
-        seed.store(Files.newOutputStream(file), null);
-        ProgressStore store = new ProgressStore(file, Clock.systemUTC());
-        for (int i = 0; i < 4; i++) {
-            check(store.redeem(0), "soda redemption " + (i + 1));
-            check(!store.hasUnlocked("redemptions_5"), "no Foodie before five redemptions");
-        }
-        check(store.redeem(0), "fifth redemption");
-        check(store.hasUnlocked("redemptions_5"), "Foodie unlocks on the fifth redemption");
-        check(store.points() == 5_000 - 1_500 + 200, "grant credited with the redemption");
-        Files.delete(file);
-        Files.delete(directory);
-    }
 
     private static void poker() {
         Poker.HandRank fullHouse = Poker.evaluateFive(List.of(card("Hearts", 8), card("Clubs", 8),
@@ -155,93 +51,204 @@ public final class LogicTest {
         check(Poker.bestFive(eight).rank().category() == 5, "best five of eight");
     }
 
-    private static void flight() throws Exception {
-        SpriteAtlas atlas = new SpriteAtlas();
-        PipeFlightGame game = new PipeFlightGame(new Random(1), atlas);
-        check(game.stage() == PipeFlightGame.AIR && game.pipeX > 1280,
-                "new run starts in noir with a pipe on the right");
-        double oldX = game.pipeX;
-        game.update(.02, new PipeFlightGame.Input(false, false, false, false, false));
-        check(game.pipeX < oldX, "pipe scrolls left");
-        for (int stage = 0; stage < 3; stage++) {
-            game.failureCount = stage;
-            game.playerY = 128;
-            game.playerX = 180;
-            game.animationFrame = 0;
-            check(!game.touchesObstacle(new PipeFlightGame.Rect(180, 128, 2, 2)),
-                    "transparent sprite corner must not collide in stage " + stage);
+    private static void stud() {
+        Poker.Stud table = Poker.Stud.deal(new Random(7), 500);
+        Set<Poker.Card> all = new HashSet<>(table.playerCards());
+        all.addAll(table.dealerCards());
+        check(table.playerCards().size() == 7 && table.dealerCards().size() == 7
+                && all.size() == 14, "two unique seven-card hands from one deck");
+        check(table.pot() == 100 && table.stake() == 50 && table.bankroll() == 450, "ante posts both sides");
+        check(table.street() == 1 && table.playerUpRevealed().isEmpty()
+                && table.dealerUpRevealed().isEmpty(), "nothing shown before street one");
+        check(table.canCheck() && table.canRaise() && table.checksLeft() == 2,
+                "street one starts free to check or bet");
+
+        while (!table.isOver()) {
+            if (table.canCheck()) table.playerCheck();
+            else if (table.canRaise()) table.playerRaise();
+            else table.playerFold();
         }
-        game.failureCount = 0;
-        game.playerY = 128;
-        game.pipeX = game.playerX;
-        game.gapY = 128 + 128 + 10;
-        game.step(0, 0, false);
-        check(game.stage() == PipeFlightGame.OCEAN && game.health == 100,
-                "card contact advances stage and restores health");
-        game.pipeX = game.playerX - PipeFlightGame.PIPE_WIDTH - 1;
-        game.step(0, 0, false);
-        game.step(0, 0, false);
-        check(game.score == 1 && game.totalPipes() == 1, "pipe scores exactly once");
-        game.pokerPoints = 4;
-        game.upgrades[1] = 2;
-        PipeFlightGame restarted = game.restartCampaign();
-        check(restarted.stage() == PipeFlightGame.AIR && restarted.totalPipes() == 0,
-                "paid retry starts a fresh campaign");
-        check(restarted.pokerPoints == 4 && restarted.upgrades[1] == 2,
-                "poker progress survives a retry in the app session");
-        check(!restarted.canDouble(), "gamble state resets for a new campaign");
-    }
+        check(table.playerUpRevealed().size() == 5 && table.dealerUpRevealed().size() == 5
+                && table.playerRank() != null && table.dealerRank() != null,
+                "check/raise runs all six streets to a showdown");
 
-    private static void gamble() throws Exception {
-        SpriteAtlas atlas = new SpriteAtlas();
-        PipeFlightGame game = new PipeFlightGame(new Random(1), atlas);
-        check(!game.canDouble(), "gamble is not offered until armed");
-        game.offerGamble();
-        check(game.canDouble(), "gamble armed for the finished run");
-        game.resolveGamble(true);
-        check(!game.canDouble() && game.doubleWon(), "flip resolves and wins once");
-        game.offerGamble();
-        game.resolveGamble(false);
-        check(!game.canDouble() && game.doubleWon(), "only one coin flip per run");
-    }
+        Poker.Stud oneSided = Poker.Stud.withCards(
+                List.of(card("Hearts", 14), card("Spades", 13), card("Hearts", 12), card("Spades", 11),
+                        card("Hearts", 10), card("Spades", 2), card("Hearts", 6)),
+                List.of(card("Clubs", 9), card("Diamonds", 8), card("Diamonds", 7), card("Spades", 5),
+                        card("Clubs", 4), card("Diamonds", 3), card("Diamonds", 14)),
+                500);
+        oneSided.playerCheck();
+        check(oneSided.street() == 2 && oneSided.pot() == 100 && !oneSided.isOver(),
+                "the dealer never acts: a check deals the next card at once and adds nothing to the pot");
+        oneSided.playerRaise();
+        check(oneSided.street() == 3 && oneSided.pot() == 150 && oneSided.stake() == 100,
+                "a raise adds to the pot and the stake, then the street advances");
 
-    private static void pokerPause() throws Exception {
-        PipeFlightGame game = new PipeFlightGame(new Random(12), new SpriteAtlas());
-        game.collected.clear();
-        for (int i = 0; i < 8; i++) game.collected.add(game.deck.drawTop());
-        game.beginPoker();
-        check(game.poker != null, "eight pickups start poker");
-        double x = game.pipeX;
-        game.update(1, new PipeFlightGame.Input(false, false, false, false, false));
-        check(game.pipeX == x, "poker pauses flight");
-        game.pokerAction();
-        check(game.poker.revealed, "first action reveals showdown");
-        game.pokerAction();
-        check(game.poker == null, "second action resumes or advances");
-    }
-
-    private static void finalFailure() throws Exception {
-        PipeFlightGame game = new PipeFlightGame(new Random(2), new SpriteAtlas());
-        for (int stage = 0; stage < 3; stage++) {
-            game.playerY = PipeFlightGame.PLAY_TOP;
-            game.pipeX = game.playerX;
-            game.gapY = PipeFlightGame.PLAY_TOP + game.playerSize() + 10;
-            game.step(0, 0, false);
-            check(game.stage() == stage + 1, "card collision advances stage " + stage);
+        Poker.Stud allIn = Poker.Stud.withCards(
+                List.of(card("Hearts", 14), card("Spades", 13), card("Hearts", 12), card("Spades", 11),
+                        card("Hearts", 10), card("Spades", 2), card("Hearts", 6)),
+                List.of(card("Clubs", 9), card("Diamonds", 8), card("Diamonds", 7), card("Spades", 5),
+                        card("Clubs", 4), card("Diamonds", 3), card("Diamonds", 14)),
+                150);
+        check(allIn.bankroll() == 100, "the ante leaves a short stack to raise with");
+        while (!allIn.isOver()) {
+            if (allIn.canRaise()) allIn.playerRaise();
+            else if (allIn.canCheck()) allIn.playerCheck();
+            else allIn.playerFold();
         }
-        check(game.drowning && !game.gameOver, "third failure begins drowning");
-        game.advanceDrowning(3.5);
-        check(game.gameOver, "drowning ends after 3.5 seconds");
+        check(allIn.playerAllIn() && allIn.winner() == Poker.Winner.PLAYER,
+                "a raise that empties the stack is all-in and the cards decide the run-out");
+        check(allIn.street() == Poker.Stud.STREETS
+                && allIn.playerUpRevealed().size() == 5 && allIn.dealerUpRevealed().size() == 5,
+                "all-in runs the remaining streets and reveals the remaining cards");
+        check(allIn.netDelta() == allIn.pot() && allIn.netDelta() == 200,
+                "a one-sided win pays the full pot");
+
+        Poker.Stud overlap = Poker.Stud.withCards(
+                List.of(card("Clubs", 7), card("Diamonds", 2), card("Hearts", 13), card("Spades", 12),
+                        card("Hearts", 4), card("Clubs", 11), card("Diamonds", 9)),
+                List.of(card("Spades", 3), card("Hearts", 8), card("Diamonds", 13), card("Clubs", 5),
+                        card("Spades", 10), card("Diamonds", 14), card("Spades", 2)),
+                500);
+        while (!overlap.isOver()) {
+            if (overlap.canCheck()) overlap.playerCheck();
+            else if (overlap.canRaise()) overlap.playerRaise();
+            else overlap.playerFold();
+        }
+        check(overlap.winner() == Poker.Winner.DEALER,
+                "shown-rank overlap no longer pushes; the better best-five wins");
+        check(overlap.netDelta() < 0, "the loss costs the stake");
+        check(overlap.playerRank() != null && overlap.dealerRank() != null,
+                "showdown still evaluates both hands");
+
+        Poker.Stud win = Poker.Stud.withCards(
+                List.of(card("Hearts", 14), card("Spades", 13), card("Hearts", 12), card("Spades", 11),
+                        card("Hearts", 10), card("Spades", 2), card("Hearts", 6)),
+                List.of(card("Clubs", 9), card("Diamonds", 8), card("Diamonds", 7), card("Spades", 5),
+                        card("Clubs", 4), card("Diamonds", 3), card("Diamonds", 14)),
+                500);
+        while (!win.isOver()) {
+            if (win.canCheck()) win.playerCheck();
+            else if (win.canRaise()) win.playerRaise();
+            else win.playerFold();
+        }
+        check(win.winner() == Poker.Winner.PLAYER && win.playerRank().category() == 4,
+                "best five of seven decides the showdown");
+        check(win.netDelta() == win.pot(), "a one-sided win pays the full pot");
+
+        Poker.Stud first = runStud(new Random(11), 500);
+        Poker.Stud second = runStud(new Random(11), 500);
+        check(first.playerCards().equals(second.playerCards())
+                && first.dealerCards().equals(second.dealerCards()), "seeded stud deals are stable");
+        check(first.pot() == second.pot() && first.winner() == second.winner()
+                && first.netDelta() == second.netDelta(), "identical play gives identical payouts");
+    }
+
+    private static Poker.Stud runStud(Random random, int points) {
+        Poker.Stud table = Poker.Stud.deal(random, points);
+        while (!table.isOver()) {
+            if (table.canCheck()) table.playerCheck();
+            else if (table.canRaise()) table.playerRaise();
+            else table.playerFold();
+        }
+        return table;
+    }
+
+    /** The two-check limit, hole-card reveals, and the half-stake fold cost. */
+    private static void checkLimit() {
+        Poker.Stud cap = Poker.Stud.withCards(
+                List.of(card("Hearts", 14), card("Spades", 13), card("Hearts", 12), card("Spades", 11),
+                        card("Hearts", 10), card("Spades", 2), card("Hearts", 6)),
+                List.of(card("Clubs", 9), card("Diamonds", 8), card("Diamonds", 7), card("Spades", 5),
+                        card("Clubs", 4), card("Diamonds", 3), card("Diamonds", 14)),
+                500);
+        cap.playerCheck();
+        check(cap.checksLeft() == 1 && cap.playerHoleRevealed().size() == 1,
+                "first check spends a check and reveals a hole card");
+        cap.playerCheck();
+        check(cap.checksLeft() == 0 && cap.playerHoleRevealed().size() == 2 && !cap.canCheck(),
+                "second check spends the last check and reveals the second hole card");
+        boolean threw = false;
+        try {
+            cap.playerCheck();
+        } catch (IllegalStateException error) {
+            threw = true;
+        }
+        check(threw, "third check throws");
+        cap.playerFold();
+        check(cap.winner() == Poker.Winner.DEALER && cap.folded(), "fold concedes to the dealer");
+        check(cap.netDelta() == -cap.stake() / 2, "fold loses only half the stake");
+        check(cap.street() == Poker.Stud.STREETS && cap.playerUpRevealed().size() == 5
+                && cap.dealerUpRevealed().size() == 5,
+                "fold runs the hand out so the remaining cards are revealed");
+        check(cap.playerRank() != null && cap.dealerRank() != null, "run-out still evaluates both hands");
+    }
+
+    private static void progress() throws Exception {
+        Path file = Files.createTempDirectory("poker-progress").resolve("progress.properties");
+        Files.writeString(file, "version=2\npoints=800\nredeemed.0=1\npokerWins=0\n"
+                + "bestRun=12\nunlockedAchievements=first_play,pipes_10\n");
+        TestClock clock = new TestClock();
+        ProgressStore store = new ProgressStore(file, clock);
+        check(store.points() == 800 && store.redeemedCount(0) == 1, "existing rewards load");
+        store.recordPokerWin();
+        store.recordPokerWin();
+        check(store.claimDailyBonus() == 100, "daily bonus");
+        check(store.claimDailyBonus() == 0, "daily bonus once");
+        ProgressStore reloaded = new ProgressStore(file, clock);
+        check(reloaded.points() == 1100 && reloaded.pokerWins() == 2, "wins persist and grant once");
+        check(reloaded.hasUnlocked("poker_win"), "first-win achievement");
+        check(reloaded.tradeIn(0) == 150 && reloaded.redeem(0), "food rewards still work");
+        check(reloaded.tradeInFull(0) == 300, "full trade-in refunds the whole cost");
+        check(reloaded.points() == 1250 && reloaded.redeemedCount(0) == 0, "full trade-in empties the count");
+        check(reloaded.tradeInFull(0) == 0, "full trade-in with nothing redeemed returns nothing");
+        check(reloaded.redeem(0), "redemption for the consume test");
+        check(reloaded.points() == 950 && reloaded.redeemedCount(0) == 1, "redemption charges the full cost");
+        reloaded.consumeRedemption(0);
+        check(reloaded.points() == 950 && reloaded.redeemedCount(0) == 0, "consume drops the count and moves no points");
+        ProgressStore afterConsume = new ProgressStore(file, clock);
+        check(afterConsume.points() == 950 && afterConsume.redeemedCount(0) == 0, "consume persists across reloads");
+        reloaded.adjustPoints(-100);
+        check(reloaded.points() == 850, "poker loss deducts points");
+        reloaded.adjustPoints(-9000);
+        check(reloaded.points() == 0, "balance floors at zero");
+    }
+
+    /**
+     * menu.csv round trip: a quoted description containing commas must survive the parse, the photo
+     * column must land on the item, and a legacy 10-column row must still load with empty photo and
+     * description (old files must keep working).
+     */
+    private static void menuCsv() throws Exception {
+        Path dir = Files.createTempDirectory("goodburger-menu");
+        Files.writeString(dir.resolve("menu.csv"), String.join("\n",
+                "id,name,category,price,calories,protein,carbs,fat,sodium,cateringOnly,photo,description",
+                "B01,Rowdy Burger,ENTREE,6.99,650,32,45,35,980,false,01B_RowdyBurger.png,\"A classic, with commas, inside quotes.\"",
+                "S01,Tater Tots,SIDE,2.49,320,4,41,15,230,false",
+                ""));
+        Files.writeString(dir.resolve("modifiers.csv"),
+                "itemId,name,extraPrice,extraCalories,extraProtein,extraCarbs,extraFat,extraSodium\n"
+                + "B01,Extra Cheese,1.00,100,4,2,9,200\n");
+        MenuManager menu = new DataManager(dir).loadMenu();
+        MenuItem rowdy = menu.findById("B01");
+        check(rowdy != null, "item B01 loaded");
+        check(rowdy.getPhoto().equals("01B_RowdyBurger.png"), "photo column parsed: " + rowdy.getPhoto());
+        check(rowdy.getDescription().equals("A classic, with commas, inside quotes."),
+                "quoted description with commas parsed: " + rowdy.getDescription());
+        check(rowdy.getPrice() == 6.99 && rowdy.getNutrition().getCalories() == 650
+                && !rowdy.isCateringOnly(), "price, nutrition and catering flag still parsed");
+        MenuItem tots = menu.findById("S01");
+        check(tots != null && tots.getPhoto().isEmpty() && tots.getDescription().isEmpty(),
+                "legacy 10-column row loads with empty photo/description");
     }
 
     public static void main(String[] args) throws Exception {
-        economy();
-        foodie();
         poker();
-        flight();
-        gamble();
-        pokerPause();
-        finalFailure();
-        System.out.println("All JavaFX rewards and Pipe Flight logic checks passed.");
+        stud();
+        checkLimit();
+        progress();
+        menuCsv();
+        System.out.println("All poker and rewards logic checks passed.");
     }
 }

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import edu.utsa.cs3443.goodburger.view.NavBar?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.shape.Rectangle?>
+
+<!--
+  Poker page (module: rewards, author: Fabricio Ocampo).
+  The seven-card stud table embedded in the app window instead of a separate
+  window: the table area scrolls if it needs room, the betting buttons stay
+  pinned above the nav bar, the rules view replaces the table in place
+  (no popup), and "Back to rewards" (or the rewards nav button) returns to
+  the rewards page. Same table, look, and rules as the standalone
+  PokerWindow in the rewards package.
+-->
+<AnchorPane prefHeight="600.0" prefWidth="800.0" style="-fx-background-color: #FFFFFF;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.utsa.cs3443.goodburger.controller.PokerPageController">
+    <children>
+        <Rectangle fill="#45a0ab" height="22.0" width="800.0" />
+        <Rectangle fill="#e0733a" height="10.0" layoutY="22.0" width="800.0" />
+        <Rectangle fill="#b52d5e" height="6.0" layoutY="32.0" width="800.0" />
+        <Rectangle fill="#b52d5e" height="6.0" layoutY="562.0" width="800.0" />
+        <Rectangle fill="#e0733a" height="10.0" layoutY="568.0" width="800.0" />
+        <Rectangle fill="#45a0ab" height="22.0" layoutY="578.0" width="800.0" />
+
+        <ScrollPane fx:id="contentScroll" fitToWidth="true" hbarPolicy="NEVER" layoutY="38.0" prefHeight="392.0" prefWidth="800.0" style="-fx-background-color: #e6f1f3;" />
+        <StackPane fx:id="actionsSlot" layoutY="430.0" prefHeight="52.0" prefWidth="800.0" style="-fx-background-color: #e6f1f3;" />
+
+        <NavBar current="poker" layoutY="500.0" />
+    </children>
+</AnchorPane>

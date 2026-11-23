@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.shape.Rectangle?>
+
+<!--
+  All colors and fonts come from style.css (same folder as this file).
+  Everything sits directly in one AnchorPane, so each item can be dragged freely.
+-->
+
+<AnchorPane prefHeight="600.0" prefWidth="800.0" styleClass="root-pane" stylesheets="@../../../../styles/style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.utsa.cs3443.goodburger.controller.RegisterController">
+   <children>
+      <!-- Top stripes -->
+      <Rectangle height="22.0" styleClass="stripe-teal" width="800.0" />
+      <Rectangle height="10.0" layoutY="22.0" styleClass="stripe-orange" width="800.0" />
+      <Rectangle height="6.0" layoutY="32.0" styleClass="stripe-fuchsia" width="800.0" />
+
+      <!-- Bottom stripes -->
+      <Rectangle height="6.0" layoutY="562.0" styleClass="stripe-fuchsia" width="800.0" />
+      <Rectangle height="10.0" layoutY="568.0" styleClass="stripe-orange" width="800.0" />
+      <Rectangle height="22.0" layoutY="578.0" styleClass="stripe-teal" width="800.0" />
+
+      <!-- Card background -->
+      <Rectangle height="475.0" layoutX="220.0" layoutY="48.0" styleClass="card" width="360.0" />
+
+      <Label alignment="CENTER" layoutX="220.0" layoutY="58.0" prefWidth="360.0" styleClass="page-title" text="CREATE ACCOUNT" />
+
+      <!-- Name -->
+      <Label layoutX="250.0" layoutY="110.0" styleClass="field-label" text="Name" />
+      <TextField fx:id="nameInput" layoutX="250.0" layoutY="132.0" prefHeight="38.0" prefWidth="300.0" promptText="Full name" />
+
+      <!-- Date of birth -->
+      <Label layoutX="250.0" layoutY="172.0" styleClass="field-label" text="Date of Birth" />
+      <TextField fx:id="birthdayInput" layoutX="250.0" layoutY="194.0" prefHeight="38.0" prefWidth="300.0" promptText="MM/DD/YYYY" />
+
+      <!-- Email -->
+      <Label layoutX="250.0" layoutY="234.0" styleClass="field-label" text="Email" />
+      <TextField fx:id="emailInput" layoutX="250.0" layoutY="256.0" prefHeight="38.0" prefWidth="300.0" promptText="you@example.com" />
+
+      <!-- Password -->
+      <Label layoutX="250.0" layoutY="296.0" styleClass="field-label" text="Password" />
+      <PasswordField fx:id="passwordInput" layoutX="250.0" layoutY="318.0" prefHeight="38.0" prefWidth="300.0" promptText="Password" />
+
+      <!-- Confirm password -->
+      <Label layoutX="250.0" layoutY="358.0" styleClass="field-label" text="Confirm Password" />
+      <PasswordField fx:id="confirmPasswordInput" layoutX="250.0" layoutY="380.0" prefHeight="38.0" prefWidth="300.0" promptText="Re-enter password" />
+
+      <Label fx:id="errorLabel" layoutX="250.0" layoutY="422.0" prefHeight="30.0" prefWidth="300.0" styleClass="error-label" wrapText="true" />
+
+      <Button fx:id="submitButton" defaultButton="true" layoutX="250.0" layoutY="460.0" mnemonicParsing="false" onAction="#submitClicked" prefHeight="42.0" prefWidth="300.0" styleClass="primary-button" text="CREATE ACCOUNT" />
+      <Button fx:id="backButton" layoutX="14.0" layoutY="47.0" mnemonicParsing="false" onAction="#backClicked" prefHeight="32.0" prefWidth="90.0" styleClass="outline-button" text="&lt; Back" />
+   </children>
+</AnchorPane>

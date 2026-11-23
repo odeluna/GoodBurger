@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import edu.utsa.cs3443.goodburger.view.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.scene.text.*?>
+
+<!--
+  Rewards page (module: rewards, author: Fabricio Ocampo).
+  Modeled on the team theme already merged in home_page.fxml:
+    Palette: White #FFFFFF  Teal #45A0AB  Orange #E0733A  Fuchsia #B52D5E  Grey #C4CED4
+  Data comes from the rewards package (ProgressStore, EconomyRules, Achievements),
+  so the point economy is the same one the Pipe Flight minigame uses.
+  The bottom nav bar matches checkout_page.fxml (styles/rewardsScreen.css).
+-->
+
+<AnchorPane prefHeight="600.0" prefWidth="800.0" style="-fx-background-color: #474b51;" stylesheets="@../../../../styles/rewardsScreen.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.utsa.cs3443.goodburger.controller.RewardsPageController">
+    <children>
+      <Rectangle arcHeight="12.0" arcWidth="12.0" fill="#f2dce4" height="244.0" layoutX="26.0" layoutY="172.0" stroke="#b52d5e" strokeWidth="2.0" width="450.0" />
+        <!-- Top stripes -->
+        <Rectangle fill="#45a0ab" height="22.0" width="800.0" />
+        <Rectangle fill="#e0733a" height="10.0" layoutY="22.0" width="800.0" />
+        <Rectangle fill="#b52d5e" height="6.0" layoutY="32.0" width="800.0" />
+
+        <!-- Bottom stripes -->
+        <Rectangle fill="#b52d5e" height="6.0" layoutY="562.0" width="800.0" />
+        <Rectangle fill="#e0733a" height="10.0" layoutY="568.0" width="800.0" />
+        <Rectangle fill="#45a0ab" height="22.0" layoutY="578.0" width="800.0" />
+
+        <!-- Balance card -->
+        <Rectangle arcHeight="12.0" arcWidth="12.0" fill="#CFE0F1" height="64.0" layoutX="26.0" layoutY="98.0" stroke="#45a0ab" strokeWidth="2.0" width="452.0" />
+        <Label fx:id="pointsLabel" layoutX="44.0" layoutY="110.0" prefHeight="40.0" prefWidth="398.0" text="Current rewards points: 0" textFill="#30373D">
+            <font>
+                <Font name="System Bold" size="22.0" />
+            </font>
+        </Label>
+
+        <!-- Redeemable rewards -->
+        <Label layoutX="38.0" layoutY="185.0" prefHeight="28.0" prefWidth="300.0" text="Redeem your points" textFill="#b52d5e">
+            <font>
+                <Font name="System Bold" size="18.0" />
+            </font>
+        </Label>
+
+        <Label fx:id="reward1Name" layoutX="43.0" layoutY="214.0" prefHeight="44.0" prefWidth="248.0" text="Soda: 300 pts" textFill="#30373D">
+            <font>
+                <Font name="System Bold" size="17.0" />
+            </font>
+        </Label>
+        <Button fx:id="redeem1Button" layoutX="352.0" layoutY="214.0" mnemonicParsing="false" onAction="#redeem1Clicked" prefHeight="44.0" prefWidth="114.0" styleClass="teal-button" text="Redeem" />
+
+        <Label fx:id="reward2Name" layoutX="42.0" layoutY="270.0" prefHeight="44.0" prefWidth="248.0" text="Fries: 500 pts" textFill="#30373D">
+            <font>
+                <Font name="System Bold" size="17.0" />
+            </font>
+        </Label>
+        <Button fx:id="redeem2Button" layoutX="352.0" layoutY="270.0" mnemonicParsing="false" onAction="#redeem2Clicked" prefHeight="44.0" prefWidth="114.0" styleClass="teal-button" text="Redeem" />
+
+        <Label fx:id="reward3Name" layoutX="42.0" layoutY="326.0" prefHeight="44.0" prefWidth="248.0" text="Salad: 1000 pts" textFill="#30373D">
+            <font>
+                <Font name="System Bold" size="17.0" />
+            </font>
+        </Label>
+        <Button fx:id="redeem3Button" layoutX="352.0" layoutY="326.0" mnemonicParsing="false" onAction="#redeem3Clicked" prefHeight="44.0" prefWidth="114.0" styleClass="teal-button" text="Redeem" />
+
+        <!-- Mini game panel -->
+        <Rectangle arcHeight="12.0" arcWidth="12.0" fill="#e8d0c5" height="316.0" layoutX="492.0" layoutY="100.0" stroke="#e0733a" strokeWidth="2.0" width="272.0" />
+        <Label alignment="CENTER" layoutX="508.0" layoutY="116.0" prefHeight="30.0" prefWidth="240.0" text="Mini game" textAlignment="CENTER" textFill="#e0733a">
+            <font>
+                <Font name="System Bold" size="18.0" />
+            </font>
+        </Label>
+        <Button fx:id="miniGameButton" layoutX="520.0" layoutY="160.0" managed="false" mnemonicParsing="false" onAction="#miniGameClicked" prefHeight="120.0" prefWidth="100.0" styleClass="teal-button" text="Pipe Flight" visible="false" wrapText="true" />
+        <Button fx:id="pokerButton" layoutX="515.0" layoutY="167.0" mnemonicParsing="false" onAction="#pokerClicked" prefHeight="120.0" prefWidth="228.0" styleClass="teal-button" text="Poker" wrapText="true" />
+        <ProgressBar fx:id="dailyCapBar" layoutX="504.0" layoutY="316.0" prefHeight="16.0" prefWidth="248.0" progress="0.0" />
+        <Label fx:id="dailyCapLabel" layoutX="504.0" layoutY="338.0" prefHeight="20.0" prefWidth="248.0" text="Earned today: 0 / 2000 pts" textAlignment="CENTER" textFill="#30373D" />
+        <Label fx:id="miniGameStatsLabel" layoutX="504.0" layoutY="364.0" prefHeight="44.0" prefWidth="248.0" text="Daily bonus + 100 (day 0)" textAlignment="CENTER" textFill="#30373D" wrapText="true" />
+
+        <!-- Navigation bar (shared NavBar) -->
+        <NavBar current="rewards" layoutY="500.0" />
+    </children>
+</AnchorPane>

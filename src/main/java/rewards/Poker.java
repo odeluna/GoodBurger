@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
-/** Card deck and five-of-eight poker evaluation translated from deckofcards and poker_round.go. */
+/** Card deck and hand evaluation shared by the Pipe Flight eight-card Round and the seven-card stud. */
 public final class Poker {
     private Poker() { }
 
@@ -137,6 +139,204 @@ public final class Poker {
             for (int i = 0; i < 8; i++) dealerCards.add(deck.drawTop());
             playerBest = bestFive(this.playerCards);
             dealerBest = bestFive(dealerCards);
+        }
+    }
+
+    public enum Winner { PLAYER, DEALER, PUSH }
+
+    /**
+     * One hand of seven-card stud against the house.
+     *
+     * <p>Both sides are dealt seven cards: the first two stay hidden, the other five
+     * are shown one per street. The house only deals the cards and posts its ante;
+     * it never bets, so every decision is the player's. The player posts an ante
+     * and on each of the six streets may check, raise, or fold, and the next card
+     * is dealt straight away. There is no call: a check is usable at most twice
+     * per hand, and every check or raise flips one of the player's hole cards face
+     * up. A raise adds {@link #BASE_BET} to the pot and to the player's stake.
+     * Winning pays the full pot; losing at showdown costs the full stake; folding
+     * costs only half of it. A
+     * raise that empties the bankroll is all-in and runs the remaining streets to
+     * showdown. If the best five-card hands tie exactly the pot is pushed. A fold
+     * runs the hand out: the remaining streets are dealt and every card is revealed
+     * before the hand is over.
+     */
+    public static final class Stud {
+        public static final int CARDS = 7;
+        public static final int HOLE_CARDS = 2;
+        public static final int STREETS = 6;
+        public static final int ANTE = 50;
+        /** Minimum account balance to sit down and play; the ante itself stays {@value #ANTE}. */
+        public static final int MIN_POINTS = 250;
+        public static final int BASE_BET = 50;
+        public static final int MAX_CHECKS = 2;
+
+        private final List<Card> player = new ArrayList<>();
+        private final List<Card> dealer = new ArrayList<>();
+        private int street = 1;
+        private int revealedUp;
+        private int pot;
+        private int stake;
+        private int bankroll;
+        private boolean playerAllIn;
+        private boolean over;
+        private HandRank playerRank;
+        private HandRank dealerRank;
+        private Winner winner;
+        private int checksUsed;
+        private int holeRevealed;
+        private boolean folded;
+
+        private Stud() { }
+
+        /** Starts a hand from a fresh deck. {@code points} is the full balance; the ante is posted at once. */
+        public static Stud deal(Random random, int points) {
+            if (points < MIN_POINTS) throw new IllegalArgumentException("need at least " + MIN_POINTS + " points to play");
+            Stud table = new Stud();
+            List<Card> deck = new ArrayList<>();
+            for (String suit : new String[]{"Hearts", "Diamonds", "Clubs", "Spades"})
+                for (int rank = 2; rank <= 14; rank++) deck.add(new Card(suit, rank));
+            Collections.shuffle(deck, random);
+            for (int i = 0; i < CARDS; i++) {
+                table.player.add(deck.get(i));
+                table.dealer.add(deck.get(CARDS + i));
+            }
+            table.open(points);
+            return table;
+        }
+
+        /** Fixed hands (first two cards are the hidden ones); for tests and previews. */
+        static Stud withCards(List<Card> player, List<Card> dealer, int points) {
+            if (player.size() != CARDS || dealer.size() != CARDS)
+                throw new IllegalArgumentException("stud hands are seven cards");
+            Set<Card> seen = new HashSet<>();
+            for (Card card : player) if (!seen.add(card)) throw new IllegalArgumentException("duplicate card " + card);
+            for (Card card : dealer) if (!seen.add(card)) throw new IllegalArgumentException("duplicate card " + card);
+            Stud table = new Stud();
+            table.player.addAll(player);
+            table.dealer.addAll(dealer);
+            table.open(points);
+            return table;
+        }
+
+        private void open(int points) {
+            pot = 2 * ANTE;
+            stake = ANTE;
+            bankroll = points - ANTE;
+            street = 1;
+        }
+
+        public int street() { return street; }
+        public int pot() { return pot; }
+        public int stake() { return stake; }
+        public int bankroll() { return bankroll; }
+        public boolean playerAllIn() { return playerAllIn; }
+        public boolean isOver() { return over; }
+        public Winner winner() {
+            if (!over) throw new IllegalStateException("hand is not over");
+            return winner;
+        }
+        public HandRank playerRank() { return playerRank; }
+        public HandRank dealerRank() { return dealerRank; }
+        public List<Card> playerCards() { return List.copyOf(player); }
+        public List<Card> dealerCards() { return List.copyOf(dealer); }
+        public List<Card> playerHole() { return List.of(player.get(0), player.get(1)); }
+        public List<Card> dealerHole() { return List.of(dealer.get(0), dealer.get(1)); }
+        public List<Card> playerUpRevealed() { return List.copyOf(player.subList(HOLE_CARDS, HOLE_CARDS + revealedUp)); }
+        public List<Card> dealerUpRevealed() { return List.copyOf(dealer.subList(HOLE_CARDS, HOLE_CARDS + revealedUp)); }
+        public int checksLeft() { return MAX_CHECKS - checksUsed; }
+        public List<Card> playerHoleRevealed() { return List.copyOf(player.subList(0, holeRevealed)); }
+        public boolean folded() { return folded; }
+
+        public boolean canCheck() { return !over && !playerAllIn && checksUsed < MAX_CHECKS; }
+        public boolean canRaise() { return !over && !playerAllIn && bankroll >= BASE_BET; }
+        public int raiseCost() { return Math.min(BASE_BET, bankroll); }
+
+        /** Checks the street for free; the next card is dealt straight away. Usable at most twice per hand. */
+        public void playerCheck() {
+            inProgress();
+            if (checksUsed >= MAX_CHECKS) throw new IllegalStateException("checks are used up for this hand");
+            checksUsed++;
+            revealHoleCard();
+            advanceStreet();
+        }
+
+        /** Raises the street by {@link #BASE_BET}, adding it to the pot and the player's stake. */
+        public void playerRaise() {
+            inProgress();
+            if (!canRaise()) throw new IllegalStateException("cannot raise; fold instead");
+            revealHoleCard();
+            bankroll -= BASE_BET;
+            stake += BASE_BET;
+            pot += BASE_BET;
+            if (bankroll == 0) {
+                playerAllIn = true;
+                closeBettingToShowdown();
+                return;
+            }
+            advanceStreet();
+        }
+
+        /** Concedes the betting; the hand is still run out so all cards are revealed. */
+        public void playerFold() {
+            inProgress();
+            folded = true;
+            runOut(Winner.DEALER);
+        }
+
+        /** Check and raise each flip one hole card face up, until both are shown. */
+        private void revealHoleCard() {
+            if (holeRevealed < HOLE_CARDS) holeRevealed++;
+        }
+
+        private void advanceStreet() {
+            nextStreet();
+        }
+
+        private void nextStreet() {
+            street++;
+            if (street > STREETS) {
+                street = STREETS;
+                showdown();
+                return;
+            }
+            revealedUp = street - 1;
+        }
+
+        /** All-in: no more bets can be answered, so run the remaining streets to showdown. */
+        private void closeBettingToShowdown() {
+            while (!over) nextStreet();
+        }
+
+        /** Early stop of the betting: the remaining streets are still dealt so
+         *  every card is revealed, and the fixed outcome wins. */
+        private void runOut(Winner fixedWinner) {
+            while (!over) nextStreet();
+            winner = fixedWinner;
+        }
+
+        private void showdown() {
+            BestHand playerBest = bestFive(player);
+            BestHand dealerBest = bestFive(dealer);
+            playerRank = playerBest.rank();
+            dealerRank = dealerBest.rank();
+            int compare = playerRank.compareTo(dealerRank);
+            winner = compare > 0 ? Winner.PLAYER : compare < 0 ? Winner.DEALER : Winner.PUSH;
+            over = true;
+        }
+
+        private void inProgress() {
+            if (over) throw new IllegalStateException("hand is over");
+        }
+
+        /** Net point change: the full pot on a win, the full stake on a loss, half the stake on a fold, zero on a push. */
+        public int netDelta() {
+            if (!over) throw new IllegalStateException("hand is not over");
+            return switch (winner) {
+                case PLAYER -> pot;
+                case DEALER -> folded ? -stake / 2 : -stake;
+                case PUSH -> 0;
+            };
         }
     }
 }

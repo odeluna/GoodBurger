@@ -77,7 +77,7 @@ public final class PipeFlightGame {
         doubleOffered = false;
     }
     /** UI hook: award account-wide poker-win achievements; set before playing. */
-    java.util.function.Supplier<java.util.List<ProgressStore.AchievementEvent>> onPokerWin;
+    public java.util.function.Supplier<java.util.List<ProgressStore.AchievementEvent>> onPokerWin;
     public String stageName() {
         return new String[]{"128px NOIR", "64px OCEAN", "32px UNDERWATER", "DROWNING"}[stage()];
     }

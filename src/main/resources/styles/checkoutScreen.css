@@ -1,0 +1,29 @@
+#non_selected{
+    -fx-background-color:  #45a0ab;
+    -fx-border-color: #ffffff;
+    -fx-text-fill: #ffffff;
+}
+#non_selected:hover{
+    -fx-background-color: #ffffff;
+    -fx-border-color: #45a0ab;
+    -fx-text-fill: #45a0ab;
+}
+#pay_button{
+    -fx-background-color: #46ac41;
+    -fx-text-fill: #ffffff;
+}
+#pay_button:hover{
+    -fx-background-color: #e1c11c;
+}
+#current_selected{
+    -fx-background-color: #b52d5e;
+    -fx-border-color: #45a0ab;
+    -fx-text-fill: #ffffff;
+}
+#backboard{
+    -fx-background-color: #595f66;
+}
+#nutrition{
+    -fx-text-alignment: center;
+}
+

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import edu.utsa.cs3443.goodburger.view.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane id="backboard" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" stylesheets="@../../../../styles/checkoutScreen.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.utsa.cs3443.goodburger.controller.CheckoutScreenController">
+   <children>
+      <Group layoutX="418.0" layoutY="136.0">
+         <children>
+            <Rectangle arcHeight="15.0" arcWidth="15.0" fill="#bed8f2" height="105.0" layoutX="1.0" layoutY="-5.0" stroke="#45a0ab" strokeType="INSIDE" strokeWidth="2.0" width="356.0" />
+            <ChoiceBox fx:id="pickup_time" layoutX="15.0" layoutY="48.0" prefHeight="37.0" prefWidth="328.0" />
+            <Label alignment="CENTER" contentDisplay="CENTER" layoutX="23.0" layoutY="9.0" prefHeight="34.0" prefWidth="301.0" text="Please select a time for pickup!" textFill="#45a0ab">
+               <font>
+                  <Font name="Bodoni MT Bold" size="21.0" />
+               </font>
+            </Label>
+         </children>
+      </Group>
+      <Group layoutX="418.0" layoutY="248.0">
+         <children>
+            <Rectangle arcHeight="15.0" arcWidth="15.0" fill="#e8d0c5" height="165.0" layoutX="1.0" stroke="#e0733a" strokeType="INSIDE" strokeWidth="2.0" width="356.0" />
+            <Button id="pay_button" layoutX="217.0" layoutY="109.0" mnemonicParsing="false" onAction="#pay_now_clicked" prefHeight="45.0" prefWidth="131.0" stylesheets="@../../../../styles/checkoutScreen.css" text="ORDER">
+               <font>
+                  <Font name="Elephant" size="18.0" />
+               </font>
+            </Button>
+            <Label layoutX="19.0" layoutY="27.0" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="26.0" prefWidth="110.0" text="Subtotal:" textFill="#e0733a">
+               <font>
+                  <Font name="Bodoni MT" size="18.0" />
+               </font>
+            </Label>
+            <Label layoutX="19.0" layoutY="48.0" prefHeight="26.0" prefWidth="110.0" text="Tax:" textFill="#e0733a">
+               <font>
+                  <Font name="Bodoni MT" size="18.0" />
+               </font>
+            </Label>
+            <Label layoutX="19.0" layoutY="72.0" prefHeight="26.0" prefWidth="110.0" text="Total:" textFill="#e0733a">
+               <font>
+                  <Font name="Bodoni MT" size="21.0" />
+               </font>
+            </Label>
+            <Label fx:id="total" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="270.0" layoutY="75.0" prefHeight="22.0" prefWidth="68.0" text="87.99" textFill="#e0733a" visible="false">
+               <font>
+                  <Font name="Book Antiqua Bold" size="17.0" />
+               </font>
+            </Label>
+            <Label fx:id="subtotal" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="270.0" layoutY="53.0" prefHeight="22.0" prefWidth="68.0" text="87.99" textFill="#e0733a" visible="false">
+               <font>
+                  <Font name="Book Antiqua Bold" size="17.0" />
+               </font>
+            </Label>
+            <Label fx:id="tax" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="272.0" layoutY="33.0" prefHeight="19.0" prefWidth="66.0" text="87.99" textFill="#e0733a" visible="false">
+               <font>
+                  <Font name="Book Antiqua Bold" size="17.0" />
+               </font>
+            </Label>
+         </children>
+      </Group>
+      <Rectangle arcHeight="30.0" arcWidth="30.0" fill="#f2dce4" height="340.0" layoutX="25.0" layoutY="130.0" stroke="#b52d5e" strokeType="INSIDE" strokeWidth="2.0" width="371.0" />
+      <NavBar current="checkout" layoutY="500.0" />
+      <Rectangle fill="#45a0ab" height="22.0" width="800.0" />
+      <Rectangle fill="#e0733a" height="10.0" layoutY="25.0" width="800.0" />
+      <Rectangle fill="#b52d5e" height="6.0" layoutY="35.0" width="800.0" />
+      <Rectangle fill="#b52d5e" height="6.0" layoutY="565.0" width="800.0" />
+      <Rectangle fill="#e0733a" height="10.0" layoutY="571.0" width="800.0" />
+      <Rectangle fill="#45a0ab" height="22.0" layoutY="581.0" width="800.0" />
+      <StackPane fx:id="cartSlot" layoutX="49.0" layoutY="143.0" prefHeight="313.0" prefWidth="321.0" />
+      <Label layoutX="41.0" layoutY="57.0" prefHeight="62.0" prefWidth="356.0" text="Current Order" textFill="#dea54b">
+         <font>
+            <Font name="Bauhaus 93" size="53.0" />
+         </font>
+      </Label>
+      <Rectangle arcHeight="15.0" arcWidth="15.0" fill="#ddffda" height="45.0" layoutX="418.0" layoutY="423.0" stroke="#3fc139" strokeType="INSIDE" strokeWidth="2.0" width="358.0" />
+      <Label fx:id="nutritionLabel" alignment="CENTER" layoutX="432.0" layoutY="437.0" prefHeight="17.0" prefWidth="328.0">
+         <font>
+            <Font name="System Bold" size="10.0" />
+         </font></Label>
+   </children>
+</AnchorPane>

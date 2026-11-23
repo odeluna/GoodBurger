@@ -1,16 +1,78 @@
-# Rewards Screen + Pipe Flight (JavaFX)
+# GoodBurger (JavaFX)
 
-This project replaces the earlier Swing app with JavaFX controls and a JavaFX Canvas game. The mini-game follows the **extended** Go version in `~/Projects/pipe-flight-running-sound/pipe-flight-noir-ocean (2)`. It has noir city, ocean, and underwater stages; pixel-aware collisions; hazards and health; eight-card poker; Power, Armor, and Recovery upgrades; audio; and the final drowning scene. The original PNG sprites and WAV files are copied into `src/main/resources`.
+GoodBurger is a restaurant ordering app (sign-in, menu, checkout, profile) with a Rewards page that contains two mini games:
+
+- **Pipe Flight** — a JavaFX Canvas game with noir-city, ocean, and underwater stages (hazards and health, Power/Armor/Recovery upgrades, audio, the final drowning scene).
+- **Poker** — a seven-card stud game played against the dealer.
+
+This branch is the **FirstEdition_V2** codebase plus the seven-card stud layer and the menu item view: every menu item now shows a **photo and a description** in the detail panel, with the data extended in `data/menu.csv`.
+
+## Where things live
+
+There are two entry points and a shared data layer:
+
+| Entry point | Class | What it runs |
+|---|---|---|
+| `edu.utsa.cs3443.goodburger.Launcher` | the app | the full GoodBurger app (sign-in → menu → checkout → profile → rewards page) |
+| `rewards.RewardsApp` | the games | a standalone launcher for the mini-games only (used during development, supports `--preview`/`--smoke`) |
+
+The two sides talk to each other in one place only: `RewardsPageController` (app side) hosts the games, and both sides share player progress through `rewards.ProgressStore`, which persists to `~/.local/share/rewards-javafx/` (one file per signed-in user). For signed-in users the balance is seeded from, and written back to, `data/users.csv` — see [docs/REWARDS.md](docs/REWARDS.md).
+
+The app packages (`edu.utsa.cs3443.goodburger.*`) each carry a `package-info.java` that explains what belongs there and why:
+
+- `…goodburger` — app shell: `Launcher`, `GoodBurgerApplication` (owns the window + `switchScreen`)
+- `…goodburger.controller` — one FXML controller per page (UI wiring only)
+- `…goodburger.model` — domain + data: `Session`, `AccountManager`, `MenuManager`, `Order*`, `DataManager`
+- `…goodburger.view` / `…view.menuPanels` — shared components and the menu-screen panels
+- `rewards` — the mini-games, shared progress, and scoring
+
+For the full class-level picture (what calls what, and how data flows), see the architecture diagram in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). The UML design diagram submitted for this project is `goodburgeruml-1.jpg`.
 
 ## Run
 
-On Linux x64 with JDK 26:
+### Linux — `./run-linux.sh`
 
 ```bash
-./run.sh
+./run-linux.sh
 ```
 
-JavaFX 26 Linux libraries are included in `lib/`, so running the project does not require downloading dependencies. To rebuild from source, run `./build.sh`. To run the logic checks, run `./test.sh`.
+Requires a 64-bit JDK 21 or newer on `PATH` (or set `JAVA_HOME`). The script finds the app jar (`windows-runtime/goodburger.jar`, or `target/` after a build, building if neither exists) and the OpenJFX 21.0.6 **Linux** jars Maven downloaded into `~/.m2` (any `./build.sh` run populates them). Point `GOODBURGER_JAVAFX_DIR` at a folder of Linux JavaFX jars to override.
+
+### Windows — `run-windows.bat`
+
+Extract the entire ZIP and double-click `run-windows.bat`. The package includes the compiled app and the Windows x64 JavaFX 21.0.6 libraries; it uses an installed 64-bit Java 21 or newer.
+
+### Development (Maven)
+
+JDK 21 or newer:
+
+```bash
+./build.sh    # mvn clean package
+./test.sh     # compile and run the logic checks (rewards.LogicTest)
+```
+
+## Menu data and the item view
+
+Column layout and the copy-paste recipe for adding a menu item: [docs/DATA.md](docs/DATA.md).
+
+Items come from `data/menu.csv`:
+
+```
+id,name,category,price,calories,protein,carbs,fat,sodium,cateringOnly,photo,description
+```
+
+- `photo` — file name of the item's image in `src/main/resources/images/`. Empty means no photo.
+- `description` — free text, wrapped in double quotes; it may contain commas. The CSV parser is quote-aware (a `""` inside a quoted field is a literal quote). Legacy rows without the last two columns still parse, with empty photo and description.
+
+The detail panel (`ItemDetailPanel`) renders each item with a **normalized photo** and the description:
+
+- The photo box is a fixed 220×220. The image is scaled to *cover* the box (`scale = max(220/w, 220/h)`), centered, and trimmed with a rounded-rectangle clip — so photos of any original size render at the same size with no distortion.
+- A missing or empty photo shows the placeholder background (`.item-photo` in `styles/menuScreen.css`) instead of crashing.
+- Rendered results: [`previews/menu-item-photo.png`](previews/menu-item-photo.png) (Rowdy Burger) and [`previews/menu-item-no-photo.png`](previews/menu-item-no-photo.png) (Ice Cream, which has no photo).
+
+## Seven-card stud (Poker button)
+
+Both sides are dealt seven cards: two stay hidden, five are shown one per street, and you bet, call, raise, or fold on each of six streets. The best five of the seven cards wins the pot at showdown. Shown ranks that match the dealer's push the pot. The hand runs on a 50-point ante against your rewards balance; the net win or loss is settled through `ProgressStore.adjustPoints`, and completing a winning showdown can claim the daily bonus. The first poker win earns the one-time Card Shark award of 200 points. The dealer follows a fixed strategy (check-raises strong hands, limps early junk, and folds junk by the third street) so every result is deterministic for a given deal.
 
 ## Rewards rules
 
@@ -30,40 +92,18 @@ JavaFX 26 Linux libraries are included in `lib/`, so running the project does no
 
 In poker, Enter or Space reveals and then continues. After a poker win, 1, 2, or 3 selects an upgrade. M toggles sound. Esc returns to rewards. After FAILED, R or Enter starts another paid play if the balance and daily cap allow it.
 
-## UML
-
-Class diagrams live in [`docs/UML/`](docs/UML/):
-
-- `goodburger-full.png` — integrated model merging all source diagrams into one page: Application & Navigation, Menu Customization & Checkout, Accounts & Shared User, and Rewards/Tasks/Points (with a relationship legend).
-- `rewards-class-diagram.png` — RewardsJavaFX class diagram (RewardsApp, MainView, RewardsController, data models `UserModel`/`Task`/`RewardItem`, and `PointsService`/`TaskService`).
-- `menu-checkout.png` — GoodBurger menu/checkout layer diagram: `GoodBurgerApplication` (extends `Application`), `CheckoutScreenController` bound to `checkout_page.fxml`, `MenuItemManager` composing `MenuItem`, `MenuItem` referencing `Item` ingredients, and `Order` composing ordered `MenuItem`s for a `User`.
-- `rewards-nogame.puml` — PlantUML source (source of truth: `src/main/java/rewards/*.java`)
-- `rewards-nogame.svg` / `rewards-nogame.png` — rendered diagram
-- `combine-guide/` — the UML integration guide (how the four reference diagrams merge into the single shared model):
-  - `how-the-diagrams-combine.jpg` — merge overview: 42 classes / 63 relationships, per-reference contributions
-  - `merge-repeated-classes.jpg` — source-class → unified-name mapping (incl. the `OrderItem` bridge between catalog `MenuItem` and checkout)
-  - `connect-the-modules.jpg` — the 6 steps to wire the modules together, plus relationship-reading notes and known implementation gaps
-- `signin-to-checkout.puml` / `.svg` / `.png` — the linear sign-in → checkout flow as a sequence diagram: 22 lifelines across all four modules (app/nav → accounts/shared user → menu/checkout → rewards), every class touched on the path (GoodBurgerApplication → … → AccountManager.login → User → Home → MenuScreen/panels → OrderItem/Order → CheckoutScreenController → RewardsController → PointsService).
-- `signin-to-checkout-classes.puml` / `.svg` / `.png` — the same linear path drawn as a class diagram: all 22 classes touched, numbered flow edges 1–22 plus real composition (`Order *-- OrderItem`, `OrderItem *-- MenuItem/Modifier`).
-
-![GoodBurger integrated class diagram](docs/UML/goodburger-full.png)
-
-Relationships follow the CS 3443 arrow vocabulary: composition (`*--`, has-a/owned), dependency (`..>`), generalization (`--|>`, `extends`), and realization (`..|>`, `implements`).
-
-### Linear sign-in → checkout (all classes touched)
-
-The flow from sign-in to checkout is linear — one path through all four modules; the only branch is the guest option at sign-in. Sequence view (every call on the path):
-
-![Sign-in to checkout sequence](docs/UML/signin-to-checkout.png)
-
-Class view (every class touched, numbered 1–22):
-
-![Sign-in to checkout classes](docs/UML/signin-to-checkout-classes.png)
-
-> **Source note:** these diagrams model the *integrated design* (from the combined reference diagrams). They are not yet backed by code — `src/main/java` currently holds only the `rewards/` package (Pipe Flight + rewards), so `GoodBurgerApplication`, `AccountManager`, `MenuScreen`, `OrderItem`, `CheckoutScreenController`, etc. are not yet present in the repo. The `rewards-nogame` diagram, by contrast, is sourced from real code.
-
 ## Design
 
-The [Figma design](https://www.figma.com/design/4qoghK6Hi24ovxvCw7Nmnl/Rewards---Pipe-Flight---JavaFX-UI) contains the original editable vector rewards layout alongside screenshots of the JavaFX rewards screen, all three game stages, poker, upgrades, and the ending. These JavaFX screenshots are also in `previews/`.
+The [Figma design](https://www.figma.com/design/4qoghK6Hi24ovxvCw7Nmnl/Rewards---Pipe-Flight---JavaFX-UI) contains the original editable vector rewards layout alongside screenshots of the JavaFX rewards screen, all three game stages, poker, upgrades, and the ending.
 
-The OpenJFX runtime in `lib/` comes from the [official Maven Central OpenJFX 26 artifacts](https://repo.maven.apache.org/maven2/org/openjfx/). These files are platform-specific; on another operating system, replace them with that platform's JavaFX 26 modules.
+## Tests
+
+`./test.sh` compiles the tests and runs two dependency-free suites (plain `main()`
+classes, no JUnit, first failed check throws):
+
+- `rewards.LogicTest` - poker hands, the points economy, achievements
+- `edu.utsa.cs3443.goodburger.ModelTest` - menu data integrity, account round
+  trips, order math and the order-id sequence
+
+ModelTest reads the real `data/` files but only writes into temp directories, so it
+never dirties the repo.
